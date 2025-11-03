@@ -105,7 +105,7 @@ export default function Header() {
 import { fetchWithAuth } from '@/lib/auth';
 
 async function getData() {
-  const response = await fetchWithAuth('http://192.168.1.101:5000/api/data');
+  const response = await fetchWithAuth('https://backend-openbo.devmosel.com/api/data');
   const data = await response.json();
   return data;
 }
@@ -142,7 +142,7 @@ Expected login response:
 ## Login Flow
 
 1. User submits username and password
-2. Frontend sends POST to `http://192.168.1.101:5000/api/auth/login`
+2. Frontend sends POST to `https://backend-openbo.devmosel.com/api/auth/login`
 3. Backend validates credentials
 4. Backend returns token and user data
 5. Frontend stores token and user in cookies

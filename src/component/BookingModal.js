@@ -1,19 +1,89 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createBooking } from '@/services/bookingService';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useToast } from '@/contexts/ToastContext';
+
 export default function BookingModal({ isOpen, onClose, space, bookingDetails }) {
+  const router = useRouter();
+  const { currentUser } = useCurrentUser();
+  const { showToastMessage } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   if (!isOpen || !space) return null;
 
-  const handleConfirmBooking = async () => {
-    // TODO: Implement actual booking API call here
-    console.log('Booking confirmed:', {
-      spaceId: space.id,
-      spaceName: space.name,
-      date: bookingDetails.date,
-      startTime: bookingDetails.startTime,
-      endTime: bookingDetails.endTime,
-    });
-    
-    // For now, just show an alert and close
-    alert('Booking confirmed! (API integration pending)');
+  /**
+   * Reset all states when modal closes
+   */
+  const handleClose = () => {
+    setIsSubmitting(false);
     onClose();
+  };
+
+  /**
+   * Format datetime to "YYYY-MM-DD HH:MM:SS"
+   */
+  const formatDateTime = (date, time) => {
+    return `${date} ${time}:00`;
+  };
+
+  const handleConfirmBooking = async () => {
+    if (!currentUser?.id) {
+      showToastMessage({
+        type: 'error',
+        title: 'Authentication required',
+        message: 'You must be logged in to make a booking',
+        duration: 5000
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const bookingPayload = {
+        user_id: currentUser.id,
+        space_id: space.id,
+        start_at: formatDateTime(bookingDetails.date, bookingDetails.startTime),
+        end_at: formatDateTime(bookingDetails.date, bookingDetails.endTime),
+      };
+
+      console.log('Creating booking:', bookingPayload);
+      
+      const response = await createBooking(bookingPayload);
+      
+      console.log('Booking created successfully:', response);
+      
+      // Show success toast using API response format
+      // Response: { success: true, message: "...", status_code: 200, data: {...} }
+      showToastMessage({
+        type: 'success',
+        title: 'Booking confirmed!',
+        message: response.message || `${space.name} has been booked successfully.`,
+        duration: 5000
+      });
+      
+      // Close modal immediately, then redirect to dashboard after 3 seconds
+      setTimeout(() => {
+        handleClose();
+        // Redirect after modal closes
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 2500);
+      }, 500);
+    } catch (err) {
+      // Show error toast only
+      showToastMessage({
+        type: 'error',
+        title: 'Booking failed',
+        message: err.message || 'Failed to create booking. Please try again.',
+        duration: 5000
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const amenityIcons = {
@@ -30,14 +100,14 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
       {/* Backdrop with blur */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={handleClose}
       />
       
       {/* Modal */}
       <div className="relative bg-white border border-[rgba(0,0,0,0.1)] rounded-[24px] w-full max-w-[512px] shadow-xl">
         {/* Close button */}
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute right-[17px] top-[17px] w-4 h-4 opacity-70 hover:opacity-100 transition-opacity"
         >
           <img src="/assets/9e12764e91cf36e92c672b4ceb011cb1b5c0cb56.svg" alt="Close" className="w-full h-full" />
@@ -120,8 +190,9 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
           {/* Action Buttons */}
           <div className="flex gap-3 mt-6">
             <button
-              onClick={onClose}
-              className="flex-1 bg-white border border-gray-200 rounded-[14px] px-4 py-2 h-[36px] flex items-center justify-center"
+              onClick={handleClose}
+              disabled={isSubmitting}
+              className="flex-1 bg-white border border-gray-200 rounded-[14px] px-4 py-2 h-[36px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <p className="font-medium text-[14px] leading-[20px] tracking-[-0.1504px] text-neutral-950">
                 Cancel
@@ -129,10 +200,11 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
             </button>
             <button
               onClick={handleConfirmBooking}
-              className="flex-1 bg-black rounded-[14px] px-4 py-2 h-[36px] flex items-center justify-center"
+              disabled={isSubmitting}
+              className="flex-1 bg-black rounded-[14px] px-4 py-2 h-[36px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <p className="font-medium text-[14px] leading-[20px] tracking-[-0.1504px] text-white">
-                Confirm Booking
+                {isSubmitting ? 'Confirming...' : 'Confirm Booking'}
               </p>
             </button>
           </div>

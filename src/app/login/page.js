@@ -4,13 +4,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { auth } from '@/lib/auth';
 
 export default function LoginPage() {
   const formRef = useRef(null);
   const imageRef = useRef(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
   
   const [formData, setFormData] = useState({
     username: '',
@@ -18,6 +19,21 @@ export default function LoginPage() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Get redirect parameter if exists
+  const redirectTo = searchParams.get('redirect') || '/dashboard';
+
+  // Check authentication IMMEDIATELY on mount
+  useEffect(() => {
+    if (auth.isAuthenticated()) {
+      // User already logged in, redirect immediately
+      window.location.href = '/dashboard';
+    } else {
+      // Not authenticated, show login form
+      setIsCheckingAuth(false);
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -35,7 +51,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://192.168.1.101:5000/api/auth/login', {
+      const response = await fetch('https://backend-openbo.devmosel.com/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,9 +103,9 @@ export default function LoginPage() {
           return;
         }
         
-        // Redirect to dashboard
-        console.log('Redirecting to dashboard...');
-        window.location.href = '/dashboard';
+        // Redirect to intended destination or dashboard
+        console.log('Redirecting to:', redirectTo);
+        window.location.href = redirectTo;
       } else {
         // Login failed
         setError(data.message || 'Invalid username or password');
@@ -103,12 +119,8 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
-    // Check if user is already logged in
-    if (auth.isAuthenticated()) {
-      console.log('Already authenticated, redirecting to dashboard');
-      window.location.href = '/dashboard';
-      return;
-    }
+    // Skip animations if checking auth
+    if (isCheckingAuth) return;
 
     // Form Animation
     const formElements = formRef.current?.querySelectorAll('.animate-form');
@@ -153,8 +165,13 @@ export default function LoginPage() {
         );
       }
     }
-  }, []);
-  
+  }, [isCheckingAuth]);
+
+  // Show nothing while checking authentication (prevents flash)
+  if (isCheckingAuth) {
+    return null;
+  }
+
   return (
     <div className="bg-white relative w-full h-screen overflow-hidden">
       {/* Left Section - Login Form */}
