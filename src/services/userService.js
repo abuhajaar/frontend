@@ -4,6 +4,22 @@
  */
 
 import { API_CONFIG, API_ENDPOINTS } from './config';
+import { auth } from '@/lib/auth';
+
+/**
+ * Get headers with authentication token
+ * @returns {Object} Headers object with auth token if available
+ */
+const getAuthHeaders = () => {
+  const token = auth.getToken();
+  const headers = { ...API_CONFIG.HEADERS };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
+};
 
 /**
  * Get user profile
@@ -15,7 +31,7 @@ export const getUserProfile = async () => {
       `${API_CONFIG.BASE_URL}${API_ENDPOINTS.USER_PROFILE}`,
       {
         method: 'GET',
-        headers: API_CONFIG.HEADERS,
+        headers: getAuthHeaders(),
       }
     );
 
@@ -41,7 +57,7 @@ export const updateUserProfile = async (profileData) => {
       `${API_CONFIG.BASE_URL}${API_ENDPOINTS.UPDATE_PROFILE}`,
       {
         method: 'PUT',
-        headers: API_CONFIG.HEADERS,
+        headers: getAuthHeaders(),
         body: JSON.stringify(profileData),
       }
     );

@@ -4,7 +4,7 @@
 
 ### API Endpoint
 ```
-POST https://backend-openbo.devmosel.com/api/bookings
+POST http://192.168.1.101:5000/api/bookings
 ```
 
 ### Request Body Format

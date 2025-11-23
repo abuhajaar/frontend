@@ -45,7 +45,7 @@ export const searchSpaces = async (date, startTime, endTime) => {
     );
 
     const result = await response.json();
-    
+    console.log('Search spaces API response:', result);
     // Handle API response format: { success, message, status_code, data }
     if (!result.success) {
       const error = new Error(result.message || 'Failed to fetch spaces');
@@ -77,6 +77,7 @@ export const getAllSpaces = async () => {
         headers: getAuthHeaders(),
       }
     );
+    console.log('Get all spaces response status:', response.status);
 
     if (!response.ok) {
       throw new Error('Failed to fetch spaces');

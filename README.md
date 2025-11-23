@@ -8,7 +8,7 @@ A modern workspace booking application built with Next.js 16, featuring real-tim
 - **React**: 19.2.0
 - **Styling**: Tailwind CSS
 - **Authentication**: JWT Bearer Token
-- **API**: REST API (https://backend-openbo.devmosel.com)
+- **API**: REST API (http://192.168.1.101:5000)
 
 ## Features
 
@@ -174,7 +174,7 @@ npm install
 Edit `/src/services/config.js`:
 ```javascript
 export const API_CONFIG = {
-  BASE_URL: 'https://backend-openbo.devmosel.com',
+  BASE_URL: 'http://192.168.1.101:5000',
   // ...
 };
 ```

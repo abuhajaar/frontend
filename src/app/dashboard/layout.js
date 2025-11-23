@@ -8,8 +8,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Sidebar from '@/components/Sidebar';
-import NotificationPanel from '@/components/NotificationPanel';
+import Sidebar from '@/component/Sidebar';
+import NotificationPanel from '@/component/NotificationPanel';
 
 export default function DashboardLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -45,8 +45,8 @@ export default function DashboardLayout({ children }) {
           marginLeft: isSidebarOpen ? '256px' : '0px'
         }}
       >
-        {/* Top Notification Panel */}
-        <NotificationPanel />
+        {/* Top Notification Panel - Hidden for now */}
+        {/* <NotificationPanel /> */}
         
         {/* Page Content - This changes when navigating between dashboard pages */}
         <main className="relative">

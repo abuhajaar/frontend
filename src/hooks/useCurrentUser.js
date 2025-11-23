@@ -1,21 +1,24 @@
 /**
  * useCurrentUser hook
- * Manages current user state from authentication
+ * Manages current user state from authentication using React Query
  */
 
-import { useState, useEffect } from 'react';
+'use client';
+
+import { useQuery } from '@tanstack/react-query';
 import { auth } from '@/lib/auth';
 
 export const useCurrentUser = () => {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const user = auth.getUser();
-    console.log('Current user loaded:', user);
-    setCurrentUser(user);
-    setIsLoading(false);
-  }, []);
+  const { data: currentUser = null, isLoading } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => {
+      const user = auth.getUser();
+      console.log('Current user loaded:', user);
+      return user;
+    },
+    staleTime: 5 * 60 * 1000, // User data is fresh for 5 minutes
+    retry: false, // Don't retry if user is not found
+  });
 
   return {
     currentUser,

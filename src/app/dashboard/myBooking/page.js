@@ -5,12 +5,11 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import BookingCard from '@/components/mybooking/BookingCard';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useState } from 'react';
+import BookingCard from '@/component/BookingCard';
+import { useCurrentUser, useUserBookings, useCheckInBooking, useCheckOutBooking, useCancelBooking } from '@/hooks';
 import { useToast } from '@/contexts/ToastContext';
 import { formatDateWithDay } from '@/utils/date';
-import { getUserBookings, checkInBooking, checkOutBooking, cancelBooking } from '@/services/bookingService';
 
 // Map API status values to UI status values
 const mapStatusToUI = (status) => {
@@ -28,160 +27,93 @@ const mapStatusToUI = (status) => {
 };
 
 export default function MyBookingPage() {
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
   const { currentUser } = useCurrentUser();
   const { showToastMessage } = useToast();
+  
+  const { data: response, isLoading: loading, refetch } = useUserBookings();
+  const { mutate: checkIn } = useCheckInBooking();
+  const { mutate: checkOut } = useCheckOutBooking();
+  const { mutate: cancel } = useCancelBooking();
 
-  // Fetch user bookings
-  useEffect(() => {
-    const fetchBookings = async () => {
-      // Wait for user data to be available
-      if (!currentUser || !currentUser.id) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        
-        // Fetch bookings from API
-        const response = await getUserBookings(currentUser.id);
-        
-        // Extract bookings data from API response
-        const bookingsData = response.data || [];
-        
-        // Sort bookings by created_at descending (newest first)
-        const sortedBookings = bookingsData.sort((a, b) => {
-          const dateA = new Date(a.created_at);
-          const dateB = new Date(b.created_at);
-          return dateB - dateA; // Descending order (newest first)
-        });
-        
-        // Format dates for display
-        const formattedBookings = sortedBookings.map(booking => ({
-          ...booking,
-          date: formatDateWithDay(booking.date)
-        }));
-        
-        setBookings(formattedBookings);
-      } catch (error) {
-        console.error('Error fetching bookings:', error);
-        showToastMessage({
-          type: 'error',
-          title: 'Error',
-          message: error.message || 'Failed to load bookings',
-          duration: 5000
-        });
-        setBookings([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBookings();
-  }, [currentUser, showToastMessage]);
+  // Extract bookings data from response and format
+  const bookingsData = response?.data || [];
+  const bookings = bookingsData
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .map(booking => ({
+      ...booking,
+      date: formatDateWithDay(booking.date)
+    }));
 
   const handleCheckIn = async (booking) => {
-    try {
-      // Call check-in API
-      const response = await checkInBooking(booking.id, booking.checkin_code);
-      
-      // Update booking in state with status and checkin_at
-      setBookings(prevBookings => 
-        prevBookings.map(b => 
-          b.id === booking.id 
-            ? { 
-                ...b, 
-                checkin_at: response.data?.checkin_at || new Date().toISOString(),
-                status: mapStatusToUI(response.data?.status) || 'checkin'
-              }
-            : b
-        )
-      );
-      
-      showToastMessage({
-        type: 'success',
-        title: 'Checked In!',
-        message: response.message || `You've successfully checked in to ${booking.space_name}`,
-        duration: 5000
-      });
-    } catch (error) {
-      console.error('Check-in error:', error);
-      showToastMessage({
-        type: 'error',
-        title: 'Check-in Failed',
-        message: error.message || 'Failed to check in',
-        duration: 5000
-      });
-    }
+    checkIn(
+      { bookingId: booking.id, checkinCode: booking.checkin_code },
+      {
+        onSuccess: (response) => {
+          showToastMessage({
+            type: 'success',
+            title: 'Checked In!',
+            message: response.message || `You've successfully checked in to ${booking.space_name}`,
+            duration: 5000
+          });
+          refetch();
+        },
+        onError: (error) => {
+          console.error('Check-in error:', error);
+          showToastMessage({
+            type: 'error',
+            title: 'Check-in Failed',
+            message: error.message || 'Failed to check in',
+            duration: 5000
+          });
+        }
+      }
+    );
   };
 
   const handleCheckOut = async (booking) => {
-    try {
-      // Call check-out API
-      const response = await checkOutBooking(booking.id);
-      
-      // Update booking in state with status and checkout_at
-      setBookings(prevBookings => 
-        prevBookings.map(b => 
-          b.id === booking.id 
-            ? { 
-                ...b, 
-                checkout_at: response.data?.checkout_at || new Date().toISOString(), 
-                status: mapStatusToUI(response.data?.status) || 'finished'
-              }
-            : b
-        )
-      );
-      
-      showToastMessage({
-        type: 'success',
-        title: 'Checked Out!',
-        message: response.message || `You've successfully checked out from ${booking.space_name}`,
-        duration: 5000
-      });
-    } catch (error) {
-      console.error('Check-out error:', error);
-      showToastMessage({
-        type: 'error',
-        title: 'Check-out Failed',
-        message: error.message || 'Failed to check out',
-        duration: 5000
-      });
-    }
+    checkOut(booking.id, {
+      onSuccess: (response) => {
+        showToastMessage({
+          type: 'success',
+          title: 'Checked Out!',
+          message: response.message || `You've successfully checked out from ${booking.space_name}`,
+          duration: 5000
+        });
+        refetch();
+      },
+      onError: (error) => {
+        console.error('Check-out error:', error);
+        showToastMessage({
+          type: 'error',
+          title: 'Check-out Failed',
+          message: error.message || 'Failed to check out',
+          duration: 5000
+        });
+      }
+    });
   };
 
   const handleCancel = async (booking) => {
-    try {
-      // Call cancel booking API
-      const response = await cancelBooking(booking.id);
-      
-      // Update booking status in state
-      setBookings(prevBookings => 
-        prevBookings.map(b => 
-          b.id === booking.id 
-            ? { ...b, status: mapStatusToUI(response.data?.status) || 'cancelled' }
-            : b
-        )
-      );
-      
-      showToastMessage({
-        type: 'success',
-        title: 'Booking Cancelled',
-        message: response.message || `Your booking for ${booking.space_name} has been cancelled`,
-        duration: 5000
-      });
-    } catch (error) {
-      console.error('Cancel booking error:', error);
-      showToastMessage({
-        type: 'error',
-        title: 'Cancellation Failed',
-        message: error.message || 'Failed to cancel booking',
-        duration: 5000
-      });
-    }
+    cancel(booking.id, {
+      onSuccess: (response) => {
+        showToastMessage({
+          type: 'success',
+          title: 'Booking Cancelled',
+          message: response.message || `Your booking for ${booking.space_name} has been cancelled`,
+          duration: 5000
+        });
+        refetch();
+      },
+      onError: (error) => {
+        console.error('Cancel booking error:', error);
+        showToastMessage({
+          type: 'error',
+          title: 'Cancellation Failed',
+          message: error.message || 'Failed to cancel booking',
+          duration: 5000
+        });
+      }
+    });
   };
 
   const handleShowQR = (booking) => {

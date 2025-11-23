@@ -5,50 +5,31 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import StatsCard from '@/components/dashboard/StatsCard';
+import StatsCard from '@/component/StatsCard';
 import { useAuth } from '@/lib/useAuth';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useCurrentUser, useDashboardStats } from '@/hooks';
 import { useToast } from '@/contexts/ToastContext';
 import { getUserDisplayName } from '@/utils/user';
-import { getEmployeeStats } from '@/services/statsService';
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const { currentUser } = useCurrentUser();
   const { showToastMessage } = useToast();
   
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { data: response, isLoading: loading, error } = useDashboardStats(currentUser?.id);
+  
+  // Extract stats data from response
+  const stats = response?.data;
 
-  // Fetch employee stats
-  useEffect(() => {
-    const fetchStats = async () => {
-      // Wait for user data to be available
-      if (!currentUser || !currentUser.id) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const response = await getEmployeeStats(currentUser.id);
-        setStats(response.data);
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-        showToastMessage({
-          type: 'error',
-          title: 'Error',
-          message: error.message || 'Failed to load statistics',
-          duration: 5000
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, [currentUser, showToastMessage]);
+  // Show error toast if stats fetch fails
+  if (error) {
+    showToastMessage({
+      type: 'error',
+      title: 'Error',
+      message: error.message || 'Failed to load statistics',
+      duration: 5000
+    });
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 sm:px-6 md:px-8 lg:px-12 pt-20 md:pt-12 pb-16">

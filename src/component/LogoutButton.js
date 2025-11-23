@@ -1,25 +1,21 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/auth';
+import { useLogout } from '@/hooks';
 
 export default function LogoutButton({ className = '', children = 'Logout' }) {
-  const router = useRouter();
+  const { mutate: logout, isPending } = useLogout();
 
   const handleLogout = () => {
-    // Clear all auth cookies
-    auth.logout();
-    
-    // Redirect to login page
-    router.push('/login');
+    logout();
   };
 
   return (
     <button 
       onClick={handleLogout}
-      className={className || "px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"}
+      disabled={isPending}
+      className={className || "px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"}
     >
-      {children}
+      {isPending ? 'Logging out...' : children}
     </button>
   );
 }

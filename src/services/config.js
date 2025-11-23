@@ -4,7 +4,7 @@
  */
 
 export const API_CONFIG = {
-  BASE_URL: 'https://backend-openbo.devmosel.com',
+  BASE_URL: 'http://192.168.1.101:5000/',
   TIMEOUT: 10000, // 10 seconds
   HEADERS: {
     'Content-Type': 'application/json',

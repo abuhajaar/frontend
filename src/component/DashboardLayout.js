@@ -7,8 +7,8 @@
 'use client';
 
 import { useState } from 'react';
-import Sidebar from '@/components/Sidebar';
-import NotificationPanel from '@/components/NotificationPanel';
+import Sidebar from '@/component/Sidebar';
+import NotificationPanel from '@/component/NotificationPanel';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 

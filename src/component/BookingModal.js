@@ -1,16 +1,14 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createBooking } from '@/services/bookingService';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useCurrentUser, useCreateBooking } from '@/hooks';
 import { useToast } from '@/contexts/ToastContext';
 
 export default function BookingModal({ isOpen, onClose, space, bookingDetails }) {
   const router = useRouter();
   const { currentUser } = useCurrentUser();
   const { showToastMessage } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { mutate: createBooking, isPending: isSubmitting } = useCreateBooking();
 
   if (!isOpen || !space) return null;
 
@@ -18,7 +16,6 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
    * Reset all states when modal closes
    */
   const handleClose = () => {
-    setIsSubmitting(false);
     onClose();
   };
 
@@ -40,50 +37,45 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
       return;
     }
 
-    setIsSubmitting(true);
+    const bookingPayload = {
+      user_id: currentUser.id,
+      space_id: space.id,
+      start_at: formatDateTime(bookingDetails.date, bookingDetails.startTime),
+      end_at: formatDateTime(bookingDetails.date, bookingDetails.endTime),
+    };
 
-    try {
-      const bookingPayload = {
-        user_id: currentUser.id,
-        space_id: space.id,
-        start_at: formatDateTime(bookingDetails.date, bookingDetails.startTime),
-        end_at: formatDateTime(bookingDetails.date, bookingDetails.endTime),
-      };
-
-      console.log('Creating booking:', bookingPayload);
-      
-      const response = await createBooking(bookingPayload);
-      
-      console.log('Booking created successfully:', response);
-      
-      // Show success toast using API response format
-      // Response: { success: true, message: "...", status_code: 200, data: {...} }
-      showToastMessage({
-        type: 'success',
-        title: 'Booking confirmed!',
-        message: response.message || `${space.name} has been booked successfully.`,
-        duration: 5000
-      });
-      
-      // Close modal immediately, then redirect to dashboard after 3 seconds
-      setTimeout(() => {
-        handleClose();
-        // Redirect after modal closes
+    console.log('Creating booking:', bookingPayload);
+    
+    createBooking(bookingPayload, {
+      onSuccess: (response) => {
+        console.log('Booking created successfully:', response);
+        
+        // Show success toast
+        showToastMessage({
+          type: 'success',
+          title: 'Booking confirmed!',
+          message: response.message || `${space.name} has been booked successfully.`,
+          duration: 5000
+        });
+        
+        // Close modal and redirect
         setTimeout(() => {
-          router.push('/dashboard');
-        }, 2500);
-      }, 500);
-    } catch (err) {
-      // Show error toast only
-      showToastMessage({
-        type: 'error',
-        title: 'Booking failed',
-        message: err.message || 'Failed to create booking. Please try again.',
-        duration: 5000
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+          handleClose();
+          setTimeout(() => {
+            router.push('/dashboard/myBooking');
+          }, 2500);
+        }, 500);
+      },
+      onError: (err) => {
+        // Show error toast
+        showToastMessage({
+          type: 'error',
+          title: 'Booking failed',
+          message: err.message || 'Failed to create booking. Please try again.',
+          duration: 5000
+        });
+      }
+    });
   };
 
   const amenityIcons = {

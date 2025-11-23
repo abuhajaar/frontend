@@ -24,7 +24,21 @@ export const login = async (username, password) => {
       throw new Error(error.message || 'Login failed');
     }
 
-    return await response.json();
+    const data = await response.json();
+    
+    // Extract token and user data from response
+    const token = data.data?.access_token || data.data?.token || data.access_token || data.token;
+    const userData = data.data?.user || data.user;
+    
+    if (!token) {
+      throw new Error('No token received from server');
+    }
+    
+    // Store token and user data in cookies/localStorage
+    const { auth } = await import('@/lib/auth');
+    auth.login(token, userData);
+    
+    return data;
   } catch (error) {
     console.error('Login error:', error);
     throw error;
@@ -37,19 +51,38 @@ export const login = async (username, password) => {
  */
 export const logout = async () => {
   try {
+    // Get auth token
+    const { auth } = await import('@/lib/auth');
+    const token = auth.getToken();
+    
+    const headers = { ...API_CONFIG.HEADERS };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    // Try to call logout API with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
     const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.LOGOUT}`, {
       method: 'POST',
-      headers: API_CONFIG.HEADERS,
+      headers,
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
-      throw new Error('Logout failed');
+      // Don't throw on API error - logout should always succeed locally
+      console.warn('Logout API returned error, but continuing with local logout');
+      return { success: true, message: 'Logged out locally' };
     }
 
     return await response.json();
   } catch (error) {
-    console.error('Logout error:', error);
-    throw error;
+    // Don't throw error - logout should always succeed
+    console.warn('Logout API call failed, but continuing with local logout:', error.message);
+    return { success: true, message: 'Logged out locally (API unavailable)' };
   }
 };
 

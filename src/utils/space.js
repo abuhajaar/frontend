@@ -64,32 +64,64 @@ export const transformSpaceData = (space) => {
   const typeConfig = getSpaceTypeConfig(space.type);
   const floor = extractFloorFromLocation(space.location);
   
-  // Get opening hours for Monday as default
-  const today = 'mon';
-  const hours = space.opening_hours?.[today];
-  const time = hours ? `${hours.start}-${hours.end}` : '08:00-18:00';
+  // Get opening hours - find first available day
+  const daysOrder = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  let opening_hours = '09:00-18:00'; // default
   
-  // Map amenities to just names array
-  const amenities = space.amenities?.map(a => a.name) || [];
+  if (space.opening_hours) {
+    for (const day of daysOrder) {
+      if (space.opening_hours[day]) {
+        const hours = space.opening_hours[day];
+        opening_hours = `${hours.start}-${hours.end}`;
+        break;
+      }
+    }
+  }
   
-  return {
+  // Handle amenities - can be array of strings OR array of objects
+  let amenities = [];
+  if (Array.isArray(space.amenities)) {
+    amenities = space.amenities.map(a => {
+      // If it's an object with 'name' property, extract the name
+      if (typeof a === 'object' && a !== null && a.name) {
+        return a.name;
+      }
+      // If it's already a string, use it directly
+      return String(a);
+    });
+  }
+  
+  const transformed = {
     id: space.id,
     name: space.name,
     type: typeConfig.displayName,
+    rawType: space.type, // Preserve original API type (hot_desk, private_room, etc.)
     typeColor: typeConfig.color,
     bgColor: typeConfig.bgColor,
     icon: typeConfig.icon,
     capacity: space.capacity,
     badgeColor: typeConfig.badgeColor,
     badgeTextColor: typeConfig.badgeTextColor,
-    time,
+    opening_hours, // Now correctly mapped
+    max_duration: space.max_duration, // Add max_duration
     amenities,
     buttonColor: typeConfig.buttonColor,
     borderColor: typeConfig.borderColor,
     floor,
     location: space.location,
     status: space.status,
+    is_available: space.is_available, // Preserve is_available from API
   };
+  
+  // Debug log
+  console.log('Transformed space:', {
+    name: transformed.name,
+    opening_hours: transformed.opening_hours,
+    max_duration: transformed.max_duration,
+    amenities: transformed.amenities,
+  });
+  
+  return transformed;
 };
 
 /**

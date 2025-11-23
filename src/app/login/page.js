@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { auth } from '@/lib/auth';
+import { login } from '@/services/authService';
 
 export default function LoginPage() {
   const formRef = useRef(null);
@@ -51,68 +52,16 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('https://backend-openbo.devmosel.com/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password
-        })
-      });
-
-      const data = await response.json();
-      console.log('Login response:', data);
-
-      if (response.ok) {
-        // Login successful
-        console.log('Full response data:', JSON.stringify(data, null, 2));
-        
-        // Try both access_token and token fields
-        const token = data.data?.access_token || data.data?.token || data.access_token || data.token;
-        console.log('Extracted token:', token);
-        
-        if (!token) {
-          console.error('No token found in response!');
-          setError('Login succeeded but no token received');
-          setLoading(false);
-          return;
-        }
-        
-        // Extract user data - check multiple possible locations
-        const userData = data.data?.user || data.user || {
-          username: formData.username,
-          email: `${formData.username}@company.com`
-        };
-        console.log('User data to save:', JSON.stringify(userData, null, 2));
-        
-        // Store token and user data
-        auth.login(token, userData);
-        
-        // Verify it was saved
-        const savedToken = auth.getToken();
-        const savedUser = auth.getUser();
-        console.log('Verification - token retrieved:', savedToken);
-        console.log('Verification - user retrieved:', savedUser);
-        
-        if (!savedToken) {
-          console.error('Token was not saved properly!');
-          setError('Failed to save login credentials');
-          setLoading(false);
-          return;
-        }
-        
-        // Redirect to intended destination or dashboard
-        console.log('Redirecting to:', redirectTo);
-        window.location.href = redirectTo;
-      } else {
-        // Login failed
-        setError(data.message || 'Invalid username or password');
-      }
+      // Use the login service instead of direct fetch
+      const data = await login(formData.username, formData.password);
+      
+      console.log('Login successful, redirecting to:', redirectTo);
+      
+      // Redirect to intended destination or dashboard
+      window.location.href = redirectTo;
     } catch (err) {
       console.error('Login error:', err);
-      setError('Unable to connect to server. Please try again later.');
+      setError(err.message || 'Invalid username or password');
     } finally {
       setLoading(false);
     }

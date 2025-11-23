@@ -185,7 +185,7 @@ import {
 } from '@/constants/booking';
 
 // API_BASE_URL
-'https://backend-openbo.devmosel.com'
+'http://192.168.1.101:5000'
 
 // TIME_SLOTS
 ['08:00', '08:30', '09:00', ..., '19:00', '19:30']

@@ -85,7 +85,7 @@
 │                            CONSTANTS                                     │
 │                     /constants/booking.js                                │
 │  ┌────────────────────────────────────────────────────────────────┐    │
-│  │ API_BASE_URL       = 'https://backend-openbo.devmosel.com'              │    │
+│  │ API_BASE_URL       = 'http://192.168.1.101:5000'              │    │
 │  │ TIME_SLOTS         = ['08:00', '08:30', ..., '19:30']         │    │
 │  │ SPACE_TYPES        = { HOT_DESK: {...}, PRIVATE: {...}, ...}  │    │
 │  │ FILTER_OPTIONS     = { FLOORS: {...}, TYPES: {...}}           │    │
