@@ -111,6 +111,7 @@ export const transformSpaceData = (space) => {
     location: space.location,
     status: space.status,
     is_available: space.is_available, // Preserve is_available from API
+    unavailable_reason: space.unavailable_reason, // Preserve unavailable_reason from API
   };
   
   // Debug log

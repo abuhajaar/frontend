@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import BookingModal from '@/component/BookingModal';
 import DateTimeSelector from '@/component/DateTimeSelector';
 import FilterBar from '@/component/FilterBar';
@@ -43,7 +43,7 @@ export default function BookingPage() {
   const availableFloors = getUniqueFloors(spaces);
   const filteredSpaces = filterSpaces(spaces, selectedFloor, selectedType);
 
-  // Filter spaces for Lantai 1 - both hot desks and meeting rooms
+  // Filter spaces for Lantai 1
   const floor1HotDesks = spaces.filter(space => {
     const isFloor1 = space.location?.includes('Lantai 1') || space.floor === '1st';
     const isHotDesk = space.rawType === 'hot_desk' || space.type === 'Hot Desk';
@@ -56,31 +56,117 @@ export default function BookingPage() {
     return isFloor1 && isMeetingRoom;
   });
 
+  const floor1PrivateRooms = spaces.filter(space => {
+    const isFloor1 = space.location?.includes('Lantai 1') || space.floor === '1st';
+    const isPrivateRoom = space.rawType === 'private_room' || space.type === 'Private Room';
+    return isFloor1 && isPrivateRoom;
+  });
+
+  // Filter spaces for Lantai 2
+  const floor2HotDesks = spaces.filter(space => {
+    const isFloor2 = space.location?.includes('Lantai 2') || space.floor === '2nd';
+    const isHotDesk = space.rawType === 'hot_desk' || space.type === 'Hot Desk';
+    return isFloor2 && isHotDesk;
+  });
+
+  const floor2MeetingRooms = spaces.filter(space => {
+    const isFloor2 = space.location?.includes('Lantai 2') || space.floor === '2nd';
+    const isMeetingRoom = space.rawType === 'meeting_room' || space.type === 'Meeting Room';
+    return isFloor2 && isMeetingRoom;
+  });
+
+  // Filter spaces for Lantai 3
+  const floor3MeetingRooms = spaces.filter(space => {
+    const isFloor3 = space.location?.includes('Lantai 3') || space.floor === '3rd';
+    const isMeetingRoom = space.rawType === 'meeting_room' || space.type === 'Meeting Room';
+    return isFloor3 && isMeetingRoom;
+  });
+
+  const floor3PrivateRooms = spaces.filter(space => {
+    const isFloor3 = space.location?.includes('Lantai 3') || space.floor === '3rd';
+    const isPrivateRoom = space.rawType === 'private_room' || space.type === 'Private Room';
+    return isFloor3 && isPrivateRoom;
+  });
+
   // Map API spaces to SVG element IDs
-  // Hot Desks: Assign sequential SVG IDs (hotDesk01, hotDesk02, etc.) to hot desk spaces
-  // Meeting Rooms: Assign sequential SVG IDs (meetingRoom01, meetingRoom02, meetingRoom03) to meeting room spaces
+  // Lantai 1: hotDesk01-12 (12 desks)
+  // Lantai 2: hotDesk13-20 (8 desks) - continuing numbering from Lantai 1
+  // Lantai 1: meetingRoom01-03
+  // Lantai 2: meetingRoom04-06 - continuing numbering from Lantai 1
   const deskSpaceMap = {};
   const occupiedDesks = [];
   
-  // Map hot desks sequentially
+  // Map Lantai 1 hot desks (hotDesk01-12)
   floor1HotDesks.forEach((space, index) => {
     const deskId = `hotDesk${String(index + 1).padStart(2, '0')}`;
     deskSpaceMap[deskId] = space;
     
-    // Only mark as occupied if explicitly set to unavailable by the API for this time slot
-    // is_available: false means there's a booking conflict for the selected time
     const isNotAvailable = space.is_available === false;
     if (isNotAvailable) {
       occupiedDesks.push(deskId);
     }
   });
 
-  // Map meeting rooms sequentially
+  // Map Lantai 2 hot desks (hotDesk13-20) - start from 13
+  floor2HotDesks.forEach((space, index) => {
+    const deskId = `hotDesk${String(13 + index).padStart(2, '0')}`;
+    deskSpaceMap[deskId] = space;
+    
+    const isNotAvailable = space.is_available === false;
+    if (isNotAvailable) {
+      occupiedDesks.push(deskId);
+    }
+  });
+
+  // Map Lantai 1 meeting rooms (meetingRoom01-03)
   floor1MeetingRooms.forEach((space, index) => {
     const roomId = `meetingRoom${String(index + 1).padStart(2, '0')}`;
     deskSpaceMap[roomId] = space;
     
-    // Only mark as occupied if explicitly set to unavailable by the API for this time slot
+    const isNotAvailable = space.is_available === false;
+    if (isNotAvailable) {
+      occupiedDesks.push(roomId);
+    }
+  });
+
+  // Map Lantai 2 meeting rooms (meetingRoom04-06) - start from 04
+  floor2MeetingRooms.forEach((space, index) => {
+    const roomId = `meetingRoom${String(4 + index).padStart(2, '0')}`;
+    deskSpaceMap[roomId] = space;
+    
+    const isNotAvailable = space.is_available === false;
+    if (isNotAvailable) {
+      occupiedDesks.push(roomId);
+    }
+  });
+
+  // Map Lantai 1 private rooms (privateRoom01-02)
+  floor1PrivateRooms.forEach((space, index) => {
+    const roomId = `privateRoom${String(index + 1).padStart(2, '0')}`;
+    deskSpaceMap[roomId] = space;
+    
+    const isNotAvailable = space.is_available === false;
+    if (isNotAvailable) {
+      occupiedDesks.push(roomId);
+    }
+  });
+
+  // Map Lantai 3 meeting rooms (meetingRoom07-08) - start from 07
+  floor3MeetingRooms.forEach((space, index) => {
+    const roomId = `meetingRoom${String(7 + index).padStart(2, '0')}`;
+    deskSpaceMap[roomId] = space;
+    
+    const isNotAvailable = space.is_available === false;
+    if (isNotAvailable) {
+      occupiedDesks.push(roomId);
+    }
+  });
+
+  // Map Lantai 3 private rooms (privateRoom03-08) - start from 03
+  floor3PrivateRooms.forEach((space, index) => {
+    const roomId = `privateRoom${String(3 + index).padStart(2, '0')}`;
+    deskSpaceMap[roomId] = space;
+    
     const isNotAvailable = space.is_available === false;
     if (isNotAvailable) {
       occupiedDesks.push(roomId);
@@ -88,27 +174,57 @@ export default function BookingPage() {
   });
 
   // Debug log to verify mapping
-  console.log('Floor 1 Spaces Mapping:', {
-    totalHotDesks: floor1HotDesks.length,
-    totalMeetingRooms: floor1MeetingRooms.length,
-    hotDeskMappings: floor1HotDesks.map((space, index) => ({
-      apiId: space.id,
-      apiName: space.name,
-      svgId: `hotDesk${String(index + 1).padStart(2, '0')}`,
-      isAvailable: space.is_available,
-      status: space.status
-    })),
-    meetingRoomMappings: floor1MeetingRooms.map((space, index) => ({
-      apiId: space.id,
-      apiName: space.name,
-      svgId: `meetingRoom${String(index + 1).padStart(2, '0')}`,
-      isAvailable: space.is_available,
-      status: space.status
-    })),
+  console.log('Floor Spaces Mapping:', {
+    lantai1: {
+      totalHotDesks: floor1HotDesks.length,
+      totalMeetingRooms: floor1MeetingRooms.length,
+      totalPrivateRooms: floor1PrivateRooms.length,
+    },
+    lantai2: {
+      totalHotDesks: floor2HotDesks.length,
+      totalMeetingRooms: floor2MeetingRooms.length,
+    },
+    lantai3: {
+      totalMeetingRooms: floor3MeetingRooms.length,
+      totalPrivateRooms: floor3PrivateRooms.length,
+    },
     deskSpaceMap: Object.keys(deskSpaceMap),
     occupiedDesks,
     availableSpaces: Object.keys(deskSpaceMap).filter(id => !occupiedDesks.includes(id))
   });
+
+  // Calculate available spaces per floor
+  const lantai1Spaces = Object.keys(deskSpaceMap).filter(id => {
+    const metadata = id.match(/^(hotDesk|meetingRoom|privateRoom)(\d+)$/);
+    if (!metadata) return false;
+    const num = parseInt(metadata[2]);
+    if (id.startsWith('hotDesk')) return num >= 1 && num <= 12;
+    if (id.startsWith('meetingRoom')) return num >= 1 && num <= 3;
+    if (id.startsWith('privateRoom')) return num >= 1 && num <= 2;
+    return false;
+  });
+
+  const lantai2Spaces = Object.keys(deskSpaceMap).filter(id => {
+    const metadata = id.match(/^(hotDesk|meetingRoom)(\d+)$/);
+    if (!metadata) return false;
+    const num = parseInt(metadata[2]);
+    if (id.startsWith('hotDesk')) return num >= 13 && num <= 20;
+    if (id.startsWith('meetingRoom')) return num >= 4 && num <= 6;
+    return false;
+  });
+
+  const lantai3Spaces = Object.keys(deskSpaceMap).filter(id => {
+    const metadata = id.match(/^(meetingRoom|privateRoom)(\d+)$/);
+    if (!metadata) return false;
+    const num = parseInt(metadata[2]);
+    if (id.startsWith('meetingRoom')) return num >= 7 && num <= 8;
+    if (id.startsWith('privateRoom')) return num >= 3 && num <= 8;
+    return false;
+  });
+
+  const availableSpacesLantai1 = lantai1Spaces.filter(id => !occupiedDesks.includes(id)).length;
+  const availableSpacesLantai2 = lantai2Spaces.filter(id => !occupiedDesks.includes(id)).length;
+  const availableSpacesLantai3 = lantai3Spaces.filter(id => !occupiedDesks.includes(id)).length;
 
   // Event handlers
   const handleSearch = () => {
@@ -133,23 +249,43 @@ export default function BookingPage() {
     const deskSpace = deskSpaceMap[desk.id];
     
     if (deskSpace) {
-      // Use the actual space data from API
+      // Use the actual space data from API, including unavailable_reason
       handleBookSpace(deskSpace);
     } else {
       // Fallback if space not found in API data (shouldn't happen if API is correct)
       const isMeetingRoom = desk.type === 'meetingRoom';
+      const isPrivateRoom = desk.type === 'privateRoom';
+      
+      let fallbackName, fallbackType, fallbackCapacity, fallbackAmenities;
+      
+      if (isMeetingRoom) {
+        fallbackName = `Meeting Room ${desk.number}`;
+        fallbackType = 'Meeting Room';
+        fallbackCapacity = 8;
+        fallbackAmenities = ['Whiteboard', 'Projector', 'Conference Phone', 'WiFi'];
+      } else if (isPrivateRoom) {
+        fallbackName = `Private Room ${desk.number}`;
+        fallbackType = 'Private Room';
+        fallbackCapacity = 4;
+        fallbackAmenities = ['Whiteboard', 'Monitor', 'Privacy Door', 'WiFi'];
+      } else {
+        fallbackName = `Hot Desk ${desk.number}`;
+        fallbackType = 'Hot Desk';
+        fallbackCapacity = 1;
+        fallbackAmenities = ['Monitor', 'Desk Lamp', 'Ergonomic Chair'];
+      }
+      
       const fallbackSpace = {
         id: desk.id,
-        name: desk.name || (isMeetingRoom ? `Meeting Room ${desk.number}` : `Hot Desk ${desk.number}`),
-        type: isMeetingRoom ? 'Meeting Room' : 'Hot Desk',
+        name: desk.name || fallbackName,
+        type: fallbackType,
         floor: '1st',
-        capacity: isMeetingRoom ? 8 : 1,
-        amenities: isMeetingRoom 
-          ? ['Whiteboard', 'Projector', 'Conference Phone', 'WiFi']
-          : ['Monitor', 'Desk Lamp', 'Ergonomic Chair'],
+        capacity: fallbackCapacity,
+        amenities: fallbackAmenities,
         opening_hours: '09:00-18:00',
         max_duration: 480,
-        status: 'available'
+        status: 'available',
+        is_available: true
       };
       handleBookSpace(fallbackSpace);
     }
@@ -180,14 +316,18 @@ export default function BookingPage() {
       />
 
       {/* View Mode Toggle */}
-      <div className="mb-6 flex items-center justify-between">
-        <FilterBar
-          selectedFloor={selectedFloor}
-          selectedType={selectedType}
-          availableFloors={availableFloors}
-          onFloorChange={setSelectedFloor}
-          onTypeChange={setSelectedType}
-        />
+      <div className="mb-6 flex items-center justify-between min-h-[44px]">
+        <div className="flex-1">
+          {viewMode === 'grid' && (
+            <FilterBar
+              selectedFloor={selectedFloor}
+              selectedType={selectedType}
+              availableFloors={availableFloors}
+              onFloorChange={setSelectedFloor}
+              onTypeChange={setSelectedType}
+            />
+          )}
+        </div>
         
         <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1">
           <button
@@ -235,6 +375,9 @@ export default function BookingPage() {
             onDeskSelect={handleDeskSelect}
             selectedDeskId={selectedDeskId}
             selectedDate={selectedDate}
+            availableSpacesLantai1={availableSpacesLantai1}
+            availableSpacesLantai2={availableSpacesLantai2}
+            availableSpacesLantai3={availableSpacesLantai3}
           />
         ) : (
           <div className="bg-white border border-slate-200 rounded-3xl p-16">

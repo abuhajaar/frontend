@@ -13,47 +13,116 @@ export default function FloorPlan({
   occupiedDesks = [], 
   onDeskSelect, 
   selectedDeskId,
-  selectedDate
+  selectedDate,
+  availableSpacesLantai1 = 0,
+  availableSpacesLantai2 = 0,
+  availableSpacesLantai3 = 0
 }) {
   const [selectedLevel, setSelectedLevel] = useState('lantai1');
   const svgContainerRef = useRef(null);
   const [svgLoaded, setSvgLoaded] = useState(false);
+  const [occupiedSvgDoc, setOccupiedSvgDoc] = useState(null);
+  const [currentFloorSvg, setCurrentFloorSvg] = useState('lantai1');
 
   // Desk and room metadata
   const deskInfo = {
-    hotDesk01: { number: 1, type: 'hotDesk' },
-    hotDesk02: { number: 2, type: 'hotDesk' },
-    hotDesk03: { number: 3, type: 'hotDesk' },
-    hotDesk04: { number: 4, type: 'hotDesk' },
-    hotDesk05: { number: 5, type: 'hotDesk' },
-    hotDesk06: { number: 6, type: 'hotDesk' },
-    hotDesk07: { number: 7, type: 'hotDesk' },
-    hotDesk08: { number: 8, type: 'hotDesk' },
-    hotDesk09: { number: 9, type: 'hotDesk' },
-    hotDesk10: { number: 10, type: 'hotDesk' },
-    hotDesk11: { number: 11, type: 'hotDesk' },
-    hotDesk12: { number: 12, type: 'hotDesk' },
-    meetingRoom01: { number: 1, type: 'meetingRoom'},
-    meetingRoom02: { number: 2, type: 'meetingRoom'},
-    meetingRoom03: { number: 3, type: 'meetingRoom'}
+    // Lantai 1: hotDesk01-12
+    hotDesk01: { number: 1, type: 'hotDesk', floor: 1 },
+    hotDesk02: { number: 2, type: 'hotDesk', floor: 1 },
+    hotDesk03: { number: 3, type: 'hotDesk', floor: 1 },
+    hotDesk04: { number: 4, type: 'hotDesk', floor: 1 },
+    hotDesk05: { number: 5, type: 'hotDesk', floor: 1 },
+    hotDesk06: { number: 6, type: 'hotDesk', floor: 1 },
+    hotDesk07: { number: 7, type: 'hotDesk', floor: 1 },
+    hotDesk08: { number: 8, type: 'hotDesk', floor: 1 },
+    hotDesk09: { number: 9, type: 'hotDesk', floor: 1 },
+    hotDesk10: { number: 10, type: 'hotDesk', floor: 1 },
+    hotDesk11: { number: 11, type: 'hotDesk', floor: 1 },
+    hotDesk12: { number: 12, type: 'hotDesk', floor: 1 },
+    // Lantai 2: hotDesk13-20
+    hotDesk13: { number: 13, type: 'hotDesk', floor: 2 },
+    hotDesk14: { number: 14, type: 'hotDesk', floor: 2 },
+    hotDesk15: { number: 15, type: 'hotDesk', floor: 2 },
+    hotDesk16: { number: 16, type: 'hotDesk', floor: 2 },
+    hotDesk17: { number: 17, type: 'hotDesk', floor: 2 },
+    hotDesk18: { number: 18, type: 'hotDesk', floor: 2 },
+    hotDesk19: { number: 19, type: 'hotDesk', floor: 2 },
+    hotDesk20: { number: 20, type: 'hotDesk', floor: 2 },
+    // Lantai 1: meetingRoom01-03
+    meetingRoom01: { number: 1, type: 'meetingRoom', floor: 1 },
+    meetingRoom02: { number: 2, type: 'meetingRoom', floor: 1 },
+    meetingRoom03: { number: 3, type: 'meetingRoom', floor: 1 },
+    // Lantai 2: meetingRoom04-06
+    meetingRoom04: { number: 4, type: 'meetingRoom', floor: 2 },
+    meetingRoom05: { number: 5, type: 'meetingRoom', floor: 2 },
+    meetingRoom06: { number: 6, type: 'meetingRoom', floor: 2 },
+    // Lantai 3: meetingRoom07-08
+    meetingRoom07: { number: 7, type: 'meetingRoom', floor: 3 },
+    meetingRoom08: { number: 8, type: 'meetingRoom', floor: 3 },
+    // Lantai 1: privateRoom01-02
+    privateRoom01: { number: 1, type: 'privateRoom', floor: 1 },
+    privateRoom02: { number: 2, type: 'privateRoom', floor: 1 },
+    // Lantai 3: privateRoom03-08
+    privateRoom03: { number: 3, type: 'privateRoom', floor: 3 },
+    privateRoom04: { number: 4, type: 'privateRoom', floor: 3 },
+    privateRoom05: { number: 5, type: 'privateRoom', floor: 3 },
+    privateRoom06: { number: 6, type: 'privateRoom', floor: 3 },
+    privateRoom07: { number: 7, type: 'privateRoom', floor: 3 },
+    privateRoom08: { number: 8, type: 'privateRoom', floor: 3 }
   };
 
-  // Calculate available desks count (hot desks + meeting rooms)
+  // Calculate available desks count (hot desks + meeting rooms + private rooms)
   const totalSpaces = Object.keys(deskInfo).length;
   const availableSpaces = totalSpaces - occupiedDesks.length;
 
-  useEffect(() => {
-    if (!svgContainerRef.current || !svgLoaded) return;
+  // Load the occupied SVG document based on selected floor
+  useEffect(function loadOccupiedSvg() {
+    const occupiedSvgFile = selectedLevel === 'lantai1' 
+      ? '/lantai1v2isOccupied.svg' 
+      : selectedLevel === 'lantai2'
+      ? '/lantai2isOccupied.svg'
+      : selectedLevel === 'lantai3'
+      ? '/lantai3isOccupied.svg'
+      : null;
+    
+    if (!occupiedSvgFile) return;
+    
+    fetch(occupiedSvgFile)
+      .then(function(response) {
+        return response.text();
+      })
+      .then(function(svgText) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgText, 'image/svg+xml');
+        setOccupiedSvgDoc(doc);
+        setCurrentFloorSvg(selectedLevel);
+      })
+      .catch(function(err) {
+        console.error('Failed to load occupied SVG:', err);
+      });
+  }, [selectedLevel]);
+
+  useEffect(function handleSvgInteraction() {
+    if (!svgContainerRef.current || !svgLoaded || !occupiedSvgDoc) return;
 
     const objectElement = svgContainerRef.current.querySelector('object');
     if (!objectElement || !objectElement.contentDocument) return;
 
     const svgDoc = objectElement.contentDocument;
     
-    // Get all hotDesk and meetingRoom elements from the SVG
-    const hotDeskElements = Array.from(svgDoc.querySelectorAll('[id^="hotDesk"]'));
-    const meetingRoomElements = Array.from(svgDoc.querySelectorAll('[id^="meetingRoom"]'));
-    const allSpaceElements = [...hotDeskElements, ...meetingRoomElements];
+    // Get all hotDesk, meetingRoom, and privateRoom elements from the SVG
+    // Only get top-level elements (not nested ones) by checking if parent is the root svg or a direct group
+    const hotDeskElements = Array.from(svgDoc.querySelectorAll('[id^="hotDesk"]')).filter(el => {
+      // Exclude nested elements by ensuring we only get elements whose id matches exactly the pattern
+      return /^hotDesk\d{2}$/.test(el.id);
+    });
+    const meetingRoomElements = Array.from(svgDoc.querySelectorAll('[id^="meetingRoom"]')).filter(el => {
+      return /^meetingRoom\d{2}$/.test(el.id);
+    });
+    const privateRoomElements = Array.from(svgDoc.querySelectorAll('[id^="privateRoom"]')).filter(el => {
+      return /^privateRoom\d{2}$/.test(el.id);
+    });
+    const allSpaceElements = [...hotDeskElements, ...meetingRoomElements, ...privateRoomElements];
 
     allSpaceElements.forEach((spaceElement) => {
       const spaceId = spaceElement.id;
@@ -61,21 +130,27 @@ export default function FloorPlan({
       const isSelected = selectedDeskId === spaceId;
       const spaceMetadata = deskInfo[spaceId];
 
-      // Add click handler
-      spaceElement.style.cursor = isOccupied ? 'not-allowed' : 'pointer';
+      // Add click handler - allow clicking even if occupied
+      spaceElement.style.cursor = 'pointer';
       
       const handleClick = (e) => {
         e.preventDefault();
-        if (!isOccupied && onDeskSelect && spaceMetadata) {
-          const spaceName = spaceMetadata.type === 'meetingRoom' 
-            ? spaceMetadata.name 
-            : `Hot Desk ${spaceMetadata.number}`;
+        if (onDeskSelect && spaceMetadata) {
+          let spaceName;
+          if (spaceMetadata.type === 'meetingRoom') {
+            spaceName = spaceMetadata.name;
+          } else if (spaceMetadata.type === 'privateRoom') {
+            spaceName = `Private Room ${spaceMetadata.number}`;
+          } else {
+            spaceName = `Hot Desk ${spaceMetadata.number}`;
+          }
           
           onDeskSelect({
             id: spaceId,
             name: spaceName,
             number: spaceMetadata.number,
-            type: spaceMetadata.type
+            type: spaceMetadata.type,
+            isOccupied: isOccupied
           });
         }
       };
@@ -107,205 +182,79 @@ export default function FloorPlan({
 
       // Handle occupied state
       if (isOccupied) {
-        // Hide green availability indicator
-        const greenCircles = newSpaceElement.querySelectorAll('[fill="#10B981"]');
-        greenCircles.forEach(circle => {
-          circle.style.display = 'none';
-        });
-
-        // Check if this is a meeting room or hot desk
-        const isMeetingRoom = spaceMetadata?.type === 'meetingRoom';
+        // Get the occupied version of this element from the occupied SVG
+        const occupiedElement = occupiedSvgDoc.getElementById(spaceId);
         
-        if (isMeetingRoom) {
-          // Grey out the room background (ellipse with white fill)
-          const roomBg = newSpaceElement.querySelector('path[fill="white"]');
-          if (roomBg) {
-            roomBg.setAttribute('fill', '#F8FAFC');
-            roomBg.setAttribute('stroke', '#94A3B8');
-          }
-
-          // Grey out chairs
-          const chairs = newSpaceElement.querySelectorAll('[fill="#1E293B"]');
-          chairs.forEach(chair => chair.setAttribute('fill', '#94A3B8'));
+        if (occupiedElement) {
+          // Clone the occupied element
+          const occupiedClone = occupiedElement.cloneNode(true);
           
-          const chairDetails = newSpaceElement.querySelectorAll('[fill="#334155"]');
-          chairDetails.forEach(detail => detail.setAttribute('fill', '#CBD5E1'));
-
-          // Reduce opacity of chair group
-          const chairGroup = newSpaceElement.querySelector('g[opacity="0.9"]');
-          if (chairGroup) {
-            chairGroup.setAttribute('opacity', '0.4');
+          // Replace the current element's innerHTML with the occupied version's innerHTML
+          while (newSpaceElement.firstChild) {
+            newSpaceElement.removeChild(newSpaceElement.firstChild);
           }
-
-          // Add grey overlay and OCCUPIED text if not already added
-          let overlay = newSpaceElement.querySelector('.occupied-overlay');
-          if (!overlay) {
-            const svgNS = "http://www.w3.org/2000/svg";
-            
-            // Get the ellipse dimensions from the room background
-            const roomBg = newSpaceElement.querySelector('path[d*="C"]');
-            if (roomBg) {
-              // Create overlay group
-              overlay = svgDoc.createElementNS(svgNS, 'g');
-              overlay.setAttribute('class', 'occupied-overlay');
-              
-              // Extract center position from the path (approximate center)
-              const bbox = roomBg.getBBox();
-              const cx = bbox.x + bbox.width / 2;
-              const cy = bbox.y + bbox.height / 2;
-              const rx = bbox.width / 2;
-              const ry = bbox.height / 2;
-              
-              // Create grey overlay ellipse
-              const overlayEllipse = svgDoc.createElementNS(svgNS, 'ellipse');
-              overlayEllipse.setAttribute('cx', cx);
-              overlayEllipse.setAttribute('cy', cy);
-              overlayEllipse.setAttribute('rx', rx);
-              overlayEllipse.setAttribute('ry', ry);
-              overlayEllipse.setAttribute('fill', 'rgba(148, 163, 184, 0.3)');
-              
-              // Create OCCUPIED text
-              const text = svgDoc.createElementNS(svgNS, 'text');
-              text.setAttribute('x', cx);
-              text.setAttribute('y', cy + 5);
-              text.setAttribute('text-anchor', 'middle');
-              text.setAttribute('font-size', '14');
-              text.setAttribute('font-weight', '700');
-              text.setAttribute('fill', '#64748B');
-              text.setAttribute('font-family', 'Inter, sans-serif');
-              text.textContent = 'OCCUPIED';
-              
-              overlay.appendChild(overlayEllipse);
-              overlay.appendChild(text);
-              newSpaceElement.appendChild(overlay);
-            }
-          }
-        } else {
-          // Handle hot desk occupied state
-          // Grey out desk elements
-          const deskPaths = newSpaceElement.querySelectorAll('path[fill="white"]');
-          deskPaths.forEach(path => path.setAttribute('fill', '#F8FAFC'));
           
-          const monitorPaths = newSpaceElement.querySelectorAll('path[fill="#1E293B"]');
-          monitorPaths.forEach(path => path.setAttribute('fill', '#94A3B8'));
-          
-          const monitorScreens = newSpaceElement.querySelectorAll('path[fill="#334155"]');
-          monitorScreens.forEach(path => path.setAttribute('fill', '#CBD5E1'));
-
-          // Add occupied overlay if not already added
-          let overlay = newSpaceElement.querySelector('.occupied-overlay-desk');
-          if (!overlay) {
-            const svgNS = "http://www.w3.org/2000/svg";
-            
-            // Get bounding box of the entire desk group
-            const bbox = newSpaceElement.getBBox();
-            const cx = bbox.x + bbox.width / 2;
-            const cy = bbox.y + bbox.height / 2;
-            
-            // Create overlay group
-            overlay = svgDoc.createElementNS(svgNS, 'g');
-            overlay.setAttribute('class', 'occupied-overlay-desk');
-            
-            // Create grey overlay rectangle
-            const overlayRect = svgDoc.createElementNS(svgNS, 'rect');
-            overlayRect.setAttribute('x', bbox.x);
-            overlayRect.setAttribute('y', bbox.y);
-            overlayRect.setAttribute('width', bbox.width);
-            overlayRect.setAttribute('height', bbox.height);
-            overlayRect.setAttribute('rx', '4');
-            overlayRect.setAttribute('fill', 'rgba(148, 163, 184, 0.3)');
-            
-            // Create badge background
-            const badgeRect = svgDoc.createElementNS(svgNS, 'rect');
-            badgeRect.setAttribute('x', cx - 15);
-            badgeRect.setAttribute('y', cy - 6);
-            badgeRect.setAttribute('width', '30');
-            badgeRect.setAttribute('height', '12');
-            badgeRect.setAttribute('rx', '2');
-            badgeRect.setAttribute('fill', '#F1F5F9');
-            badgeRect.setAttribute('stroke', '#CBD5E1');
-            badgeRect.setAttribute('stroke-width', '0.5');
-            
-            // Create OCCUPIED text
-            const text = svgDoc.createElementNS(svgNS, 'text');
-            text.setAttribute('x', cx);
-            text.setAttribute('y', cy + 2);
-            text.setAttribute('text-anchor', 'middle');
-            text.setAttribute('font-size', '5');
-            text.setAttribute('font-weight', '700');
-            text.setAttribute('fill', '#64748B');
-            text.setAttribute('font-family', 'Arial, sans-serif');
-            text.textContent = 'OCCUPIED';
-            
-            overlay.appendChild(overlayRect);
-            overlay.appendChild(badgeRect);
-            overlay.appendChild(text);
-            newSpaceElement.appendChild(overlay);
+          // Copy all children from occupied version
+          while (occupiedClone.firstChild) {
+            newSpaceElement.appendChild(occupiedClone.firstChild);
           }
+          
+          // Mark as replaced so we can track it
+          newSpaceElement.setAttribute('data-occupied-replaced', 'true');
         }
       } else {
-        // Reset to available state
-        const greenCircles = newSpaceElement.querySelectorAll('[fill="#10B981"]');
-        greenCircles.forEach(circle => {
-          circle.style.display = '';
-        });
-
-        // Remove occupied overlays if they exist
-        const overlay = newSpaceElement.querySelector('.occupied-overlay');
-        if (overlay) {
-          overlay.remove();
-        }
-        
-        const deskOverlay = newSpaceElement.querySelector('.occupied-overlay-desk');
-        if (deskOverlay) {
-          deskOverlay.remove();
-        }
-
-        // Reset meeting room colors
-        const isMeetingRoom = spaceMetadata?.type === 'meetingRoom';
-        if (isMeetingRoom) {
-          const roomBg = newSpaceElement.querySelector('path[fill="#F8FAFC"]');
-          if (roomBg) {
-            roomBg.setAttribute('fill', 'white');
-            roomBg.setAttribute('stroke', '#CBD5E1');
-          }
-
-          const chairs = newSpaceElement.querySelectorAll('[fill="#94A3B8"]');
-          chairs.forEach(chair => chair.setAttribute('fill', '#1E293B'));
-          
-          const chairDetails = newSpaceElement.querySelectorAll('[fill="#CBD5E1"]');
-          chairDetails.forEach(detail => detail.setAttribute('fill', '#334155'));
-
-          const chairGroup = newSpaceElement.querySelector('g[opacity="0.4"]');
-          if (chairGroup) {
-            chairGroup.setAttribute('opacity', '0.9');
-          }
-        } else {
-          // Reset hot desk colors
-          const greyDesks = newSpaceElement.querySelectorAll('path[fill="#F8FAFC"]');
-          greyDesks.forEach(path => path.setAttribute('fill', 'white'));
-          
-          const greyMonitors = newSpaceElement.querySelectorAll('path[fill="#94A3B8"]');
-          greyMonitors.forEach(path => path.setAttribute('fill', '#1E293B'));
-          
-          const greyScreens = newSpaceElement.querySelectorAll('path[fill="#CBD5E1"]');
-          greyScreens.forEach(path => path.setAttribute('fill', '#334155'));
+        // Reset to available state - check if it was previously replaced
+        if (newSpaceElement.getAttribute('data-occupied-replaced') === 'true') {
+          // Need to reload from the original SVG
+          // Get the original element from a fresh load
+          const originalSvgFile = selectedLevel === 'lantai1' 
+            ? '/lantai1v2.svg' 
+            : selectedLevel === 'lantai2'
+            ? '/lantai2.svg'
+            : '/lantai3.svg';
+          fetch(originalSvgFile)
+            .then(response => response.text())
+            .then(svgText => {
+              const parser = new DOMParser();
+              const originalDoc = parser.parseFromString(svgText, 'image/svg+xml');
+              const originalElement = originalDoc.getElementById(spaceId);
+              
+              if (originalElement) {
+                // Replace with original content
+                while (newSpaceElement.firstChild) {
+                  newSpaceElement.removeChild(newSpaceElement.firstChild);
+                }
+                
+                const originalClone = originalElement.cloneNode(true);
+                while (originalClone.firstChild) {
+                  newSpaceElement.appendChild(originalClone.firstChild);
+                }
+                
+                // Remove the marker
+                newSpaceElement.removeAttribute('data-occupied-replaced');
+              }
+            });
         }
       }
     });
-  }, [selectedDeskId, occupiedDesks, onDeskSelect, svgLoaded]);
+  }, [selectedDeskId, occupiedDesks, onDeskSelect, svgLoaded, occupiedSvgDoc]);
+
+  const handleFloorChange = (floor) => {
+    setSvgLoaded(false);
+    setSelectedLevel(floor);
+  };
 
   const handleSvgLoad = () => {
     setSvgLoaded(true);
   };
 
   return (
-    <div className="bg-white border border-[rgba(226,232,240,0.8)] rounded-3xl overflow-hidden">
+    <div className="bg-white border border-[rgba(0, 110, 255, 0.8)] rounded-3xl overflow-hidden">
       {/* Level Tabs */}
       <div className="p-8 pb-0">
-        <div className="inline-flex items-center bg-white border border-[rgba(226,232,240,0.8)] rounded-2xl p-0.5">
+        <div className="inline-flex items-center bg-white border border-[rgba(0, 110, 255, 0.8)] rounded-2xl p-0.5">
           <button
-            onClick={() => setSelectedLevel('lantai1')}
+            onClick={() => handleFloorChange('lantai1')}
             className={`px-6 py-2 text-sm font-normal rounded-[14px] transition-all ${
               selectedLevel === 'lantai1'
                 ? 'bg-[#0f172b] text-white'
@@ -315,12 +264,12 @@ export default function FloorPlan({
             <div className="flex items-center gap-2">
               <span>Lantai 1</span>
               <span className="px-2 py-0.5 text-[10px] leading-[14.286px] font-normal bg-[rgba(0,188,125,0.1)] text-[#009966] rounded-full">
-                {availableSpaces} Available
+                {availableSpacesLantai1} Available
               </span>
             </div>
           </button>
           <button
-            onClick={() => setSelectedLevel('lantai2')}
+            onClick={() => handleFloorChange('lantai2')}
             className={`px-6 py-2 text-sm font-normal rounded-[14px] transition-all ${
               selectedLevel === 'lantai2'
                 ? 'bg-[#0f172b] text-white'
@@ -330,12 +279,12 @@ export default function FloorPlan({
             <div className="flex items-center gap-2">
               <span>Lantai 2</span>
               <span className="px-2 py-0.5 text-[10px] leading-[14.286px] font-normal bg-[rgba(0,188,125,0.1)] text-[#009966] rounded-full">
-                0 Available
+                {availableSpacesLantai2} Available
               </span>
             </div>
           </button>
           <button
-            onClick={() => setSelectedLevel('lantai3')}
+            onClick={() => handleFloorChange('lantai3')}
             className={`px-6 py-2 text-sm font-normal rounded-[14px] transition-all ${
               selectedLevel === 'lantai3'
                 ? 'bg-[#0f172b] text-white'
@@ -345,7 +294,7 @@ export default function FloorPlan({
             <div className="flex items-center gap-2">
               <span>Lantai 3</span>
               <span className="px-2 py-0.5 text-[10px] leading-[14.286px] font-normal bg-[rgba(0,188,125,0.1)] text-[#009966] rounded-full">
-                0 Available
+                {availableSpacesLantai3} Available
               </span>
             </div>
           </button>
@@ -354,13 +303,14 @@ export default function FloorPlan({
 
       {/* Floor Plan Container */}
       <div className="p-8">
-        {selectedLevel === 'lantai1' ? (
-          <div 
-            ref={svgContainerRef}
-            className="relative w-full bg-white border border-[rgba(226,232,240,0.8)] rounded-3xl overflow-auto"
-          >
+        <div 
+          ref={svgContainerRef}
+          className="relative w-full bg-white border border-[rgba(0, 110, 255, 0.8)] rounded-3xl overflow-auto min-h-[600px]"
+        >
+          {selectedLevel === 'lantai1' && (
             <object
-              data="/lantai1.svg"
+              key="lantai1"
+              data="/lantai1v2.svg"
               type="image/svg+xml"
               className="w-full h-auto"
               style={{ maxWidth: '1551px', display: 'block' }}
@@ -368,12 +318,37 @@ export default function FloorPlan({
             >
               Your browser does not support SVG
             </object>
-          </div>
-        ) : (
-          <div className="w-full h-[900px] bg-white border border-[rgba(226,232,240,0.8)] rounded-3xl flex items-center justify-center">
-            <p className="text-slate-500">Lantai {selectedLevel === 'lantai2' ? '2' : '3'} floor plan coming soon</p>
-          </div>
-        )}
+          )}
+          {selectedLevel === 'lantai2' && (
+            <object
+              key="lantai2"
+              data="/lantai2.svg"
+              type="image/svg+xml"
+              className="w-full h-auto"
+              style={{ maxWidth: '1551px', display: 'block' }}
+              onLoad={handleSvgLoad}
+            >
+              Your browser does not support SVG
+            </object>
+          )}
+          {selectedLevel === 'lantai3' && (
+            <object
+              key="lantai3"
+              data="/lantai3.svg"
+              type="image/svg+xml"
+              className="w-full h-auto"
+              style={{ maxWidth: '1551px', display: 'block' }}
+              onLoad={handleSvgLoad}
+            >
+              Your browser does not support SVG
+            </object>
+          )}
+          {!['lantai1', 'lantai2', 'lantai3'].includes(selectedLevel) && (
+            <div className="w-full h-[600px] flex items-center justify-center">
+              <p className="text-slate-500">Floor plan not available</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
