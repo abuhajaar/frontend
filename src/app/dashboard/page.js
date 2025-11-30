@@ -32,7 +32,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 sm:px-6 md:px-8 lg:px-12 pt-20 md:pt-12 pb-16">
+    <div className="min-h-screen px-4 sm:px-6 md:px-8 lg:px-12 pt-20 md:pt-12 pb-16">
       {/* Header */}
       <div className="mb-8 dashboard-section">
         <div className="flex items-center gap-2 mb-2">

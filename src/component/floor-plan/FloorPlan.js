@@ -7,6 +7,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { gsap } from 'gsap';
 import { isWeekend } from '@/utils/date';
 
 export default function FloorPlan({ 
@@ -20,9 +21,11 @@ export default function FloorPlan({
 }) {
   const [selectedLevel, setSelectedLevel] = useState('lantai1');
   const svgContainerRef = useRef(null);
+  const svgInnerRef = useRef(null);
   const [svgLoaded, setSvgLoaded] = useState(false);
   const [occupiedSvgDoc, setOccupiedSvgDoc] = useState(null);
   const [currentFloorSvg, setCurrentFloorSvg] = useState('lantai1');
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Desk and room metadata
   const deskInfo = {
@@ -240,8 +243,47 @@ export default function FloorPlan({
   }, [selectedDeskId, occupiedDesks, onDeskSelect, svgLoaded, occupiedSvgDoc]);
 
   const handleFloorChange = (floor) => {
-    setSvgLoaded(false);
-    setSelectedLevel(floor);
+    if (isTransitioning || floor === selectedLevel) return;
+    
+    setIsTransitioning(true);
+    const svgInner = svgInnerRef.current;
+    
+    if (svgInner) {
+      // Determine slide direction based on floor numbers
+      const currentFloorNum = selectedLevel === 'lantai1' ? 1 : selectedLevel === 'lantai2' ? 2 : 3;
+      const newFloorNum = floor === 'lantai1' ? 1 : floor === 'lantai2' ? 2 : 3;
+      const direction = newFloorNum > currentFloorNum ? 1 : -1; // 1 = slide left, -1 = slide right
+      
+      // Slide out animation
+      gsap.to(svgInner, {
+        x: direction * -100,
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power2.in',
+        onComplete: () => {
+          setSvgLoaded(false);
+          setSelectedLevel(floor);
+          
+          // Reset position for slide in from opposite side
+          gsap.set(svgInner, { x: direction * 100, opacity: 0 });
+          
+          // Slide in animation
+          gsap.to(svgInner, {
+            x: 0,
+            opacity: 1,
+            duration: 0.3,
+            ease: 'power2.out',
+            onComplete: () => {
+              setIsTransitioning(false);
+            }
+          });
+        }
+      });
+    } else {
+      setSvgLoaded(false);
+      setSelectedLevel(floor);
+      setIsTransitioning(false);
+    }
   };
 
   const handleSvgLoad = () => {
@@ -305,8 +347,9 @@ export default function FloorPlan({
       <div className="p-8">
         <div 
           ref={svgContainerRef}
-          className="relative w-full bg-white border border-[rgba(0, 110, 255, 0.8)] rounded-3xl overflow-auto min-h-[600px]"
+          className="relative w-full bg-white border border-[rgba(0, 110, 255, 0.8)] rounded-3xl overflow-hidden min-h-[600px]"
         >
+          <div ref={svgInnerRef} className="w-full h-full">
           {selectedLevel === 'lantai1' && (
             <object
               key="lantai1"
@@ -348,6 +391,7 @@ export default function FloorPlan({
               <p className="text-slate-500">Floor plan not available</p>
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>

@@ -34,7 +34,7 @@ export default function DashboardLayout({ children }) {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-white">
       {/* Sidebar - Renders once for all dashboard pages */}
       <Sidebar />
       
@@ -42,7 +42,7 @@ export default function DashboardLayout({ children }) {
       <div 
         className="flex-1 transition-all duration-300"
         style={{
-          marginLeft: isSidebarOpen ? '256px' : '0px'
+          marginLeft: isSidebarOpen ? '256px' : '72px'
         }}
       >
         {/* Top Notification Panel - Hidden for now */}

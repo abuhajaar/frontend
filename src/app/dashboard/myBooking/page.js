@@ -144,7 +144,7 @@ export default function MyBookingPage() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
       ) : bookings.length === 0 ? (
-        <div className="bg-gray-50 rounded-2xl p-12 text-center">
+        <div className="rounded-2xl p-12 text-center">
           <p className="text-gray-600 mb-4">No bookings found</p>
           <p className="text-sm text-gray-500">
             Book a space to see it here

@@ -380,22 +380,25 @@ export default function BookingPage() {
             availableSpacesLantai3={availableSpacesLantai3}
           />
         ) : (
-          <div className="bg-white border border-slate-200 rounded-3xl p-16">
-            <div className="text-center max-w-md mx-auto">
-              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/>
-                  <path d="M3 9h18M9 3v18"/>
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-neutral-950 mb-2">
-                Select Date and Time
-              </h3>
-              <p className="text-sm text-slate-600">
-                Please select your preferred date and time, then click "Search" to view available spaces on the floor plan.
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="col-span-full text-center py-20">
+          <div className="flex flex-col items-center gap-4">
+            <img 
+              src="/assets/e989417bb1ce761a34ffa1b2d4ae037ff1890258.svg" 
+              alt="" 
+              className="w-16 h-16 opacity-30" 
+            />
+            <div>
+              <p className="text-base text-neutral-950 tracking-[-0.3125px] leading-6 mb-2">
+                Ready to find your perfect workspace?
+              </p>
+              <p className="text-sm text-[#717182] tracking-[-0.1504px] leading-5">
+                Select your date and time above, then click "Search Availability" to see available spaces
               </p>
             </div>
           </div>
+        </div>
+      </div>
         )
       ) : (
         <SpacesGrid
