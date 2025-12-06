@@ -13,11 +13,11 @@ import { auth } from '@/lib/auth';
 const getAuthHeaders = () => {
   const token = auth.getToken();
   const headers = { ...API_CONFIG.HEADERS };
-  
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
   return headers;
 };
 
@@ -137,6 +137,34 @@ export const getAllSpacesForManage = async () => {
     return await response.json();
   } catch (error) {
     console.error('Get spaces for management error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update space status (available/maintenance)
+ * @param {string|number} spaceId - Space ID
+ * @param {string} status - New status ('available' or 'maintenance')
+ * @returns {Promise<Object>} Response from API
+ */
+export const updateSpaceStatus = async (spaceId, status) => {
+  try {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}/api/spaces/manage/${spaceId}`,
+      {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ status }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to update space status');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Update space status error:', error);
     throw error;
   }
 };

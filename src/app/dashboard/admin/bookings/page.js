@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Search, Calendar, Clock, Edit2, Trash2, CheckCircle } from 'lucide-react';
-import { getAllBookingsForManage } from '@/services/bookingService';
+import { Search, Calendar, Clock, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { getAllBookingsForManage, deleteBooking } from '@/services/bookingService';
+import DeleteConfirmDialog from '@/component/DeleteConfirmDialog';
 
 // Mock data matching Figma
 const mockBookings = [
@@ -92,6 +93,10 @@ export default function AdminBookingsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
+  const [sortField, setSortField] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [bookingToDelete, setBookingToDelete] = useState(null);
 
   // Fetch bookings from API
   useEffect(() => {
@@ -99,7 +104,7 @@ export default function AdminBookingsPage() {
       try {
         setLoading(true);
         const response = await getAllBookingsForManage();
-        
+
         if (response.success && response.data) {
           setBookings(response.data);
         } else {
@@ -131,7 +136,7 @@ export default function AdminBookingsPage() {
 
   const formatSpaceType = (type) => {
     if (!type) return 'N/A';
-    return type.split('_').map(word => 
+    return type.split('_').map(word =>
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
   };
@@ -166,7 +171,6 @@ export default function AdminBookingsPage() {
     return configs[status] || configs.pending;
   };
 
-  // Calculate stats
   const stats = {
     total: bookings.length,
     active: bookings.filter((b) => b.status === 'active').length,
@@ -174,8 +178,43 @@ export default function AdminBookingsPage() {
     completed: bookings.filter((b) => b.status === 'completed').length,
   };
 
-  // Filter bookings
-  const filteredBookings = bookings
+  // Handle sorting
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Handle delete click
+  const handleDeleteClick = (booking) => {
+    setBookingToDelete(booking);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Handle confirm delete
+  const handleConfirmDelete = async () => {
+    try {
+      const response = await deleteBooking(bookingToDelete.id);
+      if (response.success) {
+        // Refresh bookings list
+        const refreshResponse = await getAllBookingsForManage();
+        if (refreshResponse.success && refreshResponse.data) {
+          setBookings(refreshResponse.data);
+        }
+        setIsDeleteDialogOpen(false);
+        setBookingToDelete(null);
+      }
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+      alert('Failed to delete booking. Please try again.');
+    }
+  };
+
+  // Filter and sort bookings
+  const filteredAndSortedBookings = bookings
     .filter((booking) => {
       const matchesSearch =
         (booking.username || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -188,12 +227,12 @@ export default function AdminBookingsPage() {
       // Date filtering
       const matchesDate = (() => {
         if (dateFilter === 'all') return true;
-        
+
         const bookingDate = new Date(booking.date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         bookingDate.setHours(0, 0, 0, 0);
-        
+
         if (dateFilter === 'past') {
           return bookingDate < today;
         } else if (dateFilter === 'today') {
@@ -207,10 +246,25 @@ export default function AdminBookingsPage() {
       return matchesSearch && matchesStatus && matchesDate;
     })
     .sort((a, b) => {
-      // Sort by date: oldest to newest
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return dateA - dateB; // Ascending order (oldest first)
+      if (!sortField) {
+        // Default sort by date: oldest to newest
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateA - dateB;
+      }
+
+      let aValue = a[sortField];
+      let bValue = b[sortField];
+
+      // Handle date sorting
+      if (sortField === 'date') {
+        aValue = new Date(a.date).getTime();
+        bValue = new Date(b.date).getTime();
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
     });
 
   return (
@@ -317,144 +371,165 @@ export default function AdminBookingsPage() {
               <p className="mt-4 text-[14px] text-[#717182]">Loading bookings...</p>
             </div>
           </div>
-        ) : filteredBookings.length === 0 ? (
+        ) : filteredAndSortedBookings.length === 0 ? (
           <div className="flex items-center justify-center py-12">
             <p className="text-[14px] text-[#717182]">No bookings found</p>
           </div>
         ) : (
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr className="h-[45.5px]">
-              <th className="text-left px-[25px] font-['Inter'] font-bold text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182]">
-                User
-              </th>
-              <th className="text-left px-[25px] font-['Inter'] font-bold text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182]">
-                Workspace
-              </th>
-              <th className="text-left px-[25px] font-['Inter'] font-bold text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182]">
-                Date
-              </th>
-              <th className="text-left px-[25px] font-['Inter'] font-bold text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182]">
-                Time
-              </th>
-              <th className="text-left px-[25px] font-['Inter'] font-bold text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182]">
-                Check-in Code
-              </th>
-              <th className="text-left px-[25px] font-['Inter'] font-bold text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182]">
-                Status
-              </th>
-              <th className="text-left px-[25px] font-['Inter'] font-bold text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182]">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredBookings.map((booking) => {
-              const statusConfig = getStatusConfig(booking.status);
-              return (
-                <tr
-                  key={booking.id}
-                  className="border-t border-gray-200 h-[72px]"
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr className="h-[45.5px]">
+                <th className="text-left px-[25px] font-['Inter'] font-bold text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182]">
+                  User
+                </th>
+                <th className="text-left px-[25px] font-['Inter'] font-bold text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182]">
+                  Workspace
+                </th>
+                <th
+                  className="text-left px-[25px] font-['Inter'] font-bold text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182] cursor-pointer hover:text-neutral-950 transition-colors"
+                  onClick={() => handleSort('date')}
                 >
-                  {/* User */}
-                  <td className="px-[25px]">
-                    <div className="flex flex-col gap-0">
-                      <p className="font-['Inter'] font-normal text-[14px] leading-[21px] tracking-[-0.3008px] text-neutral-950">
-                        {booking.username || 'N/A'}
-                      </p>
-                      <p className="font-['Inter'] font-normal text-[12px] leading-[18px] text-[#717182]">
-                        {booking.user_email || 'N/A'}
-                      </p>
-                    </div>
-                  </td>
-
-                  {/* Workspace */}
-                  <td className="px-[25px]">
-                    <div className="flex flex-col gap-0">
-                      <p className="font-['Inter'] font-normal text-[14px] leading-[21px] tracking-[-0.3008px] text-neutral-950">
-                        {booking.space_name || 'N/A'}
-                      </p>
-                      <p className="font-['Inter'] font-normal text-[12px] leading-[18px] text-[#717182]">
-                        {formatSpaceType(booking.space_type)}
-                      </p>
-                    </div>
-                  </td>
-
-                  {/* Date */}
-                  <td className="px-[25px]">
-                    <div className="flex items-center gap-[8px]">
-                      <Calendar className="w-[16px] h-[16px] text-[#717182]" strokeWidth={1.5} />
-                      <p className="font-['Inter'] font-normal text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182]">
-                        {formatDate(booking.date)}
-                      </p>
-                    </div>
-                  </td>
-
-                  {/* Time */}
-                  <td className="px-[25px]">
-                    <div className="flex items-center gap-[8px]">
-                      <Clock className="w-[16px] h-[16px] text-[#717182]" strokeWidth={1.5} />
-                      <p className="font-['Inter'] font-normal text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182]">
-                        {booking.start_time || 'N/A'} - {booking.end_time || 'N/A'}
-                      </p>
-                    </div>
-                  </td>
-
-                  {/* Check-in Code */}
-                  <td className="px-[25px]">
-                    <div className="bg-gray-50 rounded-[8px] px-[12px] py-[10.5px] inline-flex">
-                      <p className="font-['Inter'] font-normal text-[14px] leading-[16.5px] tracking-[-0.3008px] text-neutral-950">
-                        {booking.checkin_code || 'N/A'}
-                      </p>
-                    </div>
-                  </td>
-
-                  {/* Status */}
-                  <td className="px-[25px]">
-                    <div className="flex flex-col gap-[4px]">
-                      <div
-                        className={`${statusConfig.bg} ${statusConfig.text} rounded-[8px] px-[9px] py-[3px] inline-flex w-fit`}
-                      >
-                        <p className="font-['Inter'] font-normal text-[12px] leading-[18px] tracking-[-0.12px]">
-                          {statusConfig.label}
+                  <div className="flex items-center gap-1">
+                    Date
+                    {sortField === 'date' && (
+                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </div>
+                </th>
+                <th
+                  className="text-left px-[25px] font-['Inter'] font-bold text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182] cursor-pointer hover:text-neutral-950 transition-colors"
+                  onClick={() => handleSort('start_time')}
+                >
+                  <div className="flex items-center gap-1">
+                    Time
+                    {sortField === 'start_time' && (
+                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </div>
+                </th>
+                <th className="text-left px-[25px] font-['Inter'] font-bold text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182]">
+                  Check-in Code
+                </th>
+                <th
+                  className="text-left px-[25px] font-['Inter'] font-bold text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182] cursor-pointer hover:text-neutral-950 transition-colors"
+                  onClick={() => handleSort('status')}
+                >
+                  <div className="flex items-center gap-1">
+                    Status
+                    {sortField === 'status' && (
+                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </div>
+                </th>
+                <th className="text-left px-[25px] font-['Inter'] font-bold text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182]">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredAndSortedBookings.map((booking) => {
+                const statusConfig = getStatusConfig(booking.status);
+                return (
+                  <tr
+                    key={booking.id}
+                    className="border-t border-gray-200 h-[72px]"
+                  >
+                    {/* User */}
+                    <td className="px-[25px]">
+                      <div className="flex flex-col gap-0">
+                        <p className="font-['Inter'] font-normal text-[14px] leading-[21px] tracking-[-0.3008px] text-neutral-950">
+                          {booking.username || 'N/A'}
+                        </p>
+                        <p className="font-['Inter'] font-normal text-[12px] leading-[18px] text-[#717182]">
+                          {booking.user_email || 'N/A'}
                         </p>
                       </div>
-                      {booking.status === 'active' && isCheckedIn(booking) && (
-                        <p className="font-['Inter'] font-normal text-[11px] leading-[16.5px] tracking-[0.0645px] text-[#00a63e]">
-                          ✓ Checked In
-                        </p>
-                      )}
-                    </div>
-                  </td>
+                    </td>
 
-                  {/* Actions */}
-                  <td className="px-[25px]">
-                    <div className="flex gap-[8px]">
-                      {booking.status === 'active' && !isCheckedIn(booking) && (
-                        <button className="w-[28px] h-[28px] rounded-[8px] hover:bg-gray-100 flex items-center justify-center">
-                          <CheckCircle className="w-[16px] h-[16px] text-[#717182]" strokeWidth={1.5} />
-                        </button>
-                      )}
-                      {(booking.status === 'active' ||
-                        booking.status === 'pending') && (
-                        <>
-                          <button className="w-[28px] h-[28px] rounded-[8px] hover:bg-gray-100 flex items-center justify-center">
-                            <Edit2 className="w-[16px] h-[16px] text-[#717182]" strokeWidth={1.5} />
-                          </button>
-                          <button className="w-[28px] h-[28px] rounded-[8px] hover:bg-gray-100 flex items-center justify-center">
-                            <Trash2 className="w-[16px] h-[16px] text-[#717182]" strokeWidth={1.5} />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    {/* Workspace */}
+                    <td className="px-[25px]">
+                      <div className="flex flex-col gap-0">
+                        <p className="font-['Inter'] font-normal text-[14px] leading-[21px] tracking-[-0.3008px] text-neutral-950">
+                          {booking.space_name || 'N/A'}
+                        </p>
+                        <p className="font-['Inter'] font-normal text-[12px] leading-[18px] text-[#717182]">
+                          {formatSpaceType(booking.space_type)}
+                        </p>
+                      </div>
+                    </td>
+
+                    {/* Date */}
+                    <td className="px-[25px]">
+                      <div className="flex items-center gap-[8px]">
+                        <Calendar className="w-[16px] h-[16px] text-[#717182]" strokeWidth={1.5} />
+                        <p className="font-['Inter'] font-normal text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182]">
+                          {formatDate(booking.date)}
+                        </p>
+                      </div>
+                    </td>
+
+                    {/* Time */}
+                    <td className="px-[25px]">
+                      <div className="flex items-center gap-[8px]">
+                        <Clock className="w-[16px] h-[16px] text-[#717182]" strokeWidth={1.5} />
+                        <p className="font-['Inter'] font-normal text-[14px] leading-[21px] tracking-[-0.3008px] text-[#717182]">
+                          {booking.start_time || 'N/A'} - {booking.end_time || 'N/A'}
+                        </p>
+                      </div>
+                    </td>
+
+                    {/* Check-in Code */}
+                    <td className="px-[25px]">
+                      <div className="bg-gray-50 rounded-[8px] px-[12px] py-[10.5px] inline-flex">
+                        <p className="font-['Inter'] font-normal text-[14px] leading-[16.5px] tracking-[-0.3008px] text-neutral-950">
+                          {booking.checkin_code || 'N/A'}
+                        </p>
+                      </div>
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-[25px]">
+                      <div className="flex flex-col gap-[4px]">
+                        <div
+                          className={`${statusConfig.bg} ${statusConfig.text} rounded-[8px] px-[9px] py-[3px] inline-flex w-fit`}
+                        >
+                          <p className="font-['Inter'] font-normal text-[12px] leading-[18px] tracking-[-0.12px]">
+                            {statusConfig.label}
+                          </p>
+                        </div>
+                        {booking.status === 'active' && isCheckedIn(booking) && (
+                          <p className="font-['Inter'] font-normal text-[11px] leading-[16.5px] tracking-[0.0645px] text-[#00a63e]">
+                            ✓ Checked In
+                          </p>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-[25px]">
+                      <button
+                        onClick={() => handleDeleteClick(booking)}
+                        className="w-[28px] h-[28px] rounded-[8px] hover:bg-gray-100 flex items-center justify-center"
+                      >
+                        <Trash2 className="w-[16px] h-[16px] text-[#e7000b]" strokeWidth={1.5} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Booking"
+        message="Are you sure to delete this booking?"
+      />
     </div>
   );
 }

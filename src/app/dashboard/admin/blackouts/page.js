@@ -2,18 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, CalendarX2 } from 'lucide-react';
-import { API_CONFIG, API_ENDPOINTS } from '@/services/config';
-
-const getAllBlackouts = async () => {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_CONFIG.BASE_URL.replace(/\/$/, '')}${API_ENDPOINTS.BLACKOUTS}`, {
-    headers: {
-      ...API_CONFIG.HEADERS,
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
-  return response.json();
-};
+import { getAllBlackouts, createBlackout, updateBlackout, deleteBlackout } from '@/services/blackoutService';
+import BlackoutDialog from '@/component/BlackoutDialog';
+import DeleteConfirmDialog from '@/component/DeleteConfirmDialog';
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -24,7 +15,7 @@ const getBlackoutStatus = (startAt, endAt) => {
   const now = new Date();
   const start = new Date(startAt);
   const end = new Date(endAt);
-  
+
   if (now >= start && now <= end) return 'active';
   if (now < start) return 'upcoming';
   return 'completed';
@@ -35,6 +26,13 @@ export default function AdminBlackoutsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  // Dialog states
+  const [isBlackoutDialogOpen, setIsBlackoutDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState('create');
+  const [selectedBlackout, setSelectedBlackout] = useState(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [blackoutToDelete, setBlackoutToDelete] = useState(null);
 
   useEffect(() => {
     fetchBlackouts();
@@ -51,6 +49,62 @@ export default function AdminBlackoutsPage() {
       console.error('Error fetching blackouts:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle Add Blackout
+  const handleAddBlackout = () => {
+    setDialogMode('create');
+    setSelectedBlackout(null);
+    setIsBlackoutDialogOpen(true);
+  };
+
+  // Handle Edit Blackout
+  const handleEditBlackout = (blackout) => {
+    setDialogMode('edit');
+    setSelectedBlackout(blackout);
+    setIsBlackoutDialogOpen(true);
+  };
+
+  // Handle Delete Blackout
+  const handleDeleteClick = (blackout) => {
+    setBlackoutToDelete(blackout);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Submit Blackout (Create or Update)
+  const handleBlackoutSubmit = async (formData) => {
+    try {
+      if (dialogMode === 'create') {
+        const response = await createBlackout(formData);
+        if (response.success) {
+          await fetchBlackouts();
+          setIsBlackoutDialogOpen(false);
+        }
+      } else {
+        const response = await updateBlackout(selectedBlackout.id, formData);
+        if (response.success) {
+          await fetchBlackouts();
+          setIsBlackoutDialogOpen(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting blackout:', error);
+      throw error;
+    }
+  };
+
+  // Confirm Delete
+  const handleConfirmDelete = async () => {
+    try {
+      const response = await deleteBlackout(blackoutToDelete.id);
+      if (response.success) {
+        await fetchBlackouts();
+        setIsDeleteDialogOpen(false);
+        setBlackoutToDelete(null);
+      }
+    } catch (error) {
+      console.error('Error deleting blackout:', error);
     }
   };
 
@@ -95,7 +149,10 @@ export default function AdminBlackoutsPage() {
             Manage space unavailability and maintenance periods
           </p>
         </div>
-        <button className="bg-black text-white px-3 h-9 rounded-[14px] flex items-center gap-2 hover:bg-neutral-800 transition-colors">
+        <button
+          onClick={handleAddBlackout}
+          className="bg-black text-white px-3 h-9 rounded-[14px] flex items-center gap-2 hover:bg-neutral-800 transition-colors"
+        >
           <Plus size={16} />
           <span className="text-[14px] leading-[20px] tracking-[-0.1504px] font-medium">
             Add Blackout
@@ -228,16 +285,16 @@ export default function AdminBlackoutsPage() {
                   <td className="px-6 py-6">
                     <div className="flex items-center gap-2">
                       <button
+                        onClick={() => handleEditBlackout(blackout)}
                         className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                        onClick={() => console.log('Edit blackout:', blackout.id)}
                       >
                         <Edit2 size={16} className="text-neutral-950" />
                       </button>
                       <button
+                        onClick={() => handleDeleteClick(blackout)}
                         className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                        onClick={() => console.log('Delete blackout:', blackout.id)}
                       >
-                        <Trash2 size={16} className="text-neutral-950" />
+                        <Trash2 size={16} className="text-[#e7000b]" />
                       </button>
                     </div>
                   </td>
@@ -247,6 +304,24 @@ export default function AdminBlackoutsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Blackout Dialog */}
+      <BlackoutDialog
+        isOpen={isBlackoutDialogOpen}
+        onClose={() => setIsBlackoutDialogOpen(false)}
+        mode={dialogMode}
+        blackoutData={selectedBlackout}
+        onSubmit={handleBlackoutSubmit}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Blackout"
+        message="Are you sure to delete this blackout?"
+      />
     </div>
   );
 }

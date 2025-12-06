@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { getAllFloors } from '@/services';
-import { Plus, Layers, Grid3x3, CheckCircle, TrendingUp, Search, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Layers, Grid3x3, CheckCircle, TrendingUp, Search, Edit2, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 
 export default function AdminFloorsPage() {
   const [floors, setFloors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortField, setSortField] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc');
 
   useEffect(() => {
     fetchFloors();
@@ -36,10 +38,29 @@ export default function AdminFloorsPage() {
     occupancy: '72%'
   };
 
-  // Filter floors based on search
-  const filteredFloors = floors.filter(floor => 
-    floor.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Handle sorting
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Filter and sort floors
+  const filteredAndSortedFloors = floors
+    .filter(floor => floor.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => {
+      if (!sortField) return 0;
+
+      let aValue = a[sortField];
+      let bValue = b[sortField];
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
 
   if (loading) {
     return (
@@ -128,8 +149,16 @@ export default function AdminFloorsPage() {
               <th className="text-left px-[25px] py-[12px] text-[14px] leading-[21px] tracking-[-0.3008px] font-bold text-[#717182]">
                 Building
               </th>
-              <th className="text-left px-[25px] py-[12px] text-[14px] leading-[21px] tracking-[-0.3008px] font-bold text-[#717182]">
-                Total Spaces
+              <th
+                className="text-left px-[25px] py-[12px] text-[14px] leading-[21px] tracking-[-0.3008px] font-bold text-[#717182] cursor-pointer hover:text-neutral-950 transition-colors"
+                onClick={() => handleSort('total_spaces')}
+              >
+                <div className="flex items-center gap-1">
+                  Total Spaces
+                  {sortField === 'total_spaces' && (
+                    sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                  )}
+                </div>
               </th>
               <th className="text-left px-[25px] py-[12px] text-[14px] leading-[21px] tracking-[-0.3008px] font-bold text-[#717182]">
                 Available
@@ -146,14 +175,14 @@ export default function AdminFloorsPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredFloors.length === 0 ? (
+            {filteredAndSortedFloors.length === 0 ? (
               <tr>
                 <td colSpan="7" className="text-center py-[40px] text-[#717182]">
                   {searchQuery ? 'No floors found matching your search.' : 'No floors available.'}
                 </td>
               </tr>
             ) : (
-              filteredFloors.map((floor) => (
+              filteredAndSortedFloors.map((floor) => (
                 <tr key={floor.id} className="border-t border-gray-200 hover:bg-gray-50 transition-colors">
                   <td className="px-[25px] py-[20px]">
                     <div className="flex items-center gap-[8px]">
@@ -198,17 +227,17 @@ export default function AdminFloorsPage() {
                   </td>
                   <td className="px-[25px] py-[20px]">
                     <div className="flex items-center gap-[8px]">
-                      <button 
+                      <button
                         className="p-[6px] rounded-[8px] hover:bg-gray-100 transition-colors"
                         onClick={() => console.log('Edit floor:', floor.id)}
                       >
                         <Edit2 size={16} className="text-neutral-950" />
                       </button>
-                      <button 
+                      <button
                         className="p-[6px] rounded-[8px] hover:bg-gray-100 transition-colors"
                         onClick={() => console.log('Delete floor:', floor.id)}
                       >
-                        <Trash2 size={16} className="text-neutral-950" />
+                        <Trash2 size={16} className="text-[#e7000b]" />
                       </button>
                     </div>
                   </td>

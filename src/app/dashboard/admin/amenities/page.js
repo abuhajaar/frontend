@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getAllAmenities } from '@/services';
-import { 
-  Plus, Search, Edit2, Trash2, Grid3x3, Wifi, Snowflake, Monitor, 
-  Cable, Video, Tv, Printer, BarChart3, Armchair, Presentation, 
-  Lock, Phone, Wrench 
+import {
+  Plus, Search, Edit2, Trash2, Grid3x3, Wifi, Snowflake, Monitor,
+  Cable, Video, Tv, Printer, BarChart3, Armchair, Presentation,
+  Lock, Phone, Wrench
 } from 'lucide-react';
 
 // Icon and category mapping based on API icon field
@@ -24,7 +24,7 @@ const getAmenityConfig = (icon) => {
     locker: { icon: Lock, category: 'Facilities', color: '#9810fa', bg: 'bg-purple-100', text: 'text-[#8200db]' },
     phone_booth: { icon: Phone, category: 'Facilities', color: '#9810fa', bg: 'bg-purple-100', text: 'text-[#8200db]' },
   };
-  
+
   return configs[icon] || { icon: Wrench, category: 'Other', color: '#717182', bg: 'bg-gray-100', text: 'text-[#717182]' };
 };
 
@@ -172,11 +172,10 @@ export default function AdminAmenitiesPage() {
                 const config = getAmenityConfig(amenity.icon);
                 const IconComponent = config.icon;
                 const isExpanded = expandedAmenity === amenity.id;
-                
+
                 return (
-                  <>
-                    <tr 
-                      key={amenity.id} 
+                  <React.Fragment key={amenity.id}>
+                    <tr
                       className="border-t border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
                       onClick={() => setExpandedAmenity(isExpanded ? null : amenity.id)}
                     >
@@ -200,7 +199,7 @@ export default function AdminAmenitiesPage() {
                       </td>
                       <td className="px-[25px] py-[16.5px]">
                         <div className="flex items-center gap-[8px]">
-                          <button 
+                          <button
                             className="p-[6px] rounded-[8px] hover:bg-gray-100 transition-colors"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -209,14 +208,14 @@ export default function AdminAmenitiesPage() {
                           >
                             <Edit2 size={16} className="text-neutral-950" />
                           </button>
-                          <button 
+                          <button
                             className="p-[6px] rounded-[8px] hover:bg-gray-100 transition-colors"
                             onClick={(e) => {
                               e.stopPropagation();
                               console.log('Delete amenity:', amenity.id);
                             }}
                           >
-                            <Trash2 size={16} className="text-neutral-950" />
+                            <Trash2 size={16} className="text-[#e7000b]" />
                           </button>
                         </div>
                       </td>
@@ -230,7 +229,7 @@ export default function AdminAmenitiesPage() {
                             </p>
                             <div className="grid grid-cols-3 gap-3">
                               {amenity.spaces.map((space) => (
-                                <div 
+                                <div
                                   key={space.id}
                                   className="bg-white border border-gray-200 rounded-[8px] px-[12px] py-[8px]"
                                 >
@@ -244,7 +243,7 @@ export default function AdminAmenitiesPage() {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 );
               })
             )}
@@ -254,4 +253,3 @@ export default function AdminAmenitiesPage() {
     </div>
   );
 }
-              

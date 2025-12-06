@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllUsers } from '@/services/userService';
-import { Search, UserCircle2, Star, Circle, Edit2, Trash2 } from 'lucide-react';
+import { getAllUsers, createUser, updateUser, deleteUser } from '@/services/userService';
+import { Plus, Search, Edit2, Trash2, UserCircle2, Star, Circle } from 'lucide-react';
+import UserDialog from '@/component/UserDialog';
+import DeleteConfirmDialog from '@/component/DeleteConfirmDialog';
+import { useToast } from '@/contexts/ToastContext';
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -136,32 +139,114 @@ const getStatusConfig = (status) => {
 };
 
 export default function UsersPage() {
+  const { showToastMessage } = useToast();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Fetch users from API
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true);
-        const response = await getAllUsers();
-        if (response.success && response.data) {
-          setUsers(response.data);
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error);
-        // Use mock data as fallback
-        setUsers(mockUsers);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Dialog states
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState('create');
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
+  // Fetch users from API
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllUsers();
+      if (response.success && response.data) {
+        setUsers(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      // Use mock data as fallback
+      setUsers(mockUsers);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchUsers();
   }, []);
+
+  // Handlers for user operations
+  const handleAddUser = () => {
+    setDialogMode('create');
+    setSelectedUser(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditUser = (user) => {
+    setDialogMode('edit');
+    setSelectedUser(user);
+    setIsDialogOpen(true);
+  };
+
+  const handleDeleteClick = (user) => {
+    setUserToDelete(user);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleUserSubmit = async (userData) => {
+    try {
+      if (dialogMode === 'create') {
+        const response = await createUser(userData);
+        showToastMessage({
+          type: 'success',
+          title: 'User created!',
+          message: response.message || 'User has been created successfully.',
+          duration: 5000
+        });
+      } else {
+        const response = await updateUser(selectedUser.id, userData);
+        showToastMessage({
+          type: 'success',
+          title: 'User updated!',
+          message: response.message || 'User has been updated successfully.',
+          duration: 5000
+        });
+      }
+
+      // Refresh users list
+      await fetchUsers();
+    } catch (error) {
+      showToastMessage({
+        type: 'error',
+        title: dialogMode === 'create' ? 'Failed to create user' : 'Failed to update user',
+        message: error.message || 'An error occurred. Please try again.',
+        duration: 5000
+      });
+      throw error; // Re-throw to prevent dialog from closing
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      const response = await deleteUser(userToDelete.id);
+      showToastMessage({
+        type: 'success',
+        title: 'User deleted!',
+        message: response.message || 'User has been deleted successfully.',
+        duration: 5000
+      });
+
+      // Refresh users list
+      await fetchUsers();
+    } catch (error) {
+      showToastMessage({
+        type: 'error',
+        title: 'Failed to delete user',
+        message: error.message || 'An error occurred. Please try again.',
+        duration: 5000
+      });
+      throw error; // Re-throw to prevent dialog from closing
+    }
+  };
 
   // Calculate stats
   const totalUsers = users.length;
@@ -172,11 +257,11 @@ export default function UsersPage() {
   // Filter users
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         user.email?.toLowerCase().includes(searchQuery.toLowerCase());
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'active' && user.is_active) ||
-                         (statusFilter === 'inactive' && !user.is_active);
+    const matchesStatus = statusFilter === 'all' ||
+      (statusFilter === 'active' && user.is_active) ||
+      (statusFilter === 'inactive' && !user.is_active);
     return matchesSearch && matchesRole && matchesStatus;
   });
 
@@ -192,10 +277,8 @@ export default function UsersPage() {
             Manage user accounts and permissions
           </p>
         </div>
-        <button className="flex items-center gap-2 h-[36px] px-3 bg-black text-white rounded-[14px] hover:bg-neutral-800 transition-colors">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
+        <button onClick={handleAddUser} className="flex items-center gap-2 h-[36px] px-3 bg-black text-white rounded-[14px] hover:bg-neutral-800 transition-colors">
+          <Plus size={16} />
           <span className="text-[14px] leading-[20px] tracking-[-0.1504px] font-medium">Add User</span>
         </button>
       </div>
@@ -240,9 +323,9 @@ export default function UsersPage() {
           className="h-[42px] px-3 bg-white border border-gray-200 rounded-[14px] text-[14px] tracking-[-0.3008px] text-neutral-950 focus:outline-none focus:ring-2 focus:ring-neutral-950"
         >
           <option value="all">All Roles</option>
-          <option value="admin">Admin</option>
+          <option value="superadmin">Super Admin</option>
           <option value="manager">Manager</option>
-          <option value="user">User</option>
+          <option value="employee">Employee</option>
         </select>
         <select
           value={statusFilter}
@@ -303,8 +386,8 @@ export default function UsersPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
                           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="10" cy="7" r="3" stroke="#717182" strokeWidth="1.5"/>
-                            <path d="M4 18C4 15 6.5 13 10 13C13.5 13 16 15 16 18" stroke="#717182" strokeWidth="1.5" strokeLinecap="round"/>
+                            <circle cx="10" cy="7" r="3" stroke="#717182" strokeWidth="1.5" />
+                            <path d="M4 18C4 15 6.5 13 10 13C13.5 13 16 15 16 18" stroke="#717182" strokeWidth="1.5" strokeLinecap="round" />
                           </svg>
                         </div>
                         <div className="flex flex-col">
@@ -313,8 +396,8 @@ export default function UsersPage() {
                           </p>
                           <div className="flex items-center gap-1">
                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <rect x="1" y="3" width="10" height="7" rx="1" stroke="#717182" strokeWidth="1"/>
-                              <path d="M3 3V2C3 1.5 3.5 1 4 1H8C8.5 1 9 1.5 9 2V3" stroke="#717182" strokeWidth="1"/>
+                              <rect x="1" y="3" width="10" height="7" rx="1" stroke="#717182" strokeWidth="1" />
+                              <path d="M3 3V2C3 1.5 3.5 1 4 1H8C8.5 1 9 1.5 9 2V3" stroke="#717182" strokeWidth="1" />
                             </svg>
                             <p className="text-[12px] leading-[18px] text-[#717182]">
                               {user.email}
@@ -355,10 +438,16 @@ export default function UsersPage() {
                     </td>
                     <td className="pl-[25px]">
                       <div className="flex gap-2">
-                        <button className="w-7 h-7 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors">
-                          <Edit2 className="w-[16px] h-[16px] text-[#364153]" strokeWidth={1.5} />
+                        <button
+                          onClick={() => handleEditUser(user)}
+                          className="w-7 h-7 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors"
+                        >
+                          <Edit2 className="w-[16px] h-[16px] text-neutral-950" strokeWidth={1.5} />
                         </button>
-                        <button className="w-7 h-7 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors">
+                        <button
+                          onClick={() => handleDeleteClick(user)}
+                          className="w-7 h-7 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors"
+                        >
                           <Trash2 className="w-[16px] h-[16px] text-[#e7000b]" strokeWidth={1.5} />
                         </button>
                       </div>
@@ -370,6 +459,23 @@ export default function UsersPage() {
           </table>
         )}
       </div>
+
+      {/* User Dialog */}
+      <UserDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        mode={dialogMode}
+        userData={selectedUser}
+        onSubmit={handleUserSubmit}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        userName={userToDelete?.username || ''}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 }

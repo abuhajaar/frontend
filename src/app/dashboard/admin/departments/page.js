@@ -1,13 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllDepartments } from '@/services/departmentService';
-import { Search, Edit2, Trash2, Building2, Users } from 'lucide-react';
+import { getAllDepartments, createDepartment, updateDepartment, deleteDepartment } from '@/services/departmentService';
+import { Plus, Search, Edit2, Trash2, Building2, Users, ChevronUp, ChevronDown } from 'lucide-react';
+import DepartmentDialog from '@/component/DepartmentDialog';
+import DeleteConfirmDialog from '@/component/DeleteConfirmDialog';
 
 export default function AdminDepartmentsPage() {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortField, setSortField] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc');
+
+  // Dialog states
+  const [isDepartmentDialogOpen, setIsDepartmentDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState('create');
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [departmentToDelete, setDepartmentToDelete] = useState(null);
 
   useEffect(() => {
     fetchDepartments();
@@ -17,7 +28,7 @@ export default function AdminDepartmentsPage() {
     try {
       setLoading(true);
       const response = await getAllDepartments();
-      
+
       if (response.success && response.data) {
         setDepartments(response.data);
       }
@@ -28,18 +39,39 @@ export default function AdminDepartmentsPage() {
     }
   };
 
-  // Filter departments
-  const filteredDepartments = departments.filter(dept =>
-    dept.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    dept.manager_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    dept.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Handle sorting
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Filter and sort departments
+  const filteredAndSortedDepartments = departments
+    .filter(dept =>
+      dept.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      dept.manager_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      dept.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (!sortField) return 0;
+
+      let aValue = a[sortField];
+      let bValue = b[sortField];
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
 
   // Calculate stats
   const stats = {
     totalDepartments: departments.length,
     totalEmployees: departments.reduce((sum, dept) => sum + (dept.total_users || 0), 0),
-    avgPerDepartment: departments.length > 0 
+    avgPerDepartment: departments.length > 0
       ? Math.round(departments.reduce((sum, dept) => sum + (dept.total_users || 0), 0) / departments.length)
       : 0,
   };
@@ -48,11 +80,67 @@ export default function AdminDepartmentsPage() {
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     });
+  };
+
+  // Handle Add Department
+  const handleAddDepartment = () => {
+    setDialogMode('create');
+    setSelectedDepartment(null);
+    setIsDepartmentDialogOpen(true);
+  };
+
+  // Handle Edit Department
+  const handleEditDepartment = (department) => {
+    setDialogMode('edit');
+    setSelectedDepartment(department);
+    setIsDepartmentDialogOpen(true);
+  };
+
+  // Handle Delete Department
+  const handleDeleteClick = (department) => {
+    setDepartmentToDelete(department);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Submit Department (Create or Update)
+  const handleDepartmentSubmit = async (formData) => {
+    try {
+      if (dialogMode === 'create') {
+        const response = await createDepartment(formData);
+        if (response.success) {
+          await fetchDepartments();
+          setIsDepartmentDialogOpen(false);
+        }
+      } else {
+        const response = await updateDepartment(selectedDepartment.id, formData);
+        if (response.success) {
+          await fetchDepartments();
+          setIsDepartmentDialogOpen(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting department:', error);
+      throw error;
+    }
+  };
+
+  // Confirm Delete
+  const handleConfirmDelete = async () => {
+    try {
+      const response = await deleteDepartment(departmentToDelete.id);
+      if (response.success) {
+        await fetchDepartments();
+        setIsDeleteDialogOpen(false);
+        setDepartmentToDelete(null);
+      }
+    } catch (error) {
+      console.error('Error deleting department:', error);
+    }
   };
 
   if (loading) {
@@ -78,8 +166,11 @@ export default function AdminDepartmentsPage() {
             Manage organizational departments and managers
           </p>
         </div>
-        <button className="bg-black text-white px-5 h-[36px] rounded-[14px] text-[14px] font-medium flex items-center gap-2 hover:bg-gray-800 transition-colors">
-          <span className="text-[18px] leading-none">+</span>
+        <button
+          onClick={handleAddDepartment}
+          className="bg-black text-white px-5 h-[36px] rounded-[14px] text-[14px] font-medium flex items-center gap-2 hover:bg-gray-800 transition-colors"
+        >
+          <Plus size={16} />
           Add Department
         </button>
       </div>
@@ -121,23 +212,43 @@ export default function AdminDepartmentsPage() {
             <tr className="bg-gray-50">
               <th className="text-left px-6 py-3 text-[14px] font-bold leading-[21px] tracking-[-0.3008px] text-[#717182]">Department</th>
               <th className="text-left px-6 py-3 text-[14px] font-bold leading-[21px] tracking-[-0.3008px] text-[#717182]">Manager</th>
-              <th className="text-left px-6 py-3 text-[14px] font-bold leading-[21px] tracking-[-0.3008px] text-[#717182]">Employees</th>
+              <th
+                className="text-left px-6 py-3 text-[14px] font-bold leading-[21px] tracking-[-0.3008px] text-[#717182] cursor-pointer hover:text-neutral-950 transition-colors"
+                onClick={() => handleSort('total_employees')}
+              >
+                <div className="flex items-center gap-1">
+                  Employees
+                  {sortField === 'total_employees' && (
+                    sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                  )}
+                </div>
+              </th>
               <th className="text-left px-6 py-3 text-[14px] font-bold leading-[21px] tracking-[-0.3008px] text-[#717182]">Description</th>
-              <th className="text-left px-6 py-3 text-[14px] font-bold leading-[21px] tracking-[-0.3008px] text-[#717182]">Created</th>
+              <th
+                className="text-left px-6 py-3 text-[14px] font-bold leading-[21px] tracking-[-0.3008px] text-[#717182] cursor-pointer hover:text-neutral-950 transition-colors"
+                onClick={() => handleSort('created_at')}
+              >
+                <div className="flex items-center gap-1">
+                  Created
+                  {sortField === 'created_at' && (
+                    sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                  )}
+                </div>
+              </th>
               <th className="text-left px-6 py-3 text-[14px] font-bold leading-[21px] tracking-[-0.3008px] text-[#717182]">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredDepartments.length === 0 ? (
+            {filteredAndSortedDepartments.length === 0 ? (
               <tr>
                 <td colSpan="6" className="text-center py-12 text-[#717182]">
                   {searchQuery ? 'No departments found matching your search' : 'No departments available'}
                 </td>
               </tr>
             ) : (
-              filteredDepartments.map((dept, index) => (
-                <tr 
-                  key={dept.id || index} 
+              filteredAndSortedDepartments.map((dept, index) => (
+                <tr
+                  key={dept.id || index}
                   className="border-t border-gray-200 hover:bg-gray-50"
                 >
                   {/* Department Name */}
@@ -193,17 +304,19 @@ export default function AdminDepartmentsPage() {
                   {/* Actions */}
                   <td className="px-6 py-[23.5px]">
                     <div className="flex items-center gap-2">
-                      <button 
+                      <button
+                        onClick={() => handleEditDepartment(dept)}
                         className="p-[6px] rounded-lg hover:bg-gray-100 transition-colors"
                         title="Edit department"
                       >
                         <Edit2 size={16} className="text-neutral-950" />
                       </button>
-                      <button 
+                      <button
+                        onClick={() => handleDeleteClick(dept)}
                         className="p-[6px] rounded-lg hover:bg-gray-100 transition-colors"
                         title="Delete department"
                       >
-                        <Trash2 size={16} className="text-neutral-950" />
+                        <Trash2 size={16} className="text-[#e7000b]" />
                       </button>
                     </div>
                   </td>
@@ -213,6 +326,24 @@ export default function AdminDepartmentsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Department Dialog */}
+      <DepartmentDialog
+        isOpen={isDepartmentDialogOpen}
+        onClose={() => setIsDepartmentDialogOpen(false)}
+        mode={dialogMode}
+        departmentData={selectedDepartment}
+        onSubmit={handleDepartmentSubmit}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Department"
+        message={`Are you sure to delete this department?`}
+      />
     </div>
   );
 }

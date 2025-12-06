@@ -13,11 +13,11 @@ import { auth } from '@/lib/auth';
 const getAuthHeaders = () => {
   const token = auth.getToken();
   const headers = { ...API_CONFIG.HEADERS };
-  
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
   return headers;
 };
 
@@ -98,3 +98,88 @@ export const getAllUsers = async () => {
     throw error;
   }
 };
+
+/**
+ * Create a new user (admin only)
+ * @param {Object} userData - User data to create
+ * @returns {Promise<Object>} Created user data
+ */
+export const createUser = async (userData) => {
+  try {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${API_ENDPOINTS.USERS}`,
+      {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(userData),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create user');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Create user error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update an existing user (admin only)
+ * @param {number} userId - User ID to update
+ * @param {Object} userData - Updated user data
+ * @returns {Promise<Object>} Updated user data
+ */
+export const updateUser = async (userId, userData) => {
+  try {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${API_ENDPOINTS.USERS}/${userId}`,
+      {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(userData),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to update user');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Update user error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a user (admin only)
+ * @param {number} userId - User ID to delete
+ * @returns {Promise<Object>} Deletion confirmation
+ */
+export const deleteUser = async (userId) => {
+  try {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${API_ENDPOINTS.USERS}/${userId}`,
+      {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to delete user');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Delete user error:', error);
+    throw error;
+  }
+};
+

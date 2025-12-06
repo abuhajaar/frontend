@@ -35,11 +35,11 @@ export const getAllBookingsForManage = async () => {
 const getAuthHeaders = () => {
   const token = auth.getToken();
   const headers = { ...API_CONFIG.HEADERS };
-  
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
   return headers;
 };
 
@@ -59,14 +59,14 @@ const transformBookingData = (booking) => {
     'cancel': 'cancelled',
     'cancelled': 'cancelled'
   };
-  
+
   // Determine the correct status based on booking state
   let mappedStatus;
-  
+
   // Priority 1: If checkout_at exists, booking is finished
   if (booking.checkout_at && booking.checkout_at !== null) {
     mappedStatus = 'finished';
-  } 
+  }
   // Priority 2: If status is cancel/cancelled, keep it cancelled
   else if (booking.status?.toLowerCase() === 'cancel' || booking.status?.toLowerCase() === 'cancelled') {
     mappedStatus = 'cancelled';
@@ -75,14 +75,14 @@ const transformBookingData = (booking) => {
   else {
     mappedStatus = statusMap[booking.status?.toLowerCase()] || booking.status;
   }
-  
+
   console.log('Transforming booking:', {
     id: booking.id,
     originalStatus: booking.status,
     checkout_at: booking.checkout_at,
     mappedStatus: mappedStatus
   });
-  
+
   // API already provides date, start_time, and end_time in correct format
   return {
     id: booking.id,
@@ -125,7 +125,7 @@ export const createBooking = async (bookingData) => {
     );
 
     const result = await response.json();
-    
+
     // Handle API response format: { success, message, status_code, data }
     if (!result.success) {
       const error = new Error(result.message || 'Failed to create booking');
@@ -133,7 +133,7 @@ export const createBooking = async (bookingData) => {
       error.response = result;
       throw error;
     }
-    
+
     console.log('Booking created successfully:', result);
 
     return result;
@@ -163,7 +163,7 @@ export const getUserBookings = async (userId) => {
 
     const result = await response.json();
     console.log('Raw API response:', result);
-    
+
     // Handle API response format: { success, message, status_code, data }
     if (!result.success) {
       const error = new Error(result.message || 'Failed to fetch user bookings');
@@ -175,7 +175,7 @@ export const getUserBookings = async (userId) => {
     // Transform bookings data to UI format
     const transformedData = {
       ...result,
-      data: Array.isArray(result.data) 
+      data: Array.isArray(result.data)
         ? result.data.map(transformBookingData)
         : []
     };
@@ -229,14 +229,14 @@ export const cancelBooking = async (bookingId) => {
       {
         method: 'PATCH',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           status: 'cancel'
         }),
       }
     );
 
     const result = await response.json();
-    
+
     // Handle API response format: { success, message, status_code, data }
     if (!result.success) {
       const error = new Error(result.message || 'Failed to cancel booking');
@@ -297,15 +297,15 @@ export const checkInBooking = async (bookingId, checkinCode) => {
       {
         method: 'PATCH',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           status: 'checkin',
-          checkin_code: checkinCode 
+          checkin_code: checkinCode
         }),
       }
     );
 
     const result = await response.json();
-    
+
     // Handle API response format: { success, message, status_code, data }
     if (!result.success) {
       const error = new Error(result.message || 'Failed to check-in');
@@ -336,14 +336,14 @@ export const checkOutBooking = async (bookingId) => {
       {
         method: 'PATCH',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           status: 'checkout'
         }),
       }
     );
 
     const result = await response.json();
-    
+
     // Handle API response format: { success, message, status_code, data }
     if (!result.success) {
       const error = new Error(result.message || 'Failed to check-out');
@@ -357,6 +357,41 @@ export const checkOutBooking = async (bookingId) => {
     // Only log unexpected errors, not API validation errors
     if (!error.response) {
       console.error('Check-out booking error:', error);
+    }
+    throw error;
+  }
+};
+
+/**
+ * Delete a booking (admin only)
+ * @param {string|number} bookingId - Booking ID to delete
+ * @returns {Promise<Object>} Deletion response
+ */
+export const deleteBooking = async (bookingId) => {
+  try {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}/api/bookings/manage/${bookingId}`,
+      {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      }
+    );
+
+    const result = await response.json();
+
+    // Handle API response format: { success, message, status_code, data }
+    if (!result.success) {
+      const error = new Error(result.message || 'Failed to delete booking');
+      error.statusCode = result.status_code;
+      error.response = result;
+      throw error;
+    }
+
+    return result;
+  } catch (error) {
+    // Only log unexpected errors, not API validation errors
+    if (!error.response) {
+      console.error('Delete booking error:', error);
     }
     throw error;
   }
