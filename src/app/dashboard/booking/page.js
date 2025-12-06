@@ -292,137 +292,148 @@ export default function BookingPage() {
   };
 
   return (
-    <div className="p-8 pt-20">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-[2rem] text-neutral-950 font-semibold tracking-[-0.05em] leading-10 mb-2">
-          Browse Available Spaces
-        </h1>
-        <p className="text-base text-[#717182] tracking-[-0.3125px] leading-6">
-          Find and book your perfect workspace
-        </p>
+    <div className="min-h-full px-4 sm:px-6 md:px-8 py-8 md:py-10 bg-[#FFFFFF]">
+      {/* Background Aesthetics */}
+      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0 opacity-40">
+        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-gradient-to-br from-purple-200/40 to-blue-200/40 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[10%] left-[5%] w-[400px] h-[400px] bg-gradient-to-tr from-orange-200/30 to-rose-100/30 rounded-full blur-[80px]" />
       </div>
 
-      {/* Date and Time Selector */}
-      <DateTimeSelector
-        selectedDate={selectedDate}
-        startTime={startTime}
-        endTime={endTime}
-        onDateChange={setSelectedDate}
-        onStartTimeChange={setStartTime}
-        onEndTimeChange={setEndTime}
-        onSearch={handleSearch}
-        loading={loading}
-      />
-
-      {/* View Mode Toggle */}
-      <div className="mb-6 flex items-center justify-between min-h-[44px]">
-        <div className="flex-1">
-          {viewMode === 'grid' && (
-            <FilterBar
-              selectedFloor={selectedFloor}
-              selectedType={selectedType}
-              availableFloors={availableFloors}
-              onFloorChange={setSelectedFloor}
-              onTypeChange={setSelectedType}
-            />
-          )}
-        </div>
-        
-        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              viewMode === 'grid'
-                ? 'bg-neutral-950 text-white'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <rect x="2" y="2" width="5" height="5" rx="1"/>
-                <rect x="9" y="2" width="5" height="5" rx="1"/>
-                <rect x="2" y="9" width="5" height="5" rx="1"/>
-                <rect x="9" y="9" width="5" height="5" rx="1"/>
-              </svg>
-              Grid View
-            </div>
-          </button>
-          <button
-            onClick={() => setViewMode('floorplan')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              viewMode === 'floorplan'
-                ? 'bg-neutral-950 text-white'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <rect x="1" y="1" width="14" height="14" rx="1" stroke="currentColor" strokeWidth="2" fill="none"/>
-                <path d="M1 5h14M5 1v14" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-              Floor Plan
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* Conditional rendering based on view mode */}
-      {viewMode === 'floorplan' ? (
-        hasSearched ? (
-          <FloorPlan
-            occupiedDesks={occupiedDesks}
-            onDeskSelect={handleDeskSelect}
-            selectedDeskId={selectedDeskId}
-            selectedDate={selectedDate}
-            availableSpacesLantai1={availableSpacesLantai1}
-            availableSpacesLantai2={availableSpacesLantai2}
-            availableSpacesLantai3={availableSpacesLantai3}
-          />
-        ) : (
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="col-span-full text-center py-20">
-          <div className="flex flex-col items-center gap-4">
-            <img 
-              src="/assets/e989417bb1ce761a34ffa1b2d4ae037ff1890258.svg" 
-              alt="" 
-              className="w-16 h-16 opacity-30" 
-            />
-            <div>
-              <p className="text-base text-neutral-950 tracking-[-0.3125px] leading-6 mb-2">
-                Ready to find your perfect workspace?
-              </p>
-              <p className="text-sm text-[#717182] tracking-[-0.1504px] leading-5">
-                Select your date and time above, then click "Search Availability" to see available spaces
-              </p>
-            </div>
+      <div className="relative z-10 max-w-[1600px] mx-auto">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div>
+            <p className="text-sm font-semibold tracking-widest text-gray-400 uppercase mb-2">Space Booking</p>
+            <h1 className="text-4xl md:text-5xl font-light text-neutral-900 tracking-tight" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
+              Browse Available <span className="font-normal relative inline-block after:content-[''] after:absolute after:bottom-2 after:left-0 after:w-full after:h-3 after:bg-blue-100/50 after:-z-10">Spaces</span>
+            </h1>
           </div>
         </div>
-      </div>
-        )
-      ) : (
-        <SpacesGrid
-          spaces={spaces}
-          filteredSpaces={filteredSpaces}
-          loading={loading}
-          error={error}
-          hasSearched={hasSearched}
-          selectedDate={selectedDate}
-          onBookSpace={handleBookSpace}
-        />
-      )}
 
-      {/* Booking Modal */}
-      <BookingModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        space={selectedSpace}
-        bookingDetails={{
-          date: selectedDate,
-          startTime: startTime,
-          endTime: endTime
-        }}
-      />
+        {/* Date and Time Selector */}
+        <DateTimeSelector
+          selectedDate={selectedDate}
+          startTime={startTime}
+          endTime={endTime}
+          onDateChange={setSelectedDate}
+          onStartTimeChange={setStartTime}
+          onEndTimeChange={setEndTime}
+          onSearch={handleSearch}
+          loading={loading}
+        />
+
+        {/* View Mode Toggle */}
+        <div className="mb-6 flex items-center justify-between min-h-[44px]">
+          <div className="flex-1">
+            {viewMode === 'grid' && (
+              <FilterBar
+                selectedFloor={selectedFloor}
+                selectedType={selectedType}
+                availableFloors={availableFloors}
+                onFloorChange={setSelectedFloor}
+                onTypeChange={setSelectedType}
+              />
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                viewMode === 'grid'
+                  ? 'bg-neutral-950 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <rect x="2" y="2" width="5" height="5" rx="1"/>
+                  <rect x="9" y="2" width="5" height="5" rx="1"/>
+                  <rect x="2" y="9" width="5" height="5" rx="1"/>
+                  <rect x="9" y="9" width="5" height="5" rx="1"/>
+                </svg>
+                Grid View
+              </div>
+            </button>
+            <button
+              onClick={() => setViewMode('floorplan')}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                viewMode === 'floorplan'
+                  ? 'bg-neutral-950 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <rect x="1" y="1" width="14" height="14" rx="1" stroke="currentColor" strokeWidth="2" fill="none"/>
+                  <path d="M1 5h14M5 1v14" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+                Floor Plan
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Conditional rendering based on view mode */}
+        {viewMode === 'floorplan' ? (
+          hasSearched ? (
+            <FloorPlan
+              occupiedDesks={occupiedDesks}
+              onDeskSelect={handleDeskSelect}
+              selectedDeskId={selectedDeskId}
+              selectedDate={selectedDate}
+              availableSpacesLantai1={availableSpacesLantai1}
+              availableSpacesLantai2={availableSpacesLantai2}
+              availableSpacesLantai3={availableSpacesLantai3}
+            />
+          ) : (
+            <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+              <div className="relative z-10 text-center py-20">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full flex items-center justify-center mb-2">
+                    <img 
+                      src="/assets/e989417bb1ce761a34ffa1b2d4ae037ff1890258.svg" 
+                      alt="" 
+                      className="w-10 h-10 opacity-60" 
+                    />
+                  </div>
+                  <div>
+                    <p className="text-lg font-medium text-neutral-950 tracking-tight mb-2">
+                      Ready to find your perfect workspace?
+                    </p>
+                    <p className="text-sm text-gray-500 max-w-md mx-auto">
+                      Select your date and time above, then click "Search Availability" to see available spaces
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        ) : (
+          <SpacesGrid
+            spaces={spaces}
+            filteredSpaces={filteredSpaces}
+            loading={loading}
+            error={error}
+            hasSearched={hasSearched}
+            selectedDate={selectedDate}
+            onBookSpace={handleBookSpace}
+          />
+        )}
+
+        {/* Booking Modal */}
+        <BookingModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          space={selectedSpace}
+          bookingDetails={{
+            date: selectedDate,
+            startTime: startTime,
+            endTime: endTime
+          }}
+        />
+      </div>
     </div>
   );
 }
