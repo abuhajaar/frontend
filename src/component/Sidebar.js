@@ -142,47 +142,47 @@ export default function Sidebar() {
       style={{ overflow: 'hidden' }}
     >
       {/* Header with Toggle */}
-      <div className="absolute top-8 left-6 z-30">
-        <button
-          onClick={toggleSidebar}
-          className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
-        >
-          <svg
-            className="w-5 h-5 text-gray-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+      <div className="px-4 pt-8 pb-6">
+        <div className={`h-[41px] rounded-lg flex items-center transition-colors ${
+          isOpen ? 'px-3 gap-3' : 'justify-center'
+        }`}>
+          <button
+            onClick={toggleSidebar}
+            className="flex items-center justify-center flex-shrink-0"
           >
-            {isOpen ? (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            ) : (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            )}
-          </svg>
-        </button>
-      </div>
-
-      {/* Header Text */}
-      <div className="h-[100px] flex items-center justify-center px-6">
-        {isOpen && (
-          <h1 
-            ref={headerTextRef}
-            className="text-[20px] font-normal text-neutral-950 tracking-[-0.8492px] leading-[30px] text-center" 
-            style={{ fontFamily: 'Tanker-Regular, sans-serif' }}
-          >
-            OpenBO
-          </h1>
-        )}
+            <svg
+              className="w-[15px] h-[15px] text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+            >
+              {isOpen ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              )}
+            </svg>
+          </button>
+          {/* Header Text */}
+          {isOpen && (
+            <h1 
+              ref={headerTextRef}
+              className="text-[20px] font-normal text-neutral-950 tracking-[-0.8492px] leading-[30px]" 
+              style={{ fontFamily: 'Tanker-Regular, sans-serif' }}
+            >
+              OpenBO
+            </h1>
+          )}
+        </div>
       </div>
 
       {/* Navigation */}
@@ -270,6 +270,42 @@ export default function Sidebar() {
 
         {/* Settings Navigation */}
         <div className="flex flex-col gap-1">
+          {/* Admin Dashboard - Only for superadmin */}
+          {currentUser?.role === 'superadmin' && (
+            <button 
+              onClick={() => router.push('/dashboard/admin')}
+              className={`h-[41px] rounded-lg flex items-center transition-colors ${
+                isOpen ? 'px-3 gap-3' : 'justify-center'
+              } ${
+                pathname.startsWith('/dashboard/admin') 
+                  ? 'bg-gray-100 text-neutral-950' 
+                  : 'text-[#717182] hover:bg-gray-50'
+              }`}
+            >
+              <svg 
+                width="15" 
+                height="15" 
+                viewBox="0 0 15 15" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-[15px] h-[15px]"
+              >
+                <path 
+                  d="M7.5 1.25C6.375 1.25 5.5 2.125 5.5 3.25C5.5 4.375 6.375 5.25 7.5 5.25C8.625 5.25 9.5 4.375 9.5 3.25C9.5 2.125 8.625 1.25 7.5 1.25ZM3.5 6.25C2.375 6.25 1.5 7.125 1.5 8.25C1.5 9.375 2.375 10.25 3.5 10.25C4.625 10.25 5.5 9.375 5.5 8.25C5.5 7.125 4.625 6.25 3.5 6.25ZM11.5 6.25C10.375 6.25 9.5 7.125 9.5 8.25C9.5 9.375 10.375 10.25 11.5 10.25C12.625 10.25 13.5 9.375 13.5 8.25C13.5 7.125 12.625 6.25 11.5 6.25ZM7.5 11.25C6.375 11.25 5.5 12.125 5.5 13.25C5.5 14.375 6.375 15.25 7.5 15.25C8.625 15.25 9.5 14.375 9.5 13.25C9.5 12.125 8.625 11.25 7.5 11.25Z" 
+                  fill="currentColor"
+                />
+              </svg>
+              {isOpen && (
+                <span 
+                  ref={el => navigationLabelsRef.current[3] = el}
+                  className="text-sm font-normal tracking-[-0.3008px] leading-[21px]"
+                >
+                  Admin Dashboard
+                </span>
+              )}
+            </button>
+          )}
+
           <button 
             className={`h-[41px] rounded-lg flex items-center text-[#717182] hover:bg-gray-50 transition-colors ${
               isOpen ? 'px-3 gap-3' : 'justify-center'
@@ -282,7 +318,7 @@ export default function Sidebar() {
             />
             {isOpen && (
               <span 
-                ref={el => navigationLabelsRef.current[3] = el}
+                ref={el => navigationLabelsRef.current[currentUser?.role === 'superadmin' ? 4 : 3] = el}
                 className="text-sm font-normal tracking-[-0.3008px] leading-[21px]"
               >
                 Support
@@ -302,7 +338,7 @@ export default function Sidebar() {
             />
             {isOpen && (
               <span 
-                ref={el => navigationLabelsRef.current[4] = el}
+                ref={el => navigationLabelsRef.current[currentUser?.role === 'superadmin' ? 5 : 4] = el}
                 className="text-sm font-normal tracking-[-0.3008px] leading-[21px]"
               >
                 Settings

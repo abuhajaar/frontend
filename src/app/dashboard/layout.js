@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }) {
     };
 
     window.addEventListener('sidebarToggle', handleSidebarToggle);
-    
+
     // Get initial state from localStorage
     const savedState = localStorage.getItem('sidebarOpen');
     if (savedState !== null) {
@@ -37,9 +37,9 @@ export default function DashboardLayout({ children }) {
     <div className="flex min-h-screen bg-white">
       {/* Sidebar - Renders once for all dashboard pages */}
       <Sidebar />
-      
+
       {/* Main Content Area - Responsive to sidebar state */}
-      <div 
+      <div
         className="flex-1 transition-all duration-300"
         style={{
           marginLeft: isSidebarOpen ? '256px' : '72px'
@@ -47,9 +47,9 @@ export default function DashboardLayout({ children }) {
       >
         {/* Top Notification Panel - Hidden for now */}
         {/* <NotificationPanel /> */}
-        
+
         {/* Page Content - This changes when navigating between dashboard pages */}
-        <main className="relative">
+        <main className="relative min-h-screen p-8">
           {children}
         </main>
       </div>

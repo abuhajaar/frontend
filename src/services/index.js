@@ -18,5 +18,14 @@ export * from './bookingService';
 // User
 export * from './userService';
 
+// Departments
+export * from './departmentService';
+
+// Floors
+export * from './floorService';
+
+// Amenities
+export * from './amenityService';
+
 // Stats
 export * from './statsService';

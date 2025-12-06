@@ -115,3 +115,28 @@ export const getSpaceById = async (spaceId) => {
     throw error;
   }
 };
+
+/**
+ * Get all spaces for management view
+ * @returns {Promise<Object>} Response containing array of spaces with management details
+ */
+export const getAllSpacesForManage = async () => {
+  try {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${API_ENDPOINTS.MANAGE_SPACES}`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch spaces for management');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Get spaces for management error:', error);
+    throw error;
+  }
+};

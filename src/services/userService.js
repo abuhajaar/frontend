@@ -73,3 +73,28 @@ export const updateUserProfile = async (profileData) => {
     throw error;
   }
 };
+
+/**
+ * Get all users (admin only)
+ * @returns {Promise<Object>} All users data
+ */
+export const getAllUsers = async () => {
+  try {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${API_ENDPOINTS.USERS}`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch users');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Get all users error:', error);
+    throw error;
+  }
+};

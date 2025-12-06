@@ -7,6 +7,28 @@ import { API_CONFIG, API_ENDPOINTS } from './config';
 import { auth } from '@/lib/auth';
 
 /**
+ * Get all bookings for admin management
+ * @returns {Promise<Object>} API response with all bookings
+ */
+export const getAllBookingsForManage = async () => {
+  try {
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.MANAGE_BOOKINGS}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching manage bookings:', error);
+    throw error;
+  }
+};
+
+/**
  * Get headers with authentication token
  * @returns {Object} Headers object with auth token if available
  */
