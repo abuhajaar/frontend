@@ -159,41 +159,43 @@ export default function MyBookingPage() {
   const isSearching = searchQuery.trim().length > 0;
 
   return (
-    <div className="min-h-full px-4 sm:px-6 md:px-8 py-8 md:py-10 bg-[#FFFFFF]">
-      {/* Background Aesthetics */}
-      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0 opacity-40">
-        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-gradient-to-br from-purple-200/40 to-blue-200/40 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[10%] left-[5%] w-[400px] h-[400px] bg-gradient-to-tr from-orange-200/30 to-rose-100/30 rounded-full blur-[80px]" />
+    <div className="min-h-full px-4 sm:px-6 md:px-8 py-8 md:py-10 bg-[#FFFEF8]" style={{ backgroundImage: 'radial-gradient(#E5E5E5 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
+      {/* Background Aesthetics - Watercolor Blobs */}
+      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0 opacity-30">
+        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-[#E0F2FE] rounded-full blur-[80px]" />
+        <div className="absolute bottom-[10%] left-[5%] w-[500px] h-[500px] bg-[#FFEDD5] rounded-full blur-[60px]" />
       </div>
 
       <div className="relative z-10 max-w-[1600px] mx-auto">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
-            <p className="text-sm font-semibold tracking-widest text-gray-400 uppercase mb-2">Your Reservations</p>
-            <h1 className="text-4xl md:text-5xl font-light text-neutral-900 tracking-tight" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
-              My <span className="font-normal relative inline-block after:content-[''] after:absolute after:bottom-2 after:left-0 after:w-full after:h-3 after:bg-blue-100/50 after:-z-10">Bookings</span>
+            <p className="text-gray-500 font-medium mb-1 pl-1">
+              Your Reservations
+            </p>
+            <h1 className="text-4xl md:text-5xl font-black text-black tracking-tight" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
+              MY <span className="text-gray-400">BOOKINGS</span>
             </h1>
           </div>
         </div>
 
         {/* Search Bar */}
-        <div className="mb-8">
+        <div className="mb-12">
           <div className="relative max-w-2xl">
-            <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-black" strokeWidth={2.5} />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by space name, date, or status..."
-              className="w-full bg-white border border-gray-200 rounded-2xl pl-12 pr-12 py-3.5 text-sm text-neutral-950 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-200 transition-all shadow-sm"
+              placeholder="SEARCH BY SPACE NAME, DATE, OR STATUS..."
+              className="w-full bg-white border-2 border-black rounded-xl pl-12 pr-12 py-4 text-sm font-bold text-black placeholder:text-gray-400 placeholder:font-medium focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
               >
-                <X size={18} />
+                <X size={20} strokeWidth={2.5} />
               </button>
             )}
           </div>
@@ -202,56 +204,50 @@ export default function MyBookingPage() {
         {/* Bookings List */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="animate-spin h-12 w-12 border-4 border-black border-t-transparent rounded-full"></div>
           </div>
         ) : !hasSearchResults && isSearching ? (
-          <div className="bg-white rounded-[32px] p-12 text-center border border-gray-100 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
-            <div className="relative z-10">
-              <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6 text-4xl mx-auto">🔍</div>
-              <p className="text-gray-600 mb-2 text-lg font-medium">No bookings found</p>
-              <p className="text-sm text-gray-500 mb-4">
+          <div className="bg-white border-2 border-black rounded-[24px] p-12 text-center relative overflow-hidden max-w-2xl mx-auto shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]">
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="w-20 h-20 bg-gray-50 border-2 border-black rounded-full flex items-center justify-center mb-6 text-4xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">🔍</div>
+              <p className="text-black font-black text-2xl uppercase mb-2" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>No bookings found</p>
+              <p className="text-sm font-bold text-gray-500 mb-6">
                 Try searching with different keywords
               </p>
               <button
                 onClick={() => setSearchQuery('')}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="text-sm border-b-2 border-black text-black hover:text-blue-600 hover:border-blue-600 font-bold uppercase tracking-wide transition-colors pb-0.5"
               >
                 Clear search
               </button>
             </div>
           </div>
         ) : bookings.length === 0 ? (
-          <div className="bg-white rounded-[32px] p-12 text-center border border-gray-100 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
-            <div className="relative z-10">
-              <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6 text-4xl mx-auto">📅</div>
-              <p className="text-gray-600 mb-4 text-lg font-medium">No bookings found</p>
-              <p className="text-sm text-gray-500">
+          <div className="bg-white border-2 border-black rounded-[24px] p-12 text-center relative overflow-hidden max-w-2xl mx-auto shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]">
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="w-20 h-20 bg-gray-50 border-2 border-black rounded-full flex items-center justify-center mb-6 text-4xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">📅</div>
+              <p className="text-black font-black text-2xl uppercase mb-4" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>No bookings yet</p>
+              <p className="text-sm font-bold text-gray-500 uppercase tracking-wide">
                 Book a space to see it here
               </p>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
             {/* Left Column: Active Bookings */}
             <div className="flex flex-col gap-6">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <h2 className="text-xl font-medium text-gray-900">Active Bookings</h2>
-                <span className="text-sm text-gray-400">({activeBookings.length})</span>
+              <div className="flex items-center gap-3 border-b-2 border-black pb-2">
+                <div className="w-3 h-3 rounded-full bg-green-400 border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"></div>
+                <h2 className="text-2xl font-black text-black uppercase tracking-tight" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>Active Bookings</h2>
+                <span className="text-sm font-bold bg-black text-white px-2 py-0.5 rounded-md ml-auto">{activeBookings.length}</span>
               </div>
 
               {activeBookings.length === 0 ? (
-                <div className="bg-white rounded-[24px] p-8 text-center border border-gray-100 shadow-sm relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
-                  <div className="relative z-10">
-                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-2xl mx-auto">✨</div>
-                    <p className="text-gray-500 text-sm">No active bookings</p>
-                  </div>
+                <div className="bg-white/50 border-2 border-dashed border-black/20 rounded-[24px] p-8 text-center">
+                  <p className="text-gray-400 font-bold uppercase tracking-wide">No active bookings</p>
                 </div>
               ) : (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-6">
                   {activeBookings.map((booking) => (
                     <BookingCard
                       key={booking.id}
@@ -269,22 +265,18 @@ export default function MyBookingPage() {
 
             {/* Right Column: Past Bookings */}
             <div className="flex flex-col gap-6">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-gray-400"></div>
-                <h2 className="text-xl font-medium text-gray-900">Past Bookings</h2>
-                <span className="text-sm text-gray-400">({pastBookings.length})</span>
+              <div className="flex items-center gap-3 border-b-2 border-black pb-2 opacity-60">
+                <div className="w-3 h-3 rounded-full bg-gray-300 border border-black"></div>
+                <h2 className="text-2xl font-black text-black uppercase tracking-tight" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>Past Bookings</h2>
+                <span className="text-sm font-bold bg-gray-200 text-black px-2 py-0.5 rounded-md ml-auto border border-black/50">{pastBookings.length}</span>
               </div>
 
               {pastBookings.length === 0 ? (
-                <div className="bg-white rounded-[24px] p-8 text-center border border-gray-100 shadow-sm relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
-                  <div className="relative z-10">
-                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-2xl mx-auto">📋</div>
-                    <p className="text-gray-500 text-sm">No past bookings</p>
-                  </div>
+                <div className="bg-white/50 border-2 border-dashed border-black/20 rounded-[24px] p-8 text-center">
+                  <p className="text-gray-400 font-bold uppercase tracking-wide">No past bookings</p>
                 </div>
               ) : (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-6 opacity-80 hover:opacity-100 transition-opacity">
                   {pastBookings.map((booking) => (
                     <BookingCard
                       key={booking.id}

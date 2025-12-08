@@ -32,37 +32,42 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
   const getStatusBadge = (status) => {
     const statusConfig = {
       active: {
-        bg: 'bg-green-100',
-        text: 'text-green-700',
-        label: 'Active'
+        bg: 'bg-white',
+        text: 'text-black',
+        label: 'Active',
+        borderColor: 'border-green-500' // Accent border
       },
       checkin: {
-        bg: 'bg-blue-100',
-        text: 'text-blue-700',
-        label: 'Checked In'
+        bg: 'bg-white',
+        text: 'text-black',
+        label: 'Checked In',
+        borderColor: 'border-blue-500'
       },
       finished: {
-        bg: 'bg-gray-100',
-        text: 'text-gray-600',
-        label: 'Finished'
+        bg: 'bg-white',
+        text: 'text-gray-500',
+        label: 'Finished',
+        borderColor: 'border-gray-400'
       },
       completed: {
-        bg: 'bg-gray-100',
-        text: 'text-gray-600',
-        label: 'Finished'
+        bg: 'bg-white',
+        text: 'text-gray-500',
+        label: 'Finished',
+        borderColor: 'border-gray-400'
       },
       cancelled: {
-        bg: 'bg-red-100',
-        text: 'text-red-700',
-        label: 'Cancelled'
+        bg: 'bg-white',
+        text: 'text-red-500',
+        label: 'Cancelled',
+        borderColor: 'border-red-500'
       }
     };
 
     const config = statusConfig[status] || statusConfig.active;
 
     return (
-      <div className={`${config.bg} rounded-lg px-2.5 py-1 flex items-center justify-center`}>
-        <span className={`text-xs font-bold ${config.text} uppercase tracking-wide`}>
+      <div className={`${config.bg} border-2 ${config.borderColor} rounded-lg px-3 py-1 flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]`}>
+        <span className={`text-xs font-black ${config.text} uppercase tracking-wide`}>
           {config.label}
         </span>
       </div>
@@ -73,31 +78,31 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
   const getCardStyle = (status) => {
     if (status === 'active') {
       return {
-        bg: 'bg-green-50',
-        border: 'border-green-200'
+        bg: 'bg-[#DCFCE7]', // Watercolor Green
+        border: 'border-black'
       };
     }
     if (status === 'checkin') {
       return {
-        bg: 'bg-blue-50',
-        border: 'border-blue-200'
+        bg: 'bg-[#E0F2FE]', // Watercolor Blue
+        border: 'border-black'
       };
     }
     if (status === 'cancelled') {
       return {
-        bg: 'bg-red-50',
-        border: 'border-red-200'
+        bg: 'bg-[#FEE2E2]', // Watercolor Red
+        border: 'border-black'
       };
     }
     if (status === 'finished' || status === 'completed') {
       return {
-        bg: 'bg-gray-50',
-        border: 'border-gray-200'
+        bg: 'bg-[#F3F4F6]', // Watercolor Gray
+        border: 'border-black'
       };
     }
     return {
       bg: 'bg-white',
-      border: 'border-gray-200'
+      border: 'border-black'
     };
   };
 
@@ -115,14 +120,14 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
   // Compact mode rendering
   if (compact) {
     return (
-      <div className={`${cardStyle.bg} border-2 ${cardStyle.border} rounded-2xl p-4 flex flex-col gap-3 h-full transition-all hover:shadow-sm`}>
+      <div className={`${cardStyle.bg} border-[3px] border-black rounded-[24px] p-5 flex flex-col gap-4 h-full shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-200`}>
         {/* Header: Space Name & Status */}
         <div className="flex items-start justify-between">
           <div className="flex flex-col">
-            <h3 className="font-bold text-sm text-neutral-950 line-clamp-1">
+            <h3 className="font-black text-lg text-black line-clamp-1 uppercase tracking-tight" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
               {booking.space_name}
             </h3>
-            <p className="text-xs font-medium text-gray-500">
+            <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">
               {booking.space_type}
             </p>
           </div>
@@ -130,19 +135,19 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
         </div>
 
         {/* Date & Time Info */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 bg-white/50 p-3 rounded-xl border-2 border-black/10">
           {/* Date */}
           <div className="flex items-center gap-2">
-            <Calendar size={14} className="text-neutral-950" />
-            <p className="text-xs font-medium text-gray-600">
+            <Calendar size={16} className="text-black" strokeWidth={2.5} />
+            <p className="text-xs font-bold text-black">
               {booking.date}
             </p>
           </div>
 
           {/* Time */}
           <div className="flex items-center gap-2">
-            <Clock size={14} className="text-neutral-950" />
-            <p className="text-xs font-medium text-gray-600">
+            <Clock size={16} className="text-black" strokeWidth={2.5} />
+            <p className="text-xs font-bold text-black">
               {booking.start_time} - {booking.end_time}
             </p>
           </div>
@@ -150,11 +155,11 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
 
         {/* Check-in Code */}
         {hasButtons && booking.checkin_code && (
-          <div className="bg-white/60 border border-gray-200/50 rounded-xl p-2.5 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-              Check-in Code
+          <div className="bg-white border-2 border-black rounded-xl p-3 flex flex-col gap-1 items-center shadow-[3px_3px_0px_0px_rgba(0,0,0,0.1)]">
+            <p className="text-[10px] font-black text-gray-500 uppercase tracking-wider">
+              Code
             </p>
-            <p className="text-sm font-bold text-neutral-950 font-mono">
+            <p className="text-lg font-black text-black font-mono tracking-widest leading-none">
               {booking.checkin_code}
             </p>
           </div>
@@ -169,9 +174,9 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
                 ref={checkInRef}
                 onClick={handleCheckInClick}
                 disabled={booking.status !== 'active'}
-                className="bg-white border-2 border-green-200 text-green-700 rounded-xl px-3 py-2 text-xs font-bold flex items-center justify-center gap-2 hover:bg-green-50 active:scale-95 transition-all w-full shadow-sm"
+                className="bg-black text-white rounded-xl px-3 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.3)] active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,0.3)] transition-all w-full"
               >
-                <LogIn size={14} />
+                <LogIn size={16} strokeWidth={2.5} />
                 <span>Check In</span>
               </button>
             ) : (
@@ -179,9 +184,9 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
                 ref={checkOutRef}
                 onClick={handleCheckOutClick}
                 disabled={booking.status === 'finished' || booking.status === 'cancelled' || booking.checkout_at !== null}
-                className="bg-white border-2 border-orange-200 text-orange-700 rounded-xl px-3 py-2 text-xs font-bold flex items-center justify-center gap-2 hover:bg-orange-50 active:scale-95 transition-all w-full shadow-sm"
+                className="bg-white text-black rounded-xl px-3 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all w-full"
               >
-                <LogOut size={14} />
+                <LogOut size={16} strokeWidth={2.5} />
                 <span>Check Out</span>
               </button>
             )}
@@ -192,18 +197,18 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
                 ref={cancelRef}
                 onClick={handleCancelClick}
                 disabled={booking.status === 'finished' || booking.status === 'cancelled'}
-                className="flex-1 bg-white border-2 border-red-200 text-red-600 rounded-xl px-3 py-2 text-[11px] font-bold flex items-center justify-center gap-2 hover:bg-red-50 active:scale-95 transition-all shadow-sm"
+                className="flex-1 bg-white border-2 border-black text-red-600 rounded-xl px-3 py-2 text-[10px] font-bold uppercase tracking-wide flex items-center justify-center gap-2 hover:bg-red-50 hover:-translate-y-0.5 transition-all shadow-sm"
               >
-                <XCircle size={14} />
+                <XCircle size={14} strokeWidth={2.5} />
                 <span>Cancel</span>
               </button>
               <button
                 ref={qrRef}
                 onClick={handleQRClick}
                 disabled={booking.status === 'finished' || booking.status === 'cancelled'}
-                className="flex-1 bg-white border-2 border-gray-200 text-gray-700 rounded-xl px-3 py-2 text-[11px] font-bold flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-95 transition-all shadow-sm"
+                className="flex-1 bg-white border-2 border-black text-black rounded-xl px-3 py-2 text-[10px] font-bold uppercase tracking-wide flex items-center justify-center gap-2 hover:bg-gray-50 hover:-translate-y-0.5 transition-all shadow-sm"
               >
-                <QrCode size={14} />
+                <QrCode size={14} strokeWidth={2.5} />
                 <span>QR</span>
               </button>
             </div>
@@ -212,11 +217,14 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
 
         {/* QR Code Section - Compact */}
         {hasButtons && showQRCode && (
-          <div className="bg-white border-2 border-gray-100 rounded-xl p-4 flex flex-col items-center gap-3 animate-in fade-in zoom-in duration-200">
-            <p className="text-[10px] font-medium text-gray-500">
+          <div className="bg-white border-2 border-black rounded-xl p-4 flex flex-col items-center gap-3 mt-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] animate-in fade-in zoom-in duration-200 absolute inset-0 z-50 m-4 justify-center">
+            <button onClick={() => setShowQRCode(false)} className="absolute top-2 right-2 p-1 hover:bg-gray-100 rounded-full">
+              <XCircle size={20} />
+            </button>
+            <p className="text-xs font-bold text-black uppercase">
               Scan to check in
             </p>
-            <div className="bg-white p-3 rounded-lg border border-gray-100">
+            <div className="bg-white p-2 rounded-lg border-2 border-black">
               <QRCode
                 value={booking.checkin_code || 'N/A'}
                 size={120}
@@ -233,14 +241,14 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
 
   // Regular mode rendering
   return (
-    <div className={`${cardStyle.bg} border-2 ${cardStyle.border} rounded-2xl p-6 flex flex-col gap-4 transition-all hover:shadow-md`}>
+    <div className={`${cardStyle.bg} border-[3px] border-black rounded-[24px] p-6 flex flex-col gap-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] transition-all duration-200`}>
       {/* Header: Space Name & Status */}
       <div className="flex items-start justify-between">
-        <div className="flex flex-col">
-          <h3 className="font-bold text-lg text-neutral-950 tracking-tight">
+        <div className="flex flex-col gap-1">
+          <h3 className="font-black text-2xl text-black tracking-tight uppercase" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
             {booking.space_name}
           </h3>
-          <p className="text-sm font-medium text-gray-500">
+          <p className="text-sm font-bold text-black/60 uppercase tracking-wide">
             {booking.space_type}
           </p>
         </div>
@@ -248,19 +256,19 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
       </div>
 
       {/* Date & Time Info */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3 bg-white/40 p-4 rounded-xl border-2 border-black/10">
         {/* Date */}
-        <div className="flex items-center gap-2">
-          <Calendar size={16} className="text-neutral-950" />
-          <p className="text-sm font-medium text-gray-700">
+        <div className="flex items-center gap-3">
+          <Calendar size={20} className="text-black" strokeWidth={2.5} />
+          <p className="text-base font-bold text-black">
             {booking.date}
           </p>
         </div>
 
         {/* Time */}
-        <div className="flex items-center gap-2">
-          <Clock size={16} className="text-neutral-950" />
-          <p className="text-sm font-medium text-gray-700">
+        <div className="flex items-center gap-3">
+          <Clock size={20} className="text-black" strokeWidth={2.5} />
+          <p className="text-base font-bold text-black">
             {booking.start_time} - {booking.end_time}
           </p>
         </div>
@@ -268,15 +276,15 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
 
       {/* Check-in Code & Actions */}
       {hasButtons && (
-        <div className="flex flex-col gap-3 pt-2">
+        <div className="flex flex-col gap-4 pt-2">
           {/* Check-in Code Box and Action Buttons Row 1 */}
-          <div className="flex flex-col md:flex-row gap-3 items-stretch">
+          <div className="flex flex-col md:flex-row gap-4 items-stretch">
             {/* Check-in Code Box */}
-            <div className="flex-1 bg-white/60 border border-gray-200/50 rounded-xl p-3 flex flex-col justify-center gap-1">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+            <div className="flex-1 bg-white border-2 border-black rounded-xl p-4 flex flex-col justify-center gap-1 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.1)]">
+              <p className="text-xs font-black text-gray-500 uppercase tracking-wider">
                 Check-in Code
               </p>
-              <p className="text-lg font-bold text-neutral-950 font-mono tracking-wide">
+              <p className="text-2xl font-black text-black font-mono tracking-widest">
                 {booking.checkin_code || 'N/A'}
               </p>
             </div>
@@ -288,9 +296,9 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
                 ref={checkInRef}
                 onClick={handleCheckInClick}
                 disabled={booking.status !== 'active'}
-                className="flex-1 bg-white border-2 border-green-200 text-green-700 rounded-xl px-4 py-3 font-bold flex items-center justify-center gap-2 hover:bg-green-50 active:scale-95 transition-all shadow-sm"
+                className="flex-[2] bg-black text-white border-2 border-black rounded-xl px-4 py-3 font-bold uppercase tracking-wider flex items-center justify-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.3)] active:translate-y-0 active:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] transition-all"
               >
-                <LogIn size={18} />
+                <LogIn size={20} strokeWidth={2.5} />
                 <span>Check In</span>
               </button>
             ) : (
@@ -299,9 +307,9 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
                 ref={checkOutRef}
                 onClick={handleCheckOutClick}
                 disabled={booking.status === 'finished' || booking.status === 'cancelled' || booking.checkout_at !== null}
-                className="flex-1 bg-white border-2 border-orange-200 text-orange-700 rounded-xl px-4 py-3 font-bold flex items-center justify-center gap-2 hover:bg-orange-50 active:scale-95 transition-all shadow-sm"
+                className="flex-[2] bg-white text-black border-2 border-black rounded-xl px-4 py-3 font-bold uppercase tracking-wider flex items-center justify-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
               >
-                <LogOut size={18} />
+                <LogOut size={20} strokeWidth={2.5} />
                 <span>Check Out</span>
               </button>
             )}
@@ -311,10 +319,10 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
               ref={cancelRef}
               onClick={handleCancelClick}
               disabled={booking.status === 'finished' || booking.status === 'cancelled'}
-              className="bg-white border-2 border-red-200 text-red-600 rounded-xl px-4 py-3 font-bold flex items-center justify-center gap-2 hover:bg-red-50 active:scale-95 transition-all shadow-sm"
+              className="bg-white border-2 border-black text-red-600 rounded-xl px-4 py-3 font-bold flex items-center justify-center gap-2 hover:bg-red-50 hover:-translate-y-0.5 transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,0.1)]"
+              aria-label="Cancel Booking"
             >
-              <XCircle size={18} />
-              <span>Cancel</span>
+              <XCircle size={24} strokeWidth={2.5} />
             </button>
           </div>
 
@@ -324,9 +332,9 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
               ref={qrRef}
               onClick={handleQRClick}
               disabled={booking.status === 'finished' || booking.status === 'cancelled'}
-              className="bg-white border-2 border-gray-200 text-gray-600 rounded-xl px-4 py-2 text-xs font-bold flex items-center gap-2 hover:bg-gray-50 active:scale-95 transition-all shadow-sm"
+              className="w-full bg-white border-2 border-black text-black rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wide flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-95 transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,0.1)]"
             >
-              <QrCode size={14} />
+              <QrCode size={16} strokeWidth={2.5} />
               <span>{showQRCode ? 'Hide QR Code' : 'Show QR Code'}</span>
             </button>
           </div>
@@ -335,17 +343,17 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
 
       {/* QR Code Section - Shown when showQRCode is true */}
       {hasButtons && showQRCode && (
-        <div className="bg-white border-2 border-gray-100 rounded-2xl p-8 flex flex-col items-center gap-5 animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="bg-white border-2 border-black rounded-2xl p-8 flex flex-col items-center gap-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] animate-in fade-in slide-in-from-top-2 duration-300">
           {/* Title */}
-          <p className="text-base font-medium text-gray-500">
+          <p className="text-sm font-bold text-black uppercase tracking-wide">
             Scan to check in
           </p>
 
           {/* QR Code Container */}
-          <div className="bg-white border-2 border-gray-100 rounded-xl p-6 flex items-center justify-center shadow-inner">
+          <div className="bg-white border-2 border-black rounded-xl p-4 flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]">
             <QRCode
               value={booking.checkin_code || 'N/A'}
-              size={240}
+              size={200}
               bgColor="#ffffff"
               fgColor="#000000"
               level="H"
@@ -353,11 +361,11 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
           </div>
 
           {/* Code Text */}
-          <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
-            <p className="text-sm font-medium text-gray-500">
+          <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg border-2 border-black">
+            <p className="text-sm font-bold text-gray-500 uppercase">
               Code:
             </p>
-            <p className="text-base font-bold text-neural-950 font-mono">
+            <p className="text-lg font-black text-black font-mono">
               {booking.checkin_code || 'N/A'}
             </p>
           </div>

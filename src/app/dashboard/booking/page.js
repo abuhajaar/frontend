@@ -14,6 +14,7 @@ import FloorPlan from '@/component/floor-plan/FloorPlan';
 import LevelTabs from '@/component/floor-plan/LevelTabs';
 import { useBookingSearch } from '@/hooks/useBookingSearch';
 import { getUniqueFloors, filterSpaces } from '@/utils/space';
+import DefaultMsg from '@/component/DefaultMsg';
 
 export default function BookingPage() {
   // UI State
@@ -294,20 +295,17 @@ export default function BookingPage() {
   };
 
   return (
-    <div className="min-h-full px-4 sm:px-6 md:px-8 py-8 md:py-10 bg-[#FFFFFF]">
-      {/* Background Aesthetics */}
-      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0 opacity-40">
-        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-gradient-to-br from-purple-200/40 to-blue-200/40 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[10%] left-[5%] w-[400px] h-[400px] bg-gradient-to-tr from-orange-200/30 to-rose-100/30 rounded-full blur-[80px]" />
-      </div>
+    <div className="min-h-full px-4 sm:px-6 md:px-8 py-8 md:py-10 bg-[#FFFEF8]" style={{ backgroundImage: 'radial-gradient(#E5E5E5 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
 
       <div className="relative z-10 max-w-[1600px] mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
-            <p className="text-sm font-semibold tracking-widest text-gray-400 uppercase mb-2">Space Booking</p>
-            <h1 className="text-4xl md:text-5xl font-light text-neutral-900 tracking-tight" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
-              Browse Available <span className="font-normal relative inline-block after:content-[''] after:absolute after:bottom-2 after:left-0 after:w-full after:h-3 after:bg-blue-100/50 after:-z-10">Spaces</span>
+            <p className="text-gray-500 font-medium mb-1 pl-1">
+              Find your perfect spot
+            </p>
+            <h1 className="text-4xl md:text-5xl font-black text-black tracking-tight" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
+              BOOK A <span className="text-gray-400">SPACE</span>
             </h1>
           </div>
         </div>
@@ -325,7 +323,7 @@ export default function BookingPage() {
         />
 
         {/* View Mode Toggle */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex-1 min-h-[44px] flex items-center">
             {viewMode === 'grid' && (
               <FilterBar
@@ -336,25 +334,15 @@ export default function BookingPage() {
                 onTypeChange={setSelectedType}
               />
             )}
-            {viewMode === 'floorplan' && hasSearched && (
-              <LevelTabs
-                selectedLevel={selectedLevel}
-                onSelectLevel={setSelectedLevel}
-                availability={{
-                  lantai1: availableSpacesLantai1,
-                  lantai2: availableSpacesLantai2,
-                  lantai3: availableSpacesLantai3
-                }}
-              />
-            )}
+
           </div>
 
-          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1 shadow-sm flex-shrink-0">
+          <div className="flex items-center gap-2 bg-white border-[3px] border-black rounded-xl p-1 flex-shrink-0">
             <button
               onClick={() => setViewMode('grid')}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${viewMode === 'grid'
-                ? 'bg-neutral-950 text-white shadow-sm'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-gray-50'
+              className={`px-4 py-2 text-sm font-bold rounded-lg transition-all border-2 ${viewMode === 'grid'
+                ? 'bg-black text-white border-black ring-0'
+                : 'bg-transparent text-gray-500 border-transparent hover:bg-gray-100'
                 }`}
             >
               <div className="flex items-center gap-2">
@@ -369,9 +357,9 @@ export default function BookingPage() {
             </button>
             <button
               onClick={() => setViewMode('floorplan')}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${viewMode === 'floorplan'
-                ? 'bg-neutral-950 text-white shadow-sm'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-gray-50'
+              className={`px-4 py-2 text-sm font-bold rounded-lg transition-all border-2 ${viewMode === 'floorplan'
+                ? 'bg-black text-white border-black ring-0'
+                : 'bg-transparent text-gray-500 border-transparent hover:bg-gray-100'
                 }`}
             >
               <div className="flex items-center gap-2">
@@ -388,37 +376,32 @@ export default function BookingPage() {
         {/* Conditional rendering based on view mode */}
         {viewMode === 'floorplan' ? (
           hasSearched ? (
-            <FloorPlan
-              occupiedDesks={occupiedDesks}
-              onDeskSelect={handleDeskSelect}
-              selectedDeskId={selectedDeskId}
-              selectedDate={selectedDate}
-              selectedLevel={selectedLevel}
-              onLevelChange={setSelectedLevel}
-            />
-          ) : (
-            <div className="text-center py-20">
-              <div className="flex flex-col items-center gap-4">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full flex items-center justify-center mb-2">
-                  <img
-                    src="/assets/e989417bb1ce761a34ffa1b2d4ae037ff1890258.svg"
-                    alt=""
-                    className="w-10 h-10 opacity-60"
-                  />
-                </div>
-                <div>
-                  <p className="text-lg font-medium text-neutral-950 tracking-tight mb-2">
-                    Ready to find your perfect workspace?
-                  </p>
-                  <p className="text-sm text-gray-500 max-w-md mx-auto">
-                    Select your date and time above, then click "Search Availability" to see available spaces
-                  </p>
-                </div>
+            <div className="bg-[#FFFEF8] rounded-[24px] overflow-hidden relative pl-36">
+              <FloorPlan
+                occupiedDesks={occupiedDesks}
+                onDeskSelect={handleDeskSelect}
+                selectedDeskId={selectedDeskId}
+                selectedDate={selectedDate}
+                selectedLevel={selectedLevel}
+                onLevelChange={setSelectedLevel}
+              />
+              <div className="absolute left-0 top-0 bottom-0 z-20 h-full">
+                <LevelTabs
+                  selectedLevel={selectedLevel}
+                  onSelectLevel={setSelectedLevel}
+                  availability={{
+                    lantai1: availableSpacesLantai1,
+                    lantai2: availableSpacesLantai2,
+                    lantai3: availableSpacesLantai3
+                  }}
+                />
               </div>
             </div>
+          ) : (
+            <DefaultMsg />
           )
         ) : (
-          <div className="overflow-hidden">
+          <div className="overflow-visible pb-4">
             <SpacesGrid
               spaces={spaces}
               filteredSpaces={filteredSpaces}

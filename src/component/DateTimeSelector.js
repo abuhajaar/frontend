@@ -46,40 +46,38 @@ export default function DateTimeSelector({
   };
 
   return (
-    <div className="bg-white border border-gray-100 rounded-[32px] p-8 mb-8 shadow-sm relative overflow-visible">
-      {/* Decorative background */}
-      <div className="absolute top-0 right-0 w-40 h-40 bg-blue-50 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none opacity-60" />
+    <div className="bg-white border-[3px] border-black rounded-[32px] p-8 mb-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-visible">
 
       <div className="relative z-10">
         <div className="mb-8">
-          <h3 className="text-xl font-medium text-neutral-950 tracking-tight mb-1">
+          <h3 className="text-2xl font-black text-black tracking-tight mb-2 uppercase" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
             Select Date & Time
           </h3>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm font-bold text-gray-500">
             Choose when you need a workspace to see availability
           </p>
         </div>
 
         <div className="flex flex-col gap-6">
           {/* Date and Time Inputs Row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Date Input */}
             <div className="flex flex-col gap-2 relative" ref={calendarRef}>
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-bold text-black uppercase tracking-wide">
                 Date
               </label>
 
               <button
                 type="button"
                 onClick={() => setShowCalendar(!showCalendar)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-sm text-neutral-950 text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-200 transition-all cursor-pointer hover:bg-gray-100"
+                className="w-full bg-white border-2 border-black rounded-xl px-4 py-3.5 text-sm font-bold text-black text-left flex items-center justify-between focus:outline-none transition-all cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
               >
                 <span>{formatDateDisplay(selectedDate)}</span>
-                <CalendarIcon size={18} className="text-gray-500" />
+                <CalendarIcon size={20} strokeWidth={2.5} className="text-black" />
               </button>
 
               {showCalendar && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-[9999]">
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 z-[9999]">
                   <CustomCalendar
                     selectedDate={selectedDate}
                     onDateSelect={(date) => {
@@ -94,16 +92,16 @@ export default function DateTimeSelector({
 
             {/* Start Time Select */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-bold text-black uppercase tracking-wide">
                 Start Time
               </label>
               <select
                 value={startTime}
                 onChange={(e) => onStartTimeChange(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-sm text-neutral-950 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-200 transition-all cursor-pointer hover:bg-gray-100 appearance-none bg-no-repeat bg-right pr-10"
+                className="w-full bg-white border-2 border-black rounded-xl px-4 py-3.5 text-sm font-bold text-black focus:outline-none transition-all cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] appearance-none bg-no-repeat bg-right pr-10"
                 style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
-                  backgroundPosition: 'right 0.75rem center',
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+                  backgroundPosition: 'right 1rem center',
                   backgroundSize: '1.25rem 1.25rem'
                 }}
               >
@@ -115,16 +113,16 @@ export default function DateTimeSelector({
 
             {/* End Time Select */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-bold text-black uppercase tracking-wide">
                 End Time
               </label>
               <select
                 value={endTime}
                 onChange={(e) => onEndTimeChange(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-sm text-neutral-950 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-200 transition-all cursor-pointer hover:bg-gray-100 appearance-none bg-no-repeat bg-right pr-10"
+                className="w-full bg-white border-2 border-black rounded-xl px-4 py-3.5 text-sm font-bold text-black focus:outline-none transition-all cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] appearance-none bg-no-repeat bg-right pr-10"
                 style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
-                  backgroundPosition: 'right 0.75rem center',
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+                  backgroundPosition: 'right 1rem center',
                   backgroundSize: '1.25rem 1.25rem'
                 }}
               >
@@ -137,13 +135,20 @@ export default function DateTimeSelector({
 
           {/* Search Button */}
           <div className="flex justify-end">
-            <ButtonV1
+            <button
               onClick={onSearch}
-              loading={loading}
-              loadingText="Searching..."
+              disabled={loading}
+              className="px-8 py-3.5 bg-black text-white text-sm font-bold uppercase tracking-wider rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.3)] active:translate-y-0 active:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              Search Availability
-            </ButtonV1>
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Searching...</span>
+                </>
+              ) : (
+                <span>Search Availability</span>
+              )}
+            </button>
           </div>
         </div>
       </div>

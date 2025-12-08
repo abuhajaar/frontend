@@ -302,12 +302,13 @@ export default function FloorPlan({
   };
 
   return (
-    <div className="overflow-hidden">
+    <div className="overflow-hidden" style={{ backgroundColor: '#FFFEF8' }}>
       {/* Floor Plan Container */}
       <div>
         <div
           ref={svgContainerRef}
           className="relative w-full overflow-hidden min-h-[600px]"
+          style={{ backgroundColor: '#FFFEF8' }}
         >
           <div ref={svgInnerRef} className="w-full h-full">
             {selectedLevel === 'lantai1' && (
@@ -316,7 +317,7 @@ export default function FloorPlan({
                 data="/lantai1v2.svg"
                 type="image/svg+xml"
                 className="w-full h-auto"
-                style={{ maxWidth: '1551px', display: 'block' }}
+                style={{ maxWidth: '1551px', display: 'block', backgroundColor: '#FFFEF8' }}
                 onLoad={handleSvgLoad}
               >
                 Your browser does not support SVG
@@ -328,7 +329,7 @@ export default function FloorPlan({
                 data="/lantai2.svg"
                 type="image/svg+xml"
                 className="w-full h-auto"
-                style={{ maxWidth: '1551px', display: 'block' }}
+                style={{ maxWidth: '1551px', display: 'block', backgroundColor: '#FFFEF8' }}
                 onLoad={handleSvgLoad}
               >
                 Your browser does not support SVG
@@ -340,7 +341,7 @@ export default function FloorPlan({
                 data="/lantai3.svg"
                 type="image/svg+xml"
                 className="w-full h-auto"
-                style={{ maxWidth: '1551px', display: 'block' }}
+                style={{ maxWidth: '1551px', display: 'block', backgroundColor: '#FFFEF8' }}
                 onLoad={handleSvgLoad}
               >
                 Your browser does not support SVG

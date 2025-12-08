@@ -34,7 +34,7 @@ export default function DashboardLayout({ children }) {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex min-h-screen bg-[#FFFEF8]" style={{ backgroundImage: 'radial-gradient(#E5E5E5 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
       {/* Sidebar - Renders once for all dashboard pages */}
       <Sidebar />
 

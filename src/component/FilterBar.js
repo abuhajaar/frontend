@@ -26,9 +26,9 @@ export default function FilterBar({
       {/* Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl text-sm font-medium transition-all border h-[44px] ${isOpen
-          ? 'bg-neutral-900 text-white border-neutral-900 shadow-md'
-          : 'bg-white text-neutral-900 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+        className={`flex items-center gap-3 px-5 py-2.5 rounded-xl text-sm font-bold transition-all border-[3px] h-[44px] ${isOpen
+          ? 'bg-black text-white border-black'
+          : 'bg-white text-black border-black hover:-translate-y-0.5'
           }`}
       >
         <svg
@@ -41,127 +41,121 @@ export default function FilterBar({
           <path
             d="M4 6h12M7 10h10M4 14h12"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="2.5"
             strokeLinecap="round"
           />
         </svg>
-        Filters
+        FILTERS
         <svg
           width="16"
           height="16"
           viewBox="0 0 16 16"
           fill="none"
-          className={`transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`}
+          className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
         >
           <path
-            d="M6 4l4 4-4 4"
+            d="M6 12l4-4-4-4"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
         </svg>
       </button>
 
-      {/* Side Panel */}
-      <div
-        className={`absolute left-full top-0 ml-3 z-10 w-max bg-white border border-gray-200 rounded-[20px] shadow-xl overflow-hidden transition-all duration-300 ease-out ${isOpen
-          ? 'opacity-100 translate-x-0 visible'
-          : 'opacity-0 -translate-x-2 invisible'
-          }`}
-      >
-        <div className="p-6">
-          <div className="flex items-center gap-2 flex-wrap max-w-3xl">
-            {/* Floor Filters */}
-            <button
-              onClick={() => handleFilterChange('floor', FILTER_OPTIONS.FLOORS.ALL)}
-              className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${selectedFloor === FILTER_OPTIONS.FLOORS.ALL
-                ? 'bg-neutral-900 text-white shadow-sm'
-                : 'bg-gray-50 text-neutral-900 hover:bg-gray-100 border border-gray-200'
-                }`}
-            >
-              All Floors
-            </button>
-
-            {availableFloors.map(floor => (
+      {/* Horizontal Panel */}
+      {isOpen && (
+        <div className="bg-white border-[3px] border-black rounded-[20px] overflow-hidden">
+          <div className="p-6">
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Floor Filters */}
               <button
-                key={floor}
-                onClick={() => handleFilterChange('floor', floor)}
-                className={`px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all ${selectedFloor === floor
-                  ? 'bg-neutral-900 text-white shadow-sm'
-                  : 'bg-gray-50 text-neutral-900 hover:bg-gray-100 border border-gray-200'
+                onClick={() => handleFilterChange('floor', FILTER_OPTIONS.FLOORS.ALL)}
+                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all border-2 ${selectedFloor === FILTER_OPTIONS.FLOORS.ALL
+                  ? 'bg-black text-white border-black'
+                  : 'bg-white text-black border-black hover:-translate-y-0.5'
                   }`}
               >
-                <img
-                  src="/assets/7fefcd1b6d178ca5760daf13e3c0ffe13bd03081.svg"
-                  alt=""
-                  className="w-4 h-4"
-                />
-                {floor} Floor
+                All Floors
               </button>
-            ))}
 
-            {/* Divider */}
-            <div className="w-px h-8 bg-gray-300 mx-2"></div>
+              {availableFloors.map(floor => (
+                <button
+                  key={floor}
+                  onClick={() => handleFilterChange('floor', floor)}
+                  className={`px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border-2 ${selectedFloor === floor
+                    ? 'bg-black text-white border-black'
+                    : 'bg-white text-black border-black hover:-translate-y-0.5'
+                    }`}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  </svg>
+                  {floor} Floor
+                </button>
+              ))}
 
-            {/* Type Filters */}
-            <button
-              onClick={() => handleFilterChange('type', FILTER_OPTIONS.TYPES.ALL)}
-              className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${selectedType === FILTER_OPTIONS.TYPES.ALL
-                ? 'bg-neutral-900 text-white shadow-sm'
-                : 'bg-gray-50 text-neutral-900 hover:bg-gray-100 border border-gray-200'
-                }`}
-            >
-              All Types
-            </button>
+              {/* Divider */}
+              <div className="w-0.5 h-8 bg-black mx-2"></div>
 
-            <button
-              onClick={() => handleFilterChange('type', FILTER_OPTIONS.TYPES.HOT_DESK)}
-              className={`px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all ${selectedType === FILTER_OPTIONS.TYPES.HOT_DESK
-                ? 'bg-neutral-900 text-white shadow-sm'
-                : 'bg-gray-50 text-neutral-900 hover:bg-gray-100 border border-gray-200'
-                }`}
-            >
-              <img
-                src="/assets/e9a8acb8b17cb2cce7386825cc93d8c3562d4e74.svg"
-                alt=""
-                className="w-4 h-4"
-              />
-              Hot Desks
-            </button>
+              {/* Type Filters */}
+              <button
+                onClick={() => handleFilterChange('type', FILTER_OPTIONS.TYPES.ALL)}
+                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all border-2 ${selectedType === FILTER_OPTIONS.TYPES.ALL
+                  ? 'bg-black text-white border-black'
+                  : 'bg-white text-black border-black hover:-translate-y-0.5'
+                  }`}
+              >
+                All Types
+              </button>
 
-            <button
-              onClick={() => handleFilterChange('type', FILTER_OPTIONS.TYPES.PRIVATE)}
-              className={`px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all ${selectedType === FILTER_OPTIONS.TYPES.PRIVATE
-                ? 'bg-neutral-900 text-white shadow-sm'
-                : 'bg-gray-50 text-neutral-900 hover:bg-gray-100 border border-gray-200'
-                }`}
-            >
-              <img
-                src="/assets/b277a61a694aff124f107ca648d2a70df5cc1d10.svg"
-                alt=""
-                className="w-4 h-4"
-              />
-              Private Rooms
-            </button>
+              <button
+                onClick={() => handleFilterChange('type', FILTER_OPTIONS.TYPES.HOT_DESK)}
+                className={`px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border-2 ${selectedType === FILTER_OPTIONS.TYPES.HOT_DESK
+                  ? 'bg-black text-white border-black'
+                  : 'bg-white text-black border-black hover:-translate-y-0.5'
+                  }`}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                Hot Desks
+              </button>
 
-            <button
-              onClick={() => handleFilterChange('type', FILTER_OPTIONS.TYPES.MEETING)}
-              className={`px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all ${selectedType === FILTER_OPTIONS.TYPES.MEETING
-                ? 'bg-neutral-900 text-white shadow-sm'
-                : 'bg-gray-50 text-neutral-900 hover:bg-gray-100 border border-gray-200'
-                }`}
-            >
-              <img
-                src="/assets/2f942f19516ee84dd5c5646164f23bcd8aa2a546.svg"
-                alt=""
-                className="w-4 h-4"
-              />
-              Meeting Rooms
-            </button>
+              <button
+                onClick={() => handleFilterChange('type', FILTER_OPTIONS.TYPES.PRIVATE)}
+                className={`px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border-2 ${selectedType === FILTER_OPTIONS.TYPES.PRIVATE
+                  ? 'bg-black text-white border-black'
+                  : 'bg-white text-black border-black hover:-translate-y-0.5'
+                  }`}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                Private Rooms
+              </button>
+
+              <button
+                onClick={() => handleFilterChange('type', FILTER_OPTIONS.TYPES.MEETING)}
+                className={`px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border-2 ${selectedType === FILTER_OPTIONS.TYPES.MEETING
+                  ? 'bg-black text-white border-black'
+                  : 'bg-white text-black border-black hover:-translate-y-0.5'
+                  }`}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                Meeting Rooms
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
