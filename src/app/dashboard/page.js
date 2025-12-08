@@ -7,6 +7,7 @@ import { useCurrentUser, useDashboardStats } from '@/hooks';
 import { useToast } from '@/contexts/ToastContext';
 import { getUserDisplayName } from '@/utils/user';
 import { useRouter } from 'next/navigation';
+import { Activity, Calendar, Clock, MapPin } from 'lucide-react';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -80,28 +81,28 @@ export default function DashboardPage() {
               ) : (
                 <>
                   <StatsCard
-                    icon="/assets/da4f5fa18b22cd13d4f71102120baa5af7fe77e8.svg"
+                    icon={<Activity size={24} strokeWidth={3} />}
                     label="Today by Numbers"
                     value={stats?.today_bookings || 0}
                     description="Active sessions today"
                     shadowColor="#FFD028" // Yellowish
                   />
                   <StatsCard
-                    icon="/assets/e88e0f4df734d42bd7283994158bdc4d594b8b18.svg"
+                    icon={<Calendar size={24} strokeWidth={3} />}
                     label="Upcoming Plan"
                     value={stats?.upcoming_bookings || 0}
                     description="Future bookings scheduled"
                     shadowColor="#3B82F6" // Blue
                   />
                   <StatsCard
-                    icon="/assets/e9aa9032ab2e50fc64c3d5c46f3590100507f1e0.svg"
+                    icon={<Clock size={24} strokeWidth={3} />}
                     label="Weekly Focus"
                     value={stats?.weekly_booking_hours.toFixed(1)}
                     description="Hours dedicated this week"
                     shadowColor="#A855F7" // Purple
                   />
                   <StatsCard
-                    icon="/assets/782e096da2a1ec8dc40baa81f21270e2cc2e826c.svg"
+                    icon={<MapPin size={24} strokeWidth={3} />}
                     label="Go-To Space"
                     value={stats?.favorite_space ? stats.favorite_space.space_name : 'Explore'}
                     description={stats?.favorite_space ? `Most visited (${stats.favorite_space.booking_count})` : 'Find your favorite spot'}

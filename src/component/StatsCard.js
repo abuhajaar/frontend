@@ -19,14 +19,20 @@ export default function StatsCard({ icon, label, value, description, shadowColor
       <div className="relative z-10 flex flex-col h-full justify-between">
         <div className="flex justify-between items-start">
           <div
-            className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:rotate-6"
+            className="w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-500 group-hover:rotate-6 border-2 border-black"
             style={{
-              boxShadow: shadowColor ? `0px 8px 16px -4px ${shadowColor}40` : 'none',
-              backgroundColor: 'white',
-              border: '1px solid rgba(0,0,0,0.02)'
+              boxShadow: `4px 4px 0px 0px ${shadowColor || '#e5e7eb'}`,
+              backgroundColor: 'white'
             }}
           >
-            <img src={icon} alt="" className="w-6 h-6 transform transition-transform group-hover:scale-110" />
+            {/* Render Lucide Icon if provided, otherwise fallback to img */}
+            {typeof icon === 'function' || typeof icon === 'object' ? (
+              <div style={{ color: shadowColor || 'black' }}>
+                {icon}
+              </div>
+            ) : (
+              <img src={icon} alt="" className="w-6 h-6" />
+            )}
           </div>
           {/* Artsy decorative dot */}
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: shadowColor || '#e5e7eb' }} />
