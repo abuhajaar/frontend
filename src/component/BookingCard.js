@@ -8,46 +8,63 @@
 
 import { useState } from 'react';
 import QRCode from 'react-qr-code';
+import {
+  Calendar,
+  Clock,
+  LogIn,
+  LogOut,
+  XCircle,
+  QrCode,
+  MoreHorizontal
+} from 'lucide-react';
+import { hapticClick } from '@/utils/animations';
+import { useRef } from 'react';
 
 export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, onShowQR, compact = false }) {
   const [showQRCode, setShowQRCode] = useState(false);
+
+  // Refs for animation
+  const checkInRef = useRef(null);
+  const checkOutRef = useRef(null);
+  const cancelRef = useRef(null);
+  const qrRef = useRef(null);
 
   const getStatusBadge = (status) => {
     const statusConfig = {
       active: {
         bg: 'bg-green-100',
-        text: 'text-[#016630]',
-        label: 'active'
+        text: 'text-green-700',
+        label: 'Active'
       },
       checkin: {
         bg: 'bg-blue-100',
-        text: 'text-[#193cb8]',
-        label: 'checked-in'
+        text: 'text-blue-700',
+        label: 'Checked In'
       },
       finished: {
-        bg: 'bg-[#fef9c2]',
-        text: 'text-[#894b00]',
-        label: 'finished'
+        bg: 'bg-gray-100',
+        text: 'text-gray-600',
+        label: 'Finished'
       },
       completed: {
-        bg: 'bg-[#fef9c2]',
-        text: 'text-[#894b00]',
-        label: 'finished'
+        bg: 'bg-gray-100',
+        text: 'text-gray-600',
+        label: 'Finished'
       },
       cancelled: {
-        bg: 'bg-gray-100',
-        text: 'text-[#1e2939]',
-        label: 'cancelled'
+        bg: 'bg-red-100',
+        text: 'text-red-700',
+        label: 'Cancelled'
       }
     };
 
     const config = statusConfig[status] || statusConfig.active;
 
     return (
-      <div className={`${config.bg} border border-transparent rounded-[8px] px-[9px] py-[3px] h-[22px] flex items-center justify-center`}>
-        <p className={`font-medium text-[12px] leading-[16px] ${config.text}`}>
+      <div className={`${config.bg} rounded-lg px-2.5 py-1 flex items-center justify-center`}>
+        <span className={`text-xs font-bold ${config.text} uppercase tracking-wide`}>
           {config.label}
-        </p>
+        </span>
       </div>
     );
   };
@@ -57,25 +74,25 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
     if (status === 'active') {
       return {
         bg: 'bg-green-50',
-        border: 'border-[#b9f8cf]'
+        border: 'border-green-200'
       };
     }
     if (status === 'checkin') {
       return {
         bg: 'bg-blue-50',
-        border: 'border-[#bedbff]'
+        border: 'border-blue-200'
       };
     }
     if (status === 'cancelled') {
       return {
         bg: 'bg-red-50',
-        border: 'border-[#ffc9c9]'
+        border: 'border-red-200'
       };
     }
     if (status === 'finished' || status === 'completed') {
       return {
-        bg: 'bg-yellow-50',
-        border: 'border-[#fff085]'
+        bg: 'bg-gray-50',
+        border: 'border-gray-200'
       };
     }
     return {
@@ -89,17 +106,23 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
   // Check if booking has buttons (not cancelled or finished)
   const hasButtons = booking.status !== 'cancelled' && booking.status !== 'finished' && booking.status !== 'completed';
 
+  // Animation handlers
+  const handleCheckInClick = () => hapticClick(checkInRef.current, () => onCheckIn(booking));
+  const handleCheckOutClick = () => hapticClick(checkOutRef.current, () => onCheckOut(booking));
+  const handleCancelClick = () => hapticClick(cancelRef.current, () => onCancel(booking));
+  const handleQRClick = () => hapticClick(qrRef.current, () => setShowQRCode(!showQRCode));
+
   // Compact mode rendering
   if (compact) {
     return (
-      <div className={`${cardStyle.bg} border ${cardStyle.border} rounded-[16px] p-[16px] flex flex-col gap-[12px] h-full`}>
+      <div className={`${cardStyle.bg} border-2 ${cardStyle.border} rounded-2xl p-4 flex flex-col gap-3 h-full transition-all hover:shadow-sm`}>
         {/* Header: Space Name & Status */}
         <div className="flex items-start justify-between">
-          <div className="flex flex-col gap-[2px]">
-            <h3 className="font-medium text-[14px] leading-[20px] tracking-[-0.3125px] text-neutral-950">
+          <div className="flex flex-col">
+            <h3 className="font-bold text-sm text-neutral-950 line-clamp-1">
               {booking.space_name}
             </h3>
-            <p className="font-normal text-[12px] leading-[16px] tracking-[-0.1504px] text-[#717182]">
+            <p className="text-xs font-medium text-gray-500">
               {booking.space_type}
             </p>
           </div>
@@ -107,27 +130,19 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
         </div>
 
         {/* Date & Time Info */}
-        <div className="flex flex-col gap-[6px]">
+        <div className="flex flex-col gap-2">
           {/* Date */}
-          <div className="flex items-center gap-[6px]">
-            <img 
-              src="/assets/d5ce048667629374475c5e2698f94f4c7e50c11f.svg" 
-              alt="Calendar" 
-              className="w-[14px] h-[14px]"
-            />
-            <p className="font-normal text-[12px] leading-[16px] tracking-[-0.1504px] text-[#717182]">
+          <div className="flex items-center gap-2">
+            <Calendar size={14} className="text-neutral-950" />
+            <p className="text-xs font-medium text-gray-600">
               {booking.date}
             </p>
           </div>
 
           {/* Time */}
-          <div className="flex items-center gap-[6px]">
-            <img 
-              src="/assets/6c19041890678fea04354a56ac73a90d63546598.svg" 
-              alt="Clock" 
-              className="w-[14px] h-[14px]"
-            />
-            <p className="font-normal text-[12px] leading-[16px] tracking-[-0.1504px] text-[#717182]">
+          <div className="flex items-center gap-2">
+            <Clock size={14} className="text-neutral-950" />
+            <p className="text-xs font-medium text-gray-600">
               {booking.start_time} - {booking.end_time}
             </p>
           </div>
@@ -135,11 +150,11 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
 
         {/* Check-in Code */}
         {hasButtons && booking.checkin_code && (
-          <div className="bg-gray-50 rounded-[12px] p-[10px] flex flex-col gap-[2px]">
-            <p className="font-normal text-[11px] leading-[16px] tracking-[-0.1504px] text-[#717182]">
+          <div className="bg-white/60 border border-gray-200/50 rounded-xl p-2.5 flex flex-col gap-1">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
               Check-in Code
             </p>
-            <p className="font-medium text-[14px] leading-[20px] tracking-[-0.3125px] text-neutral-950">
+            <p className="text-sm font-bold text-neutral-950 font-mono">
               {booking.checkin_code}
             </p>
           </div>
@@ -147,69 +162,49 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
 
         {/* Actions */}
         {hasButtons && (
-          <div className="flex flex-col gap-[8px] mt-auto">
+          <div className="flex flex-col gap-2 mt-auto">
             {/* Primary Action */}
             {!booking.checkin_at ? (
               <button
-                onClick={() => onCheckIn(booking)}
+                ref={checkInRef}
+                onClick={handleCheckInClick}
                 disabled={booking.status !== 'active'}
-                className="bg-white border border-[#b9f8cf] rounded-[12px] px-[12px] py-[6px] h-[32px] flex items-center justify-center gap-[6px] hover:bg-green-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full"
+                className="bg-white border-2 border-green-200 text-green-700 rounded-xl px-3 py-2 text-xs font-bold flex items-center justify-center gap-2 hover:bg-green-50 active:scale-95 transition-all w-full shadow-sm"
               >
-                <img 
-                  src="/assets/e4565501cae2d05b318704f819e759a0d85af8ca.svg" 
-                  alt="Check In" 
-                  className="w-[14px] h-[14px]"
-                />
-                <p className="font-medium text-[12px] leading-[16px] tracking-[-0.1504px] text-[#00a63e]">
-                  Check In
-                </p>
+                <LogIn size={14} />
+                <span>Check In</span>
               </button>
             ) : (
               <button
-                onClick={() => onCheckOut(booking)}
+                ref={checkOutRef}
+                onClick={handleCheckOutClick}
                 disabled={booking.status === 'finished' || booking.status === 'cancelled' || booking.checkout_at !== null}
-                className="bg-white border border-[#ffd6a7] rounded-[12px] px-[12px] py-[6px] h-[32px] flex items-center justify-center gap-[6px] hover:bg-orange-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full"
+                className="bg-white border-2 border-orange-200 text-orange-700 rounded-xl px-3 py-2 text-xs font-bold flex items-center justify-center gap-2 hover:bg-orange-50 active:scale-95 transition-all w-full shadow-sm"
               >
-                <img 
-                  src="/assets/bbc2ebf7d4f6de18ba37c605a96fd1a7bf3cb129.svg" 
-                  alt="Check Out" 
-                  className="w-[14px] h-[14px]"
-                />
-                <p className="font-medium text-[12px] leading-[16px] tracking-[-0.1504px] text-[#f54900]">
-                  Check Out
-                </p>
+                <LogOut size={14} />
+                <span>Check Out</span>
               </button>
             )}
 
             {/* Secondary Actions */}
-            <div className="flex gap-[8px]">
+            <div className="flex gap-2">
               <button
-                onClick={() => onCancel(booking)}
+                ref={cancelRef}
+                onClick={handleCancelClick}
                 disabled={booking.status === 'finished' || booking.status === 'cancelled'}
-                className="flex-1 bg-white border border-[#ffc9c9] rounded-[12px] px-[10px] py-[6px] h-[32px] flex items-center justify-center gap-[4px] hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-white border-2 border-red-200 text-red-600 rounded-xl px-3 py-2 text-[11px] font-bold flex items-center justify-center gap-2 hover:bg-red-50 active:scale-95 transition-all shadow-sm"
               >
-                <img 
-                  src="/assets/12d525d50ab27e633f32f6b4a4a8dd8ead4212d5.svg" 
-                  alt="Cancel" 
-                  className="w-[14px] h-[14px]"
-                />
-                <p className="font-medium text-[11px] leading-[16px] tracking-[-0.1504px] text-[#e7000b]">
-                  Cancel
-                </p>
+                <XCircle size={14} />
+                <span>Cancel</span>
               </button>
               <button
-                onClick={() => setShowQRCode(!showQRCode)}
+                ref={qrRef}
+                onClick={handleQRClick}
                 disabled={booking.status === 'finished' || booking.status === 'cancelled'}
-                className="flex-1 bg-white border border-gray-200 rounded-[12px] px-[10px] py-[6px] h-[32px] flex items-center justify-center gap-[4px] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-white border-2 border-gray-200 text-gray-700 rounded-xl px-3 py-2 text-[11px] font-bold flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-95 transition-all shadow-sm"
               >
-                <img 
-                  src="/assets/be29472a3c77c094973bbbadee9cfb2d65ae44f3.svg" 
-                  alt="QR Code" 
-                  className="w-[14px] h-[14px]"
-                />
-                <p className="font-medium text-[11px] leading-[16px] tracking-[-0.1504px] text-neutral-950">
-                  QR
-                </p>
+                <QrCode size={14} />
+                <span>QR</span>
               </button>
             </div>
           </div>
@@ -217,22 +212,19 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
 
         {/* QR Code Section - Compact */}
         {hasButtons && showQRCode && (
-          <div className="bg-white border border-gray-200 rounded-[12px] p-[12px] flex flex-col items-center gap-[8px]">
-            <p className="font-normal text-[11px] leading-[16px] tracking-[-0.1504px] text-[#717182]">
+          <div className="bg-white border-2 border-gray-100 rounded-xl p-4 flex flex-col items-center gap-3 animate-in fade-in zoom-in duration-200">
+            <p className="text-[10px] font-medium text-gray-500">
               Scan to check in
             </p>
-            <div className="bg-white border-2 border-gray-100 rounded-[10px] p-[8px] flex items-center justify-center">
-              <QRCode 
+            <div className="bg-white p-3 rounded-lg border border-gray-100">
+              <QRCode
                 value={booking.checkin_code || 'N/A'}
-                size={100}
+                size={120}
                 bgColor="#ffffff"
                 fgColor="#000000"
                 level="H"
               />
             </div>
-            <p className="font-normal text-[11px] leading-[16px] text-[#717182]">
-              Code: <span className="text-[#101828] font-medium">{booking.checkin_code || 'N/A'}</span>
-            </p>
           </div>
         )}
       </div>
@@ -241,14 +233,14 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
 
   // Regular mode rendering
   return (
-    <div className={`${cardStyle.bg} border ${cardStyle.border} rounded-[16px] p-[25px] flex flex-col gap-[16px]`}>
+    <div className={`${cardStyle.bg} border-2 ${cardStyle.border} rounded-2xl p-6 flex flex-col gap-4 transition-all hover:shadow-md`}>
       {/* Header: Space Name & Status */}
-      <div className="flex items-start justify-between h-[48px]">
-        <div className="flex flex-col gap-[4px]">
-          <h3 className="font-normal text-[16px] leading-[24px] tracking-[-0.3125px] text-neutral-950">
+      <div className="flex items-start justify-between">
+        <div className="flex flex-col">
+          <h3 className="font-bold text-lg text-neutral-950 tracking-tight">
             {booking.space_name}
           </h3>
-          <p className="font-normal text-[14px] leading-[20px] tracking-[-0.1504px] text-[#717182]">
+          <p className="text-sm font-medium text-gray-500">
             {booking.space_type}
           </p>
         </div>
@@ -256,27 +248,19 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
       </div>
 
       {/* Date & Time Info */}
-      <div className="flex flex-col gap-[8px] h-[48px]">
+      <div className="flex flex-col gap-2">
         {/* Date */}
-        <div className="flex items-center gap-[8px] h-[20px]">
-          <img 
-            src="/assets/d5ce048667629374475c5e2698f94f4c7e50c11f.svg" 
-            alt="Calendar" 
-            className="w-[16px] h-[16px]"
-          />
-          <p className="font-normal text-[14px] leading-[20px] tracking-[-0.1504px] text-[#717182]">
+        <div className="flex items-center gap-2">
+          <Calendar size={16} className="text-neutral-950" />
+          <p className="text-sm font-medium text-gray-700">
             {booking.date}
           </p>
         </div>
 
         {/* Time */}
-        <div className="flex items-center gap-[8px] h-[20px]">
-          <img 
-            src="/assets/6c19041890678fea04354a56ac73a90d63546598.svg" 
-            alt="Clock" 
-            className="w-[16px] h-[16px]"
-          />
-          <p className="font-normal text-[14px] leading-[20px] tracking-[-0.1504px] text-[#717182]">
+        <div className="flex items-center gap-2">
+          <Clock size={16} className="text-neutral-950" />
+          <p className="text-sm font-medium text-gray-700">
             {booking.start_time} - {booking.end_time}
           </p>
         </div>
@@ -284,86 +268,66 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
 
       {/* Check-in Code & Actions */}
       {hasButtons && (
-        <div className="flex flex-col gap-[12px]">
+        <div className="flex flex-col gap-3 pt-2">
           {/* Check-in Code Box and Action Buttons Row 1 */}
-          <div className="flex gap-[12px] items-start">
+          <div className="flex flex-col md:flex-row gap-3 items-stretch">
             {/* Check-in Code Box */}
-            <div className="flex-1 bg-gray-50 rounded-[14px] p-[12px] flex flex-col gap-[4px] h-[72px]">
-              <p className="font-normal text-[14px] leading-[20px] tracking-[-0.1504px] text-[#717182]">
+            <div className="flex-1 bg-white/60 border border-gray-200/50 rounded-xl p-3 flex flex-col justify-center gap-1">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">
                 Check-in Code
               </p>
-              <p className="font-normal text-[16px] leading-[24px] tracking-[-0.3125px] text-neutral-950">
+              <p className="text-lg font-bold text-neutral-950 font-mono tracking-wide">
                 {booking.checkin_code || 'N/A'}
               </p>
             </div>
 
             {/* Check In / Check Out Button */}
             {!booking.checkin_at ? (
-              // Check In Button (when not checked in)
+              // Check In Button
               <button
-                onClick={() => onCheckIn(booking)}
+                ref={checkInRef}
+                onClick={handleCheckInClick}
                 disabled={booking.status !== 'active'}
-                className="bg-white border border-[#b9f8cf] rounded-[14px] px-[16px] py-[8px] h-[36px] flex items-center gap-[8px] hover:bg-green-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-white border-2 border-green-200 text-green-700 rounded-xl px-4 py-3 font-bold flex items-center justify-center gap-2 hover:bg-green-50 active:scale-95 transition-all shadow-sm"
               >
-                <img 
-                  src="/assets/e4565501cae2d05b318704f819e759a0d85af8ca.svg" 
-                  alt="Check In" 
-                  className="w-[16px] h-[16px]"
-                />
-                <p className="font-medium text-[14px] leading-[20px] tracking-[-0.1504px] text-[#00a63e]">
-                  Check In
-                </p>
+                <LogIn size={18} />
+                <span>Check In</span>
               </button>
             ) : (
-              // Check Out Button (when already checked in)
+              // Check Out Button
               <button
-                onClick={() => onCheckOut(booking)}
+                ref={checkOutRef}
+                onClick={handleCheckOutClick}
                 disabled={booking.status === 'finished' || booking.status === 'cancelled' || booking.checkout_at !== null}
-                className="bg-white border border-[#ffd6a7] rounded-[14px] px-[16px] py-[8px] h-[36px] flex items-center gap-[8px] hover:bg-orange-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-white border-2 border-orange-200 text-orange-700 rounded-xl px-4 py-3 font-bold flex items-center justify-center gap-2 hover:bg-orange-50 active:scale-95 transition-all shadow-sm"
               >
-                <img 
-                  src="/assets/bbc2ebf7d4f6de18ba37c605a96fd1a7bf3cb129.svg" 
-                  alt="Check Out" 
-                  className="w-[16px] h-[16px]"
-                />
-                <p className="font-medium text-[14px] leading-[20px] tracking-[-0.1504px] text-[#f54900]">
-                  Check Out
-                </p>
+                <LogOut size={18} />
+                <span>Check Out</span>
               </button>
             )}
 
             {/* Cancel Button */}
             <button
-              onClick={() => onCancel(booking)}
+              ref={cancelRef}
+              onClick={handleCancelClick}
               disabled={booking.status === 'finished' || booking.status === 'cancelled'}
-              className="bg-white border border-[#ffc9c9] rounded-[14px] px-[16px] py-[8px] h-[36px] flex items-center gap-[8px] hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-white border-2 border-red-200 text-red-600 rounded-xl px-4 py-3 font-bold flex items-center justify-center gap-2 hover:bg-red-50 active:scale-95 transition-all shadow-sm"
             >
-              <img 
-                src="/assets/12d525d50ab27e633f32f6b4a4a8dd8ead4212d5.svg" 
-                alt="Cancel" 
-                className="w-[16px] h-[16px]"
-              />
-              <p className="font-medium text-[14px] leading-[20px] tracking-[-0.1504px] text-[#e7000b]">
-                Cancel
-              </p>
+              <XCircle size={18} />
+              <span>Cancel</span>
             </button>
           </div>
 
           {/* Show QR Button Row 2 */}
           <div className="flex justify-center">
             <button
-              onClick={() => setShowQRCode(!showQRCode)}
+              ref={qrRef}
+              onClick={handleQRClick}
               disabled={booking.status === 'finished' || booking.status === 'cancelled'}
-              className="bg-white border border-gray-200 rounded-[14px] px-[16px] py-[8px] h-[36px] flex items-center gap-[8px] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-white border-2 border-gray-200 text-gray-600 rounded-xl px-4 py-2 text-xs font-bold flex items-center gap-2 hover:bg-gray-50 active:scale-95 transition-all shadow-sm"
             >
-              <img 
-                src="/assets/be29472a3c77c094973bbbadee9cfb2d65ae44f3.svg" 
-                alt="QR Code" 
-                className="w-[16px] h-[16px]"
-              />
-              <p className="font-medium text-[14px] leading-[20px] tracking-[-0.1504px] text-neutral-950">
-                {showQRCode ? 'Hide QR' : 'Show QR'}
-              </p>
+              <QrCode size={14} />
+              <span>{showQRCode ? 'Hide QR Code' : 'Show QR Code'}</span>
             </button>
           </div>
         </div>
@@ -371,17 +335,17 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
 
       {/* QR Code Section - Shown when showQRCode is true */}
       {hasButtons && showQRCode && (
-        <div className="bg-white border border-gray-200 rounded-[16px] p-[25px] flex flex-col items-center gap-[16px]">
+        <div className="bg-white border-2 border-gray-100 rounded-2xl p-8 flex flex-col items-center gap-5 animate-in fade-in slide-in-from-top-2 duration-300">
           {/* Title */}
-          <p className="font-normal text-[14px] leading-[20px] tracking-[-0.1504px] text-[#717182]">
+          <p className="text-base font-medium text-gray-500">
             Scan to check in
           </p>
 
           {/* QR Code Container */}
-          <div className="bg-white border-2 border-gray-100 rounded-[14px] p-[18px] w-[236px] h-[236px] flex items-center justify-center">
-            <QRCode 
+          <div className="bg-white border-2 border-gray-100 rounded-xl p-6 flex items-center justify-center shadow-inner">
+            <QRCode
               value={booking.checkin_code || 'N/A'}
-              size={200}
+              size={240}
               bgColor="#ffffff"
               fgColor="#000000"
               level="H"
@@ -389,11 +353,11 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
           </div>
 
           {/* Code Text */}
-          <div className="flex items-center gap-[4px]">
-            <p className="font-normal text-[14px] leading-[20px] tracking-[-0.1504px] text-[#717182]">
+          <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
+            <p className="text-sm font-medium text-gray-500">
               Code:
             </p>
-            <p className="font-normal text-[14px] leading-[20px] text-[#101828]">
+            <p className="text-base font-bold text-neural-950 font-mono">
               {booking.checkin_code || 'N/A'}
             </p>
           </div>

@@ -1,125 +1,148 @@
+import { useRef } from 'react';
+import { hapticClick } from '@/utils/animations';
+import {
+  Wifi,
+  Monitor,
+  Plug,
+  Presentation,
+  Video,
+  Users,
+  User,
+  Clock,
+  Timer,
+  Armchair,
+  DoorOpen
+} from 'lucide-react';
+
 export default function SpaceCard({ space, onBook }) {
-  const amenityIcons = {
-    'Wi-Fi': '/assets/wifi-icon.svg', // Add Wi-Fi icon
-    'Monitor': '/assets/f710a8532bb7f6be7023184b940c0b2b5746bc70.svg',
-    'Power Outlet': '/assets/76c797ffeb4d86d3692d6527e4b870857d452ded.svg',
-    'Standing Desk': '/assets/184edf44907e8ea4d64d9756ae4a72901920ea57.svg',
-    'Whiteboard': '/assets/013426a4beb4fcc79d3fa615feda380fd8cc6599.svg',
-    'Projector': '/assets/2470b495aa90fa962b67cb001b73a4573bb33800.svg',
-    'Video Conference': '/assets/2470b495aa90fa962b67cb001b73a4573bb33800.svg',
+  const buttonRef = useRef(null); // Ref for the button
+
+  // Map amenities to Lucide icons
+  const getAmenityIcon = (amenity) => {
+    const iconMap = {
+      'Wi-Fi': Wifi,
+      'Monitor': Monitor,
+      'Power Outlet': Plug,
+      'Standing Desk': Armchair,
+      'Whiteboard': Presentation,
+      'Projector': Presentation,
+      'Video Conference': Video,
+    };
+    return iconMap[amenity] || null;
   };
 
-  const getCapacityIcon = () => {
+  // Get icon and color scheme based on space type
+  const getTypeConfig = () => {
     if (space.type === 'Hot Desk') {
-      return '/assets/9e69ac9b819b5b1c88afa4f6e7b8406777e7c0b9.svg';
-    } else if (space.type === 'Private Room') {
-      return '/assets/b63d2480399ef9af5bbee97a82bea049fa954449.svg';
-    } else {
-      return '/assets/6efc2681542d8e95ea9d5079af33757db2573221.svg';
+      return {
+        icon: Armchair,
+        iconBg: 'bg-blue-600',
+        iconBgHover: 'group-hover:bg-blue-700',
+      };
     }
+    if (space.type === 'Private Room') {
+      return {
+        icon: DoorOpen,
+        iconBg: 'bg-purple-600',
+        iconBgHover: 'group-hover:bg-purple-700',
+      };
+    }
+    // Meeting Room
+    return {
+      icon: Users,
+      iconBg: 'bg-orange-600',
+      iconBgHover: 'group-hover:bg-orange-700',
+    };
+  };
+
+  const typeConfig = getTypeConfig();
+  const TypeIcon = typeConfig.icon;
+
+  const handleBookClick = (e) => {
+    e.stopPropagation();
+    hapticClick(buttonRef.current, () => {
+      onBook && onBook(space);
+    });
   };
 
   return (
-    <div 
-      className="bg-white border-2 rounded-[16px] overflow-hidden flex flex-col"
-      style={{ borderColor: space.borderColor }}
-    >
-      {/* Top spacing */}
-      <div className="h-[8px]" />
-
-      <div className="px-[24px] pb-[24px] flex flex-col flex-1">
-        {/* Header with Icon and Name */}
-        <div className="flex items-start gap-[12px] mb-[17px]">
-          <div 
-            className="w-[48px] h-[48px] rounded-[14px] flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: space.bgColor }}
-          >
-            <img src={space.icon} alt="" className="w-[24px] h-[24px]" />
+    <div className="group relative z-0 hover:z-10 bg-white border-2 border-b-[6px] border-gray-200 rounded-2xl overflow-hidden hover:-translate-y-1 hover:shadow-xl active:translate-y-[2px] active:shadow-sm transition-all duration-200 flex flex-col h-full">
+      {/* Header Section */}
+      <div className="p-6 border-b border-gray-100">
+        <div className="flex items-start gap-4 mb-4">
+          {/* Icon */}
+          <div className={`w-12 h-12 rounded-xl ${typeConfig.iconBg} ${typeConfig.iconBgHover} flex items-center justify-center flex-shrink-0 transition-colors duration-200 shadow-sm group-hover:scale-105 transform`}>
+            <TypeIcon className="w-6 h-6 text-white" strokeWidth={2} />
           </div>
-          <div className="flex-1 flex flex-col gap-[4px]">
-            <h3 className="text-[16px] font-normal text-neutral-950 tracking-[-0.3125px] leading-[24px]">
+
+          {/* Name and Type */}
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-bold text-neutral-950 tracking-tight mb-1 truncate">
               {space.name}
             </h3>
-            <p 
-              className="text-[14px] tracking-[-0.1504px] leading-[20px]"
-              style={{ color: space.typeColor }}
-            >
+            <p className="text-sm text-gray-600 font-medium">
               {space.type}
             </p>
           </div>
         </div>
 
-        {/* Capacity badge */}
-        <div 
-          className="inline-flex items-center gap-[8px] h-[22px] rounded-[8px] mb-[17px] self-start"
-          style={{ backgroundColor: space.badgeColor }}
-        >
-          <div className="flex items-center justify-center pl-[9px]">
-            <img 
-              src={getCapacityIcon()} 
-              alt="" 
-              className="w-[12px] h-[12px]" 
-            />
-          </div>
-          <span 
-            className="text-[12px] font-medium leading-[16px] pr-[9px]"
-            style={{ color: space.badgeTextColor }}
-          >
+        {/* Capacity Badge */}
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-transparent group-hover:border-gray-200 transition-colors duration-200">
+          {space.capacity === 1 ? (
+            <User className="w-4 h-4 text-gray-500" strokeWidth={2} />
+          ) : (
+            <Users className="w-4 h-4 text-gray-500" strokeWidth={2} />
+          )}
+          <span className="text-sm font-bold text-gray-600">
             {space.capacity} {space.capacity === 1 ? 'person' : 'people'}
           </span>
         </div>
+      </div>
 
-        {/* Opening hours and Max duration */}
-        <div className="flex flex-col gap-[8px] mb-[16px]">
-          {/* Opening hours */}
-          <div className="flex items-center gap-[8px] h-[20px]">
-            <img src="/assets/df185e711c54528a4371171a43de1718c7d42403.svg" alt="" className="w-[16px] h-[16px]" />
-            <span className="text-[14px] text-[#717182] tracking-[-0.1504px] leading-[20px]">
-              Opening hours: {space.opening_hours || '00:00-18:00'}
-            </span>
+      {/* Details Section */}
+      <div className="p-6 flex-1 flex flex-col">
+        {/* Opening Hours & Duration */}
+        <div className="space-y-3 mb-6">
+          <div className="flex items-center gap-2 text-sm text-gray-600 font-medium">
+            <Clock className="w-4 h-4 text-gray-400" strokeWidth={2.5} />
+            <span>Hours: {space.opening_hours || '00:00-18:00'}</span>
           </div>
-
-          {/* Max duration */}
-          <div className="flex items-center gap-[8px] h-[20px]">
-            <img src="/assets/6c19041890678fea04354a56ac73a90d63546598.svg" alt="" className="w-[16px] h-[16px]" />
-            <span className="text-[14px] text-[#717182] tracking-[-0.1504px] leading-[20px]">
-              Max duration: {space.max_duration} minutes
-            </span>
+          <div className="flex items-center gap-2 text-sm text-gray-600 font-medium">
+            <Timer className="w-4 h-4 text-gray-400" strokeWidth={2.5} />
+            <span>Max: {space.max_duration} minutes</span>
           </div>
         </div>
 
         {/* Amenities */}
-        <div className="flex flex-wrap gap-[8px] mb-[24px]">
-          {space.amenities && space.amenities.map((amenity, index) => {
-            const iconPath = amenityIcons[amenity];
-            
-            return (
-              <div 
-                key={index}
-                className="bg-gray-50 px-[12px] rounded-[10px] flex items-center gap-[6px] h-[32px]"
-              >
-                {iconPath ? (
-                  <img src={iconPath} alt="" className="w-[14px] h-[14px]" />
-                ) : (
-                  <div className="w-[14px] h-[14px] flex items-center justify-center">
-                    <span className="text-[10px]">✓</span>
+        {space.amenities && space.amenities.length > 0 && (
+          <div className="mb-6">
+            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+              Amenities
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {space.amenities.map((amenity, index) => {
+                const Icon = getAmenityIcon(amenity);
+                return (
+                  <div
+                    key={index}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 rounded-lg border-2 border-gray-100 font-medium text-xs text-gray-600"
+                  >
+                    {Icon && <Icon className="w-3.5 h-3.5 text-gray-500" strokeWidth={2.5} />}
+                    <span>{amenity}</span>
                   </div>
-                )}
-                <span className="text-[14px] text-[#4a5565] tracking-[-0.1504px] leading-[20px]">
-                  {amenity}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
-        {/* Book button */}
-        <button 
-          onClick={() => onBook && onBook(space)}
-          className="w-full text-white text-[14px] font-medium tracking-[-0.1504px] leading-[20px] px-[16px] py-[8px] rounded-[14px] h-[36px] flex items-center justify-center mt-auto"
-          style={{ backgroundColor: space.buttonColor }}
+        {/* Book Button */}
+        <button
+          ref={buttonRef}
+          onClick={handleBookClick}
+          className="w-full mt-auto bg-neutral-900 text-white text-sm font-bold px-4 py-3 rounded-xl border-b-4 border-neutral-700 hover:bg-neutral-800 hover:border-neutral-600 active:border-b-0 active:translate-y-1 transition-all duration-150 flex items-center justify-center gap-2"
         >
-          {space.buttonText || 'Book Space'}
+          <span>{space.buttonText || 'Book Space'}</span>
         </button>
       </div>
     </div>

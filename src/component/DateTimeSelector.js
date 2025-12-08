@@ -1,9 +1,10 @@
-/**
- * DateTimeSelector component
- * Date and time input controls with search button
- */
+'use client';
 
+import { useState, useRef, useEffect } from 'react';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import CustomCalendar from './CustomCalendar';
 import { TIME_SLOTS } from '@/constants/booking';
+import ButtonV1 from './ButtonV1';
 
 export default function DateTimeSelector({
   selectedDate,
@@ -15,11 +16,40 @@ export default function DateTimeSelector({
   onSearch,
   loading,
 }) {
+  const [showCalendar, setShowCalendar] = useState(false);
+  const calendarRef = useRef(null);
+
+  // Close calendar when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (calendarRef.current && !calendarRef.current.contains(event.target)) {
+        setShowCalendar(false);
+      }
+    }
+    if (showCalendar) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showCalendar]);
+
+  // Format date for display
+  const formatDateDisplay = (dateString) => {
+    if (!dateString) return 'Select Date';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
   return (
-    <div className="bg-white border border-gray-100 rounded-[32px] p-8 mb-8 shadow-sm relative overflow-hidden">
+    <div className="bg-white border border-gray-100 rounded-[32px] p-8 mb-8 shadow-sm relative overflow-visible">
       {/* Decorative background */}
       <div className="absolute top-0 right-0 w-40 h-40 bg-blue-50 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none opacity-60" />
-      
+
       <div className="relative z-10">
         <div className="mb-8">
           <h3 className="text-xl font-medium text-neutral-950 tracking-tight mb-1">
@@ -34,16 +64,32 @@ export default function DateTimeSelector({
           {/* Date and Time Inputs Row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Date Input */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 relative" ref={calendarRef}>
               <label className="text-sm font-medium text-gray-700">
                 Date
               </label>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => onDateChange(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-sm text-neutral-950 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-200 transition-all cursor-pointer hover:bg-gray-100"
-              />
+
+              <button
+                type="button"
+                onClick={() => setShowCalendar(!showCalendar)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-sm text-neutral-950 text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-200 transition-all cursor-pointer hover:bg-gray-100"
+              >
+                <span>{formatDateDisplay(selectedDate)}</span>
+                <CalendarIcon size={18} className="text-gray-500" />
+              </button>
+
+              {showCalendar && (
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-[9999]">
+                  <CustomCalendar
+                    selectedDate={selectedDate}
+                    onDateSelect={(date) => {
+                      onDateChange(date);
+                      setShowCalendar(false);
+                    }}
+                    onClose={() => setShowCalendar(false)}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Start Time Select */}
@@ -51,7 +97,7 @@ export default function DateTimeSelector({
               <label className="text-sm font-medium text-gray-700">
                 Start Time
               </label>
-              <select 
+              <select
                 value={startTime}
                 onChange={(e) => onStartTimeChange(e.target.value)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-sm text-neutral-950 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-200 transition-all cursor-pointer hover:bg-gray-100 appearance-none bg-no-repeat bg-right pr-10"
@@ -72,7 +118,7 @@ export default function DateTimeSelector({
               <label className="text-sm font-medium text-gray-700">
                 End Time
               </label>
-              <select 
+              <select
                 value={endTime}
                 onChange={(e) => onEndTimeChange(e.target.value)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-sm text-neutral-950 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-200 transition-all cursor-pointer hover:bg-gray-100 appearance-none bg-no-repeat bg-right pr-10"
@@ -91,16 +137,13 @@ export default function DateTimeSelector({
 
           {/* Search Button */}
           <div className="flex justify-end">
-            <button 
+            <ButtonV1
               onClick={onSearch}
-              disabled={loading}
-              className="group relative px-8 py-3 bg-neutral-900 text-white text-sm font-medium rounded-full overflow-hidden transition-all hover:pr-11 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:pr-8"
+              loading={loading}
+              loadingText="Searching..."
             >
-              <span className="relative z-10">{loading ? 'Searching...' : 'Search Availability'}</span>
-              {!loading && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">→</span>
-              )}
-            </button>
+              Search Availability
+            </ButtonV1>
           </div>
         </div>
       </div>

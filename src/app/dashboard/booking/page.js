@@ -11,6 +11,7 @@ import DateTimeSelector from '@/component/DateTimeSelector';
 import FilterBar from '@/component/FilterBar';
 import SpacesGrid from '@/component/SpacesGrid';
 import FloorPlan from '@/component/floor-plan/FloorPlan';
+import LevelTabs from '@/component/floor-plan/LevelTabs';
 import { useBookingSearch } from '@/hooks/useBookingSearch';
 import { getUniqueFloors, filterSpaces } from '@/utils/space';
 
@@ -25,6 +26,7 @@ export default function BookingPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState('floorplan'); // 'grid' or 'floorplan'
   const [selectedDeskId, setSelectedDeskId] = useState(null);
+  const [selectedLevel, setSelectedLevel] = useState('lantai1'); // For floor plan view
 
   // Set default date to today on mount
   useEffect(() => {
@@ -95,12 +97,12 @@ export default function BookingPage() {
   // Lantai 2: meetingRoom04-06 - continuing numbering from Lantai 1
   const deskSpaceMap = {};
   const occupiedDesks = [];
-  
+
   // Map Lantai 1 hot desks (hotDesk01-12)
   floor1HotDesks.forEach((space, index) => {
     const deskId = `hotDesk${String(index + 1).padStart(2, '0')}`;
     deskSpaceMap[deskId] = space;
-    
+
     const isNotAvailable = space.is_available === false;
     if (isNotAvailable) {
       occupiedDesks.push(deskId);
@@ -111,7 +113,7 @@ export default function BookingPage() {
   floor2HotDesks.forEach((space, index) => {
     const deskId = `hotDesk${String(13 + index).padStart(2, '0')}`;
     deskSpaceMap[deskId] = space;
-    
+
     const isNotAvailable = space.is_available === false;
     if (isNotAvailable) {
       occupiedDesks.push(deskId);
@@ -122,7 +124,7 @@ export default function BookingPage() {
   floor1MeetingRooms.forEach((space, index) => {
     const roomId = `meetingRoom${String(index + 1).padStart(2, '0')}`;
     deskSpaceMap[roomId] = space;
-    
+
     const isNotAvailable = space.is_available === false;
     if (isNotAvailable) {
       occupiedDesks.push(roomId);
@@ -133,7 +135,7 @@ export default function BookingPage() {
   floor2MeetingRooms.forEach((space, index) => {
     const roomId = `meetingRoom${String(4 + index).padStart(2, '0')}`;
     deskSpaceMap[roomId] = space;
-    
+
     const isNotAvailable = space.is_available === false;
     if (isNotAvailable) {
       occupiedDesks.push(roomId);
@@ -144,7 +146,7 @@ export default function BookingPage() {
   floor1PrivateRooms.forEach((space, index) => {
     const roomId = `privateRoom${String(index + 1).padStart(2, '0')}`;
     deskSpaceMap[roomId] = space;
-    
+
     const isNotAvailable = space.is_available === false;
     if (isNotAvailable) {
       occupiedDesks.push(roomId);
@@ -155,7 +157,7 @@ export default function BookingPage() {
   floor3MeetingRooms.forEach((space, index) => {
     const roomId = `meetingRoom${String(7 + index).padStart(2, '0')}`;
     deskSpaceMap[roomId] = space;
-    
+
     const isNotAvailable = space.is_available === false;
     if (isNotAvailable) {
       occupiedDesks.push(roomId);
@@ -166,7 +168,7 @@ export default function BookingPage() {
   floor3PrivateRooms.forEach((space, index) => {
     const roomId = `privateRoom${String(3 + index).padStart(2, '0')}`;
     deskSpaceMap[roomId] = space;
-    
+
     const isNotAvailable = space.is_available === false;
     if (isNotAvailable) {
       occupiedDesks.push(roomId);
@@ -244,10 +246,10 @@ export default function BookingPage() {
 
   const handleDeskSelect = (desk) => {
     setSelectedDeskId(desk.id);
-    
+
     // Get the space data from API based on desk ID
     const deskSpace = deskSpaceMap[desk.id];
-    
+
     if (deskSpace) {
       // Use the actual space data from API, including unavailable_reason
       handleBookSpace(deskSpace);
@@ -255,9 +257,9 @@ export default function BookingPage() {
       // Fallback if space not found in API data (shouldn't happen if API is correct)
       const isMeetingRoom = desk.type === 'meetingRoom';
       const isPrivateRoom = desk.type === 'privateRoom';
-      
+
       let fallbackName, fallbackType, fallbackCapacity, fallbackAmenities;
-      
+
       if (isMeetingRoom) {
         fallbackName = `Meeting Room ${desk.number}`;
         fallbackType = 'Meeting Room';
@@ -274,7 +276,7 @@ export default function BookingPage() {
         fallbackCapacity = 1;
         fallbackAmenities = ['Monitor', 'Desk Lamp', 'Ergonomic Chair'];
       }
-      
+
       const fallbackSpace = {
         id: desk.id,
         name: desk.name || fallbackName,
@@ -323,8 +325,8 @@ export default function BookingPage() {
         />
 
         {/* View Mode Toggle */}
-        <div className="mb-6 flex items-center justify-between min-h-[44px]">
-          <div className="flex-1">
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex-1 min-h-[44px] flex items-center">
             {viewMode === 'grid' && (
               <FilterBar
                 selectedFloor={selectedFloor}
@@ -334,39 +336,48 @@ export default function BookingPage() {
                 onTypeChange={setSelectedType}
               />
             )}
+            {viewMode === 'floorplan' && hasSearched && (
+              <LevelTabs
+                selectedLevel={selectedLevel}
+                onSelectLevel={setSelectedLevel}
+                availability={{
+                  lantai1: availableSpacesLantai1,
+                  lantai2: availableSpacesLantai2,
+                  lantai3: availableSpacesLantai3
+                }}
+              />
+            )}
           </div>
-          
-          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1 shadow-sm flex-shrink-0">
             <button
               onClick={() => setViewMode('grid')}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                viewMode === 'grid'
-                  ? 'bg-neutral-950 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-gray-50'
-              }`}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${viewMode === 'grid'
+                ? 'bg-neutral-950 text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-gray-50'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                  <rect x="2" y="2" width="5" height="5" rx="1"/>
-                  <rect x="9" y="2" width="5" height="5" rx="1"/>
-                  <rect x="2" y="9" width="5" height="5" rx="1"/>
-                  <rect x="9" y="9" width="5" height="5" rx="1"/>
+                  <rect x="2" y="2" width="5" height="5" rx="1" />
+                  <rect x="9" y="2" width="5" height="5" rx="1" />
+                  <rect x="2" y="9" width="5" height="5" rx="1" />
+                  <rect x="9" y="9" width="5" height="5" rx="1" />
                 </svg>
                 Grid View
               </div>
             </button>
             <button
               onClick={() => setViewMode('floorplan')}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                viewMode === 'floorplan'
-                  ? 'bg-neutral-950 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-gray-50'
-              }`}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${viewMode === 'floorplan'
+                ? 'bg-neutral-950 text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-gray-50'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                  <rect x="1" y="1" width="14" height="14" rx="1" stroke="currentColor" strokeWidth="2" fill="none"/>
-                  <path d="M1 5h14M5 1v14" stroke="currentColor" strokeWidth="2"/>
+                  <rect x="1" y="1" width="14" height="14" rx="1" stroke="currentColor" strokeWidth="2" fill="none" />
+                  <path d="M1 5h14M5 1v14" stroke="currentColor" strokeWidth="2" />
                 </svg>
                 Floor Plan
               </div>
@@ -382,44 +393,42 @@ export default function BookingPage() {
               onDeskSelect={handleDeskSelect}
               selectedDeskId={selectedDeskId}
               selectedDate={selectedDate}
-              availableSpacesLantai1={availableSpacesLantai1}
-              availableSpacesLantai2={availableSpacesLantai2}
-              availableSpacesLantai3={availableSpacesLantai3}
+              selectedLevel={selectedLevel}
+              onLevelChange={setSelectedLevel}
             />
           ) : (
-            <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
-              <div className="relative z-10 text-center py-20">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full flex items-center justify-center mb-2">
-                    <img 
-                      src="/assets/e989417bb1ce761a34ffa1b2d4ae037ff1890258.svg" 
-                      alt="" 
-                      className="w-10 h-10 opacity-60" 
-                    />
-                  </div>
-                  <div>
-                    <p className="text-lg font-medium text-neutral-950 tracking-tight mb-2">
-                      Ready to find your perfect workspace?
-                    </p>
-                    <p className="text-sm text-gray-500 max-w-md mx-auto">
-                      Select your date and time above, then click "Search Availability" to see available spaces
-                    </p>
-                  </div>
+            <div className="text-center py-20">
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full flex items-center justify-center mb-2">
+                  <img
+                    src="/assets/e989417bb1ce761a34ffa1b2d4ae037ff1890258.svg"
+                    alt=""
+                    className="w-10 h-10 opacity-60"
+                  />
+                </div>
+                <div>
+                  <p className="text-lg font-medium text-neutral-950 tracking-tight mb-2">
+                    Ready to find your perfect workspace?
+                  </p>
+                  <p className="text-sm text-gray-500 max-w-md mx-auto">
+                    Select your date and time above, then click "Search Availability" to see available spaces
+                  </p>
                 </div>
               </div>
             </div>
           )
         ) : (
-          <SpacesGrid
-            spaces={spaces}
-            filteredSpaces={filteredSpaces}
-            loading={loading}
-            error={error}
-            hasSearched={hasSearched}
-            selectedDate={selectedDate}
-            onBookSpace={handleBookSpace}
-          />
+          <div className="overflow-hidden">
+            <SpacesGrid
+              spaces={spaces}
+              filteredSpaces={filteredSpaces}
+              loading={loading}
+              error={error}
+              hasSearched={hasSearched}
+              selectedDate={selectedDate}
+              onBookSpace={handleBookSpace}
+            />
+          </div>
         )}
 
         {/* Booking Modal */}

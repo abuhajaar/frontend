@@ -10,16 +10,14 @@ import { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { isWeekend } from '@/utils/date';
 
-export default function FloorPlan({ 
-  occupiedDesks = [], 
-  onDeskSelect, 
+export default function FloorPlan({
+  occupiedDesks = [],
+  onDeskSelect,
   selectedDeskId,
   selectedDate,
-  availableSpacesLantai1 = 0,
-  availableSpacesLantai2 = 0,
-  availableSpacesLantai3 = 0
+  selectedLevel,
+  onLevelChange
 }) {
-  const [selectedLevel, setSelectedLevel] = useState('lantai1');
   const svgContainerRef = useRef(null);
   const svgInnerRef = useRef(null);
   const [svgLoaded, setSvgLoaded] = useState(false);
@@ -80,27 +78,27 @@ export default function FloorPlan({
 
   // Load the occupied SVG document based on selected floor
   useEffect(function loadOccupiedSvg() {
-    const occupiedSvgFile = selectedLevel === 'lantai1' 
-      ? '/lantai1v2isOccupied.svg' 
+    const occupiedSvgFile = selectedLevel === 'lantai1'
+      ? '/lantai1v2isOccupied.svg'
       : selectedLevel === 'lantai2'
-      ? '/lantai2isOccupied.svg'
-      : selectedLevel === 'lantai3'
-      ? '/lantai3isOccupied.svg'
-      : null;
-    
+        ? '/lantai2isOccupied.svg'
+        : selectedLevel === 'lantai3'
+          ? '/lantai3isOccupied.svg'
+          : null;
+
     if (!occupiedSvgFile) return;
-    
+
     fetch(occupiedSvgFile)
-      .then(function(response) {
+      .then(function (response) {
         return response.text();
       })
-      .then(function(svgText) {
+      .then(function (svgText) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(svgText, 'image/svg+xml');
         setOccupiedSvgDoc(doc);
         setCurrentFloorSvg(selectedLevel);
       })
-      .catch(function(err) {
+      .catch(function (err) {
         console.error('Failed to load occupied SVG:', err);
       });
   }, [selectedLevel]);
@@ -112,7 +110,7 @@ export default function FloorPlan({
     if (!objectElement || !objectElement.contentDocument) return;
 
     const svgDoc = objectElement.contentDocument;
-    
+
     // Get all hotDesk, meetingRoom, and privateRoom elements from the SVG
     // Only get top-level elements (not nested ones) by checking if parent is the root svg or a direct group
     const hotDeskElements = Array.from(svgDoc.querySelectorAll('[id^="hotDesk"]')).filter(el => {
@@ -135,7 +133,7 @@ export default function FloorPlan({
 
       // Add click handler - allow clicking even if occupied
       spaceElement.style.cursor = 'pointer';
-      
+
       const handleClick = (e) => {
         e.preventDefault();
         if (onDeskSelect && spaceMetadata) {
@@ -147,7 +145,7 @@ export default function FloorPlan({
           } else {
             spaceName = `Hot Desk ${spaceMetadata.number}`;
           }
-          
+
           onDeskSelect({
             id: spaceId,
             name: spaceName,
@@ -167,7 +165,7 @@ export default function FloorPlan({
       if (isSelected && !isOccupied) {
         // Add selected state styling with a blue glow
         newSpaceElement.style.filter = 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.8))';
-        
+
         // Change the green indicator to blue for selected state
         const greenCircle = newSpaceElement.querySelector('[fill="#10B981"]');
         if (greenCircle) {
@@ -175,7 +173,7 @@ export default function FloorPlan({
         }
       } else {
         newSpaceElement.style.filter = '';
-        
+
         // Reset green indicator if not selected
         const blueCircle = newSpaceElement.querySelector('[fill="#3B82F6"]');
         if (blueCircle && !isOccupied) {
@@ -187,21 +185,21 @@ export default function FloorPlan({
       if (isOccupied) {
         // Get the occupied version of this element from the occupied SVG
         const occupiedElement = occupiedSvgDoc.getElementById(spaceId);
-        
+
         if (occupiedElement) {
           // Clone the occupied element
           const occupiedClone = occupiedElement.cloneNode(true);
-          
+
           // Replace the current element's innerHTML with the occupied version's innerHTML
           while (newSpaceElement.firstChild) {
             newSpaceElement.removeChild(newSpaceElement.firstChild);
           }
-          
+
           // Copy all children from occupied version
           while (occupiedClone.firstChild) {
             newSpaceElement.appendChild(occupiedClone.firstChild);
           }
-          
+
           // Mark as replaced so we can track it
           newSpaceElement.setAttribute('data-occupied-replaced', 'true');
         }
@@ -210,29 +208,29 @@ export default function FloorPlan({
         if (newSpaceElement.getAttribute('data-occupied-replaced') === 'true') {
           // Need to reload from the original SVG
           // Get the original element from a fresh load
-          const originalSvgFile = selectedLevel === 'lantai1' 
-            ? '/lantai1v2.svg' 
+          const originalSvgFile = selectedLevel === 'lantai1'
+            ? '/lantai1v2.svg'
             : selectedLevel === 'lantai2'
-            ? '/lantai2.svg'
-            : '/lantai3.svg';
+              ? '/lantai2.svg'
+              : '/lantai3.svg';
           fetch(originalSvgFile)
             .then(response => response.text())
             .then(svgText => {
               const parser = new DOMParser();
               const originalDoc = parser.parseFromString(svgText, 'image/svg+xml');
               const originalElement = originalDoc.getElementById(spaceId);
-              
+
               if (originalElement) {
                 // Replace with original content
                 while (newSpaceElement.firstChild) {
                   newSpaceElement.removeChild(newSpaceElement.firstChild);
                 }
-                
+
                 const originalClone = originalElement.cloneNode(true);
                 while (originalClone.firstChild) {
                   newSpaceElement.appendChild(originalClone.firstChild);
                 }
-                
+
                 // Remove the marker
                 newSpaceElement.removeAttribute('data-occupied-replaced');
               }
@@ -242,155 +240,117 @@ export default function FloorPlan({
     });
   }, [selectedDeskId, occupiedDesks, onDeskSelect, svgLoaded, occupiedSvgDoc]);
 
-  const handleFloorChange = (floor) => {
-    if (isTransitioning || floor === selectedLevel) return;
-    
+  // Handle floor changes from parent component with animation
+  useEffect(() => {
+    if (!currentFloorSvg || currentFloorSvg === selectedLevel) return;
+    if (isTransitioning) return;
+
     setIsTransitioning(true);
     const svgInner = svgInnerRef.current;
-    
+
     if (svgInner) {
       // Determine slide direction based on floor numbers
-      const currentFloorNum = selectedLevel === 'lantai1' ? 1 : selectedLevel === 'lantai2' ? 2 : 3;
-      const newFloorNum = floor === 'lantai1' ? 1 : floor === 'lantai2' ? 2 : 3;
+      const currentFloorNum = currentFloorSvg === 'lantai1' ? 1 : currentFloorSvg === 'lantai2' ? 2 : 3;
+      const newFloorNum = selectedLevel === 'lantai1' ? 1 : selectedLevel === 'lantai2' ? 2 : 3;
       const direction = newFloorNum > currentFloorNum ? 1 : -1; // 1 = slide left, -1 = slide right
-      
-      // Slide out animation
+
+      // Fade out and slide out animation
       gsap.to(svgInner, {
-        x: direction * -100,
+        x: `${direction * -5}%`,
         opacity: 0,
-        duration: 0.3,
-        ease: 'power2.in',
+        duration: 0.25,
+        ease: 'power2.inOut',
         onComplete: () => {
+          // Update floor and reset loaded state
           setSvgLoaded(false);
-          setSelectedLevel(floor);
-          
+          setCurrentFloorSvg(selectedLevel);
+
           // Reset position for slide in from opposite side
-          gsap.set(svgInner, { x: direction * 100, opacity: 0 });
-          
-          // Slide in animation
-          gsap.to(svgInner, {
-            x: 0,
-            opacity: 1,
-            duration: 0.3,
-            ease: 'power2.out',
-            onComplete: () => {
-              setIsTransitioning(false);
-            }
-          });
+          gsap.set(svgInner, { x: `${direction * 5}%`, opacity: 0 });
         }
       });
     } else {
       setSvgLoaded(false);
-      setSelectedLevel(floor);
+      setCurrentFloorSvg(selectedLevel);
       setIsTransitioning(false);
+    }
+  }, [selectedLevel, currentFloorSvg, isTransitioning]);
+
+  // Handle SVG load and trigger slide-in animation
+  const handleSvgLoad = () => {
+    setSvgLoaded(true);
+
+    // Only animate if we're transitioning between floors
+    if (isTransitioning) {
+      const svgInner = svgInnerRef.current;
+      if (svgInner) {
+        // Slide in animation - triggered after SVG is loaded
+        gsap.to(svgInner, {
+          x: 0,
+          opacity: 1,
+          duration: 0.35,
+          ease: 'power2.out',
+          delay: 0.05, // Small delay to ensure SVG is rendered
+          onComplete: () => {
+            setIsTransitioning(false);
+          }
+        });
+      } else {
+        setIsTransitioning(false);
+      }
     }
   };
 
-  const handleSvgLoad = () => {
-    setSvgLoaded(true);
-  };
-
   return (
-    <div className="bg-white border border-[rgba(0, 110, 255, 0.8)] rounded-3xl overflow-hidden">
-      {/* Level Tabs */}
-      <div className="p-8 pb-0">
-        <div className="inline-flex items-center bg-white border border-[rgba(0, 110, 255, 0.8)] rounded-2xl p-0.5">
-          <button
-            onClick={() => handleFloorChange('lantai1')}
-            className={`px-6 py-2 text-sm font-normal rounded-[14px] transition-all ${
-              selectedLevel === 'lantai1'
-                ? 'bg-[#0f172b] text-white'
-                : 'text-neutral-950 hover:bg-slate-50'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <span>Lantai 1</span>
-              <span className="px-2 py-0.5 text-[10px] leading-[14.286px] font-normal bg-[rgba(0,188,125,0.1)] text-[#009966] rounded-full">
-                {availableSpacesLantai1} Available
-              </span>
-            </div>
-          </button>
-          <button
-            onClick={() => handleFloorChange('lantai2')}
-            className={`px-6 py-2 text-sm font-normal rounded-[14px] transition-all ${
-              selectedLevel === 'lantai2'
-                ? 'bg-[#0f172b] text-white'
-                : 'text-neutral-950 hover:bg-slate-50'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <span>Lantai 2</span>
-              <span className="px-2 py-0.5 text-[10px] leading-[14.286px] font-normal bg-[rgba(0,188,125,0.1)] text-[#009966] rounded-full">
-                {availableSpacesLantai2} Available
-              </span>
-            </div>
-          </button>
-          <button
-            onClick={() => handleFloorChange('lantai3')}
-            className={`px-6 py-2 text-sm font-normal rounded-[14px] transition-all ${
-              selectedLevel === 'lantai3'
-                ? 'bg-[#0f172b] text-white'
-                : 'text-neutral-950 hover:bg-slate-50'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <span>Lantai 3</span>
-              <span className="px-2 py-0.5 text-[10px] leading-[14.286px] font-normal bg-[rgba(0,188,125,0.1)] text-[#009966] rounded-full">
-                {availableSpacesLantai3} Available
-              </span>
-            </div>
-          </button>
-        </div>
-      </div>
-
+    <div className="overflow-hidden">
       {/* Floor Plan Container */}
-      <div className="p-8">
-        <div 
+      <div>
+        <div
           ref={svgContainerRef}
-          className="relative w-full bg-white border border-[rgba(0, 110, 255, 0.8)] rounded-3xl overflow-hidden min-h-[600px]"
+          className="relative w-full overflow-hidden min-h-[600px]"
         >
           <div ref={svgInnerRef} className="w-full h-full">
-          {selectedLevel === 'lantai1' && (
-            <object
-              key="lantai1"
-              data="/lantai1v2.svg"
-              type="image/svg+xml"
-              className="w-full h-auto"
-              style={{ maxWidth: '1551px', display: 'block' }}
-              onLoad={handleSvgLoad}
-            >
-              Your browser does not support SVG
-            </object>
-          )}
-          {selectedLevel === 'lantai2' && (
-            <object
-              key="lantai2"
-              data="/lantai2.svg"
-              type="image/svg+xml"
-              className="w-full h-auto"
-              style={{ maxWidth: '1551px', display: 'block' }}
-              onLoad={handleSvgLoad}
-            >
-              Your browser does not support SVG
-            </object>
-          )}
-          {selectedLevel === 'lantai3' && (
-            <object
-              key="lantai3"
-              data="/lantai3.svg"
-              type="image/svg+xml"
-              className="w-full h-auto"
-              style={{ maxWidth: '1551px', display: 'block' }}
-              onLoad={handleSvgLoad}
-            >
-              Your browser does not support SVG
-            </object>
-          )}
-          {!['lantai1', 'lantai2', 'lantai3'].includes(selectedLevel) && (
-            <div className="w-full h-[600px] flex items-center justify-center">
-              <p className="text-slate-500">Floor plan not available</p>
-            </div>
-          )}
+            {selectedLevel === 'lantai1' && (
+              <object
+                key="lantai1"
+                data="/lantai1v2.svg"
+                type="image/svg+xml"
+                className="w-full h-auto"
+                style={{ maxWidth: '1551px', display: 'block' }}
+                onLoad={handleSvgLoad}
+              >
+                Your browser does not support SVG
+              </object>
+            )}
+            {selectedLevel === 'lantai2' && (
+              <object
+                key="lantai2"
+                data="/lantai2.svg"
+                type="image/svg+xml"
+                className="w-full h-auto"
+                style={{ maxWidth: '1551px', display: 'block' }}
+                onLoad={handleSvgLoad}
+              >
+                Your browser does not support SVG
+              </object>
+            )}
+            {selectedLevel === 'lantai3' && (
+              <object
+                key="lantai3"
+                data="/lantai3.svg"
+                type="image/svg+xml"
+                className="w-full h-auto"
+                style={{ maxWidth: '1551px', display: 'block' }}
+                onLoad={handleSvgLoad}
+              >
+                Your browser does not support SVG
+              </object>
+            )}
+            {!['lantai1', 'lantai2', 'lantai3'].includes(selectedLevel) && (
+              <div className="w-full h-[600px] flex items-center justify-center">
+                <p className="text-slate-500">Floor plan not available</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -46,19 +46,21 @@ export default function SpacesGrid({
   // Initial state - no search performed
   if (!hasSearched) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
         <div className="col-span-full text-center py-20">
           <div className="flex flex-col items-center gap-4">
-            <img 
-              src="/assets/e989417bb1ce761a34ffa1b2d4ae037ff1890258.svg" 
-              alt="" 
-              className="w-16 h-16 opacity-30" 
-            />
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full flex items-center justify-center mb-2">
+              <img
+                src="/assets/e989417bb1ce761a34ffa1b2d4ae037ff1890258.svg"
+                alt=""
+                className="w-10 h-10 opacity-60"
+              />
+            </div>
             <div>
-              <p className="text-base text-neutral-950 tracking-[-0.3125px] leading-6 mb-2">
+              <p className="text-lg font-medium text-neutral-950 tracking-tight mb-2">
                 Ready to find your perfect workspace?
               </p>
-              <p className="text-sm text-[#717182] tracking-[-0.1504px] leading-5">
+              <p className="text-sm text-gray-500 max-w-md mx-auto">
                 Select your date and time above, then click "Search Availability" to see available spaces
               </p>
             </div>
@@ -71,7 +73,7 @@ export default function SpacesGrid({
   // No results after search
   if (spaces.length === 0) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
         <div className="col-span-full text-center py-20">
           <div className="flex flex-col items-center gap-4">
             {isWeekend(selectedDate) ? (
@@ -108,7 +110,7 @@ export default function SpacesGrid({
   // Filtered results - no matches
   if (filteredSpaces.length === 0) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
         <div className="col-span-full text-center py-20">
           <p className="text-base text-[#717182] tracking-[-0.3125px] leading-6">
             No spaces found matching your criteria. Try adjusting your filters.
@@ -120,12 +122,12 @@ export default function SpacesGrid({
 
   // Display spaces
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
       {filteredSpaces.map(space => (
-        <SpaceCard 
-          key={space.id} 
-          space={space} 
-          onBook={onBookSpace} 
+        <SpaceCard
+          key={space.id}
+          space={space}
+          onBook={onBookSpace}
         />
       ))}
     </div>

@@ -41,30 +41,28 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-full px-4 sm:px-6 md:px-8 py-8 md:py-10 bg-[#FFFFFF]">
-      {/* Background Aesthetics */}
-      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0 opacity-40">
-        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-gradient-to-br from-purple-200/40 to-blue-200/40 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[10%] left-[5%] w-[400px] h-[400px] bg-gradient-to-tr from-orange-200/30 to-rose-100/30 rounded-full blur-[80px]" />
-      </div>
+    <div className="min-h-full px-4 sm:px-6 md:px-8 py-8 md:py-10 bg-[#FFFEF8]" style={{ backgroundImage: 'radial-gradient(#E5E5E5 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
 
       <div className="relative z-10 max-w-[1600px] mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
-            <p className="text-sm font-semibold tracking-widest text-gray-400 uppercase mb-2">Workspace Overview</p>
-            <h1 className="text-4xl md:text-5xl font-light text-neutral-900 tracking-tight" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
-              Good Morning, <span className="font-normal relative inline-block after:content-[''] after:absolute after:bottom-2 after:left-0 after:w-full after:h-3 after:bg-blue-100/50 after:-z-10">{getUserDisplayName(user).split(' ')[0]}</span>
+            <p className="text-gray-500 font-medium mb-1 pl-1">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </p>
+            <h1 className="text-4xl md:text-5xl font-black text-black tracking-tight" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
+              Good morning, <span className="text-gray-400 font-bold">{getUserDisplayName(user).split(' ')[0]}</span>
             </h1>
           </div>
 
           <div className="flex gap-3">
             <button
               onClick={() => router.push('/dashboard/booking')}
-              className="group relative px-6 py-3 bg-neutral-900 text-white rounded-full font-medium overflow-hidden transition-all hover:pr-9"
+              className="group relative px-6 py-3 bg-white text-black rounded-xl font-bold text-base overflow-hidden transition-all hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none border-2 border-black"
             >
-              <span className="relative z-10">New Booking</span>
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">→</span>
+              <span className="relative z-10 flex items-center gap-2">
+                Start a New Booking <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </span>
             </button>
           </div>
         </div>
@@ -78,7 +76,7 @@ export default function DashboardPage() {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {loading ? (
-                [1, 2, 3, 4].map(i => <div key={i} className="h-40 bg-white rounded-3xl animate-pulse" />)
+                [1, 2, 3, 4].map(i => <div key={i} className="h-40 bg-white rounded-3xl animate-pulse border-2 border-black" />)
               ) : (
                 <>
                   <StatsCard
@@ -86,43 +84,41 @@ export default function DashboardPage() {
                     label="Today by Numbers"
                     value={stats?.today_bookings || 0}
                     description="Active sessions today"
-                    shadowColor="#22c55e"
+                    shadowColor="#FFD028" // Yellowish
                   />
                   <StatsCard
                     icon="/assets/e88e0f4df734d42bd7283994158bdc4d594b8b18.svg"
                     label="Upcoming Plan"
                     value={stats?.upcoming_bookings || 0}
                     description="Future bookings scheduled"
-                    shadowColor="#3b82f6"
+                    shadowColor="#3B82F6" // Blue
                   />
                   <StatsCard
                     icon="/assets/e9aa9032ab2e50fc64c3d5c46f3590100507f1e0.svg"
                     label="Weekly Focus"
                     value={stats?.weekly_booking_hours.toFixed(1)}
                     description="Hours dedicated this week"
-                    shadowColor="#a855f7"
+                    shadowColor="#A855F7" // Purple
                   />
                   <StatsCard
                     icon="/assets/782e096da2a1ec8dc40baa81f21270e2cc2e826c.svg"
                     label="Go-To Space"
                     value={stats?.favorite_space ? stats.favorite_space.space_name : 'Explore'}
                     description={stats?.favorite_space ? `Most visited (${stats.favorite_space.booking_count})` : 'Find your favorite spot'}
-                    shadowColor="#f97316"
+                    shadowColor="#F97316" // Orange
                   />
                 </>
               )}
             </div>
 
-            {/* Work Mode Selector (Replaces 'Find your zone') */}
-            <div className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
-
-              <div className="flex justify-between items-center mb-6 relative z-10">
+            {/* Work Mode Selector */}
+            <div className="bg-white rounded-[32px] p-8 border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden">
+              <div className="flex justify-between items-center mb-8 relative z-10">
                 <div>
-                  <h2 className="text-xl font-medium text-gray-900">What's your work vibe?</h2>
-                  <p className="text-gray-400 text-sm mt-1">Select a mode to find the perfect space</p>
+                  <h2 className="text-3xl font-black text-black uppercase tracking-tight">Pick Your Vibe</h2>
+                  <p className="text-gray-500 font-medium mt-1">What's on the agenda today?</p>
                 </div>
-                <button onClick={() => router.push('/dashboard/booking')} className="text-sm text-gray-400 hover:text-gray-900 transition-colors">View map</button>
+                <button onClick={() => router.push('/dashboard/booking')} className="px-4 py-2 bg-gray-100 rounded-xl border-2 border-black font-bold text-sm hover:bg-yellow-300 transition-colors">View Map</button>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
@@ -130,11 +126,13 @@ export default function DashboardPage() {
                   <button
                     key={mode.id}
                     onClick={() => router.push(`/dashboard/booking?mode=${mode.id}`)}
-                    className={`flex flex-col p-5 rounded-2xl border transition-all duration-300 group hover:shadow-md text-left ${mode.color} bg-opacity-30 border-opacity-50 hover:bg-opacity-40`}
+                    className={`flex flex-col p-5 rounded-2xl border-[3px] border-black transition-all duration-300 group hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-left bg-white`}
                   >
-                    <span className="text-3xl mb-4 transform group-hover:scale-110 transition-transform duration-300 origin-left inline-block">{mode.icon}</span>
-                    <span className="font-semibold text-gray-900 mb-1">{mode.title}</span>
-                    <span className="text-xs text-gray-500 font-medium">{mode.desc}</span>
+                    <div className={`w-12 h-12 rounded-full border-2 border-black flex items-center justify-center text-2xl mb-4 ${mode.id === 'focus' ? 'bg-indigo-100' : mode.id === 'collab' ? 'bg-blue-100' : mode.id === 'creative' ? 'bg-amber-100' : 'bg-rose-100'}`}>
+                      {mode.icon}
+                    </div>
+                    <span className="font-bold text-black text-lg mb-1">{mode.title}</span>
+                    <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">{mode.desc}</span>
                   </button>
                 ))}
               </div>
@@ -142,60 +140,81 @@ export default function DashboardPage() {
           </div>
 
           {/* Right Column: Timeline & Activity (4/12) */}
-          <div className="xl:col-span-4 flex flex-col gap-8">
+          <div className="xl:col-span-4 flex flex-col gap-8 h-full">
 
-            {/* Today's Schedule */}
-            <div className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm h-full max-h-[600px] flex flex-col relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-50 rounded-full blur-3xl -mr-10 -mt-10" />
-              <h2 className="text-xl font-medium text-gray-900 mb-6 relative z-10">Today's Schedule</h2>
+            {/* Today's Schedule - Notebook Style */}
+            <div className="bg-[#FFFDF5] rounded-[24px] border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] h-full overflow-hidden flex flex-col relative px-8 py-10"
+              style={{
+                backgroundImage: `linear-gradient(#E5E7EB 1px, transparent 1px)`,
+                backgroundSize: '100% 32px',
+                backgroundPosition: '0 24px' // Align lines
+              }}>
 
-              {loading ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-50 rounded-xl animate-pulse" />)}
-                </div>
-              ) : (stats?.today_bookings > 0 ? (
-                <div className="space-y-0 relative z-10 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                  {scheduleItems.map((item, idx) => (
-                    <div key={item.id} className="relative pl-6 pb-8 last:pb-0 border-l border-gray-100">
-                      <div className={`absolute left-[-5px] top-0 w-2.5 h-2.5 rounded-full border-2 border-white ring-1 ring-gray-200 ${idx === 0 ? 'bg-green-500 ring-green-100' : 'bg-gray-300'}`} />
-                      <div className="bg-gray-50 rounded-2xl p-4 hover:bg-blue-50 transition-colors group cursor-pointer border border-transparent hover:border-blue-100">
-                        <div className="flex justify-between items-start mb-1">
-                          <span className="text-xs font-semibold text-gray-400 group-hover:text-blue-400">{item.time}</span>
-                          <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-white text-gray-500 border border-gray-100">{item.type}</span>
+              {/* Paper Holes Decoration */}
+              <div className="absolute left-4 top-0 bottom-0 flex flex-col justify-evenly py-6 pointer-events-none">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                  <div key={i} className="w-4 h-4 rounded-full bg-[#1a1a1a] shadow-inner mb-8" />
+                ))}
+              </div>
+
+              <div className="pl-6 relative z-10 flex-1 flex flex-col">
+                <h2 className="text-3xl font-black text-black mb-6 rotate-[-1deg] inline-block border-b-4 border-yellow-300 w-fit">TODAY'S PLAN</h2>
+
+                {loading ? (
+                  <div className="space-y-6 mt-4">
+                    {[1, 2, 3].map(i => <div key={i} className="h-12 bg-black/5 rounded-lg animate-pulse" />)}
+                  </div>
+                ) : (stats?.today_bookings > 0 ? (
+                  <div className="space-y-6 mt-2">
+                    {scheduleItems.map((item, idx) => (
+                      <div key={item.id} className="relative group cursor-pointer" onClick={() => router.push('/dashboard/booking')}>
+                        {/* Handwritten-style check box */}
+                        <div className="flex items-start gap-4">
+                          <div className={`mt-1 w-6 h-6 border-2 border-black rounded-md flex items-center justify-center flex-shrink-0 ${idx === 0 ? 'bg-green-400' : 'bg-white'}`}>
+                            {idx === 0 && <span className="text-black font-bold">✓</span>}
+                          </div>
+
+                          <div className={`flex-1 transition-all ${idx === 0 ? 'opacity-50 line-through decoration-black decoration-2' : ''}`}>
+                            <div className="flex justify-between items-baseline">
+                              <h4 className="font-bold text-lg text-black leading-none">{item.title}</h4>
+                              <span className="text-sm font-bold bg-black text-white px-2 py-0.5 rounded-md -rotate-2">{item.time}</span>
+                            </div>
+                            <p className="text-sm font-medium text-gray-600 mt-1 flex items-center gap-1">
+                              📍 {item.space}
+                            </p>
+                          </div>
                         </div>
-                        <h4 className="font-medium text-gray-900">{item.title}</h4>
-                        <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                          {item.space}
-                        </p>
                       </div>
-                    </div>
-                  ))}
-                  {/* If real stats show more bookings than mock items, show a 'View All' */}
-                  {stats.today_bookings > 3 && (
-                    <button className="w-full py-3 text-sm text-gray-500 font-medium hover:text-blue-600 transition-colors mt-2">
-                      + {stats.today_bookings - 3} more sessions
+                    ))}
+
+                    {stats.today_bookings > 3 && (
+                      <button className="w-full py-2 text-sm font-bold text-gray-500 hover:text-black border-2 border-dashed border-gray-300 hover:border-black rounded-xl mt-4 transition-all">
+                        + {stats.today_bookings - 3} MORE TASKS
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center mt-10">
+                    <div className="w-24 h-24 border-[3px] border-black rounded-full flex items-center justify-center mb-4 text-4xl bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">✨</div>
+                    <p className="font-bold text-xl text-black">Nothing scheduled!</p>
+                    <p className="text-base text-gray-500 font-medium">Time to create something new.</p>
+                    <button onClick={() => router.push('/dashboard/booking')} className="mt-6 px-6 py-2 bg-blue-500 text-white font-bold rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all">
+                      Book a spot
                     </button>
-                  )}
-                </div>
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-center text-gray-400">
-                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-2xl">☕️</div>
-                  <p>No more bookings today.</p>
-                  <button onClick={() => router.push('/dashboard/booking')} className="mt-4 text-blue-600 font-medium text-sm hover:underline">Book a space</button>
-                </div>
-              ))}
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Mini-Promo Canvas - For filler content/artsy touch */}
-            <div className="bg-[#1D1D1F] rounded-[32px] p-8 text-white relative overflow-hidden min-h-[240px] flex flex-col justify-end group cursor-pointer" onClick={() => router.push('/dashboard/booking')}>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
-              <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=600" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60" alt="Workspace" />
+            {/* Mini-Promo Canvas - Artsy Style */}
+            <div className="bg-[#1D1D1F] rounded-[24px] p-6 text-white relative overflow-hidden min-h-[200px] flex flex-col justify-end group cursor-pointer border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]" onClick={() => router.push('/dashboard/booking')}>
+              <img src="https://images.unsplash.com/photo-1519752594763-2633d8d4ea29?auto=format&fit=crop&q=80&w=800" className="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-overlay transition-transform duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="Workspace" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
 
-              <div className="relative z-20">
-                <p className="text-xs font-medium text-blue-300 uppercase tracking-widest mb-2">Featured</p>
-                <h3 className="text-2xl font-light mb-1">Creative Suite B</h3>
-                <p className="text-gray-300 text-sm">Quiet, natural light, 4k monitor.</p>
+              <div className="relative z-20 transform group-hover:translate-x-1 transition-transform">
+                <span className="inline-block px-2 py-1 bg-yellow-400 text-black text-xs font-black uppercase tracking-wider mb-2 border border-black transform -rotate-2">Featured Space</span>
+                <h3 className="text-3xl font-black mb-1">THE STUDIO</h3>
+                <p className="text-gray-300 text-sm font-medium">For the makers & creators.</p>
               </div>
             </div>
 

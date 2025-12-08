@@ -5,27 +5,94 @@ import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { useCurrentUser, useCreateBooking } from '@/hooks';
 import { useToast } from '@/contexts/ToastContext';
+import { hapticClick } from '@/utils/animations';
+import {
+  X,
+  Calendar,
+  Clock,
+  Users,
+  Info,
+  AlertCircle,
+  CheckCircle2,
+  Armchair,
+  DoorOpen,
+  Wifi,
+  Monitor,
+  Plug,
+  Presentation,
+  Video,
+  Timer
+} from 'lucide-react';
 
 export default function BookingModal({ isOpen, onClose, space, bookingDetails }) {
   const router = useRouter();
   const { currentUser } = useCurrentUser();
   const { showToastMessage } = useToast();
   const { mutate: createBooking, isPending: isSubmitting } = useCreateBooking();
-  
+
   const modalRef = useRef(null);
   const backdropRef = useRef(null);
+  const confirmButtonRef = useRef(null);
+  const cancelButtonRef = useRef(null);
+  const closeButtonRef = useRef(null);
   const [isClosing, setIsClosing] = useState(false);
+
+  // Map amenities to Lucide icons
+  const getAmenityIcon = (amenityName) => {
+    const iconMap = {
+      'Wi-Fi': Wifi,
+      'Monitor': Monitor,
+      'Power Outlet': Plug,
+      'Standing Desk': Armchair,
+      'Whiteboard': Presentation,
+      'Projector': Presentation,
+      'Video Conference': Video,
+    };
+    return iconMap[amenityName] || CheckCircle2;
+  };
+
+  // Get icon and color scheme based on space type
+  const getTypeConfig = () => {
+    if (!space) return {};
+
+    if (space.type === 'Hot Desk') {
+      return {
+        icon: Armchair,
+        iconBg: 'bg-blue-600',
+        textAccent: 'text-blue-600',
+        bgAccent: 'bg-blue-50',
+      };
+    }
+    if (space.type === 'Private Room') {
+      return {
+        icon: DoorOpen,
+        iconBg: 'bg-purple-600',
+        textAccent: 'text-purple-600',
+        bgAccent: 'bg-purple-50',
+      };
+    }
+    // Meeting Room
+    return {
+      icon: Users,
+      iconBg: 'bg-orange-600',
+      textAccent: 'text-orange-600',
+      bgAccent: 'bg-orange-50',
+    };
+  };
+
+  const typeConfig = getTypeConfig();
+  const TypeIcon = typeConfig.icon || Users;
 
   // Animate modal entrance
   useEffect(() => {
     if (isOpen && modalRef.current && backdropRef.current) {
       // Reset closing state
       setIsClosing(false);
-      
+
       // Set initial state
       gsap.set(backdropRef.current, { opacity: 0 });
       gsap.set(modalRef.current, { scale: 0.95, opacity: 0, y: 10 });
-      
+
       // Animate in
       const tl = gsap.timeline();
       tl.to(backdropRef.current, {
@@ -33,37 +100,29 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
         duration: 0.25,
         ease: 'power1.out'
       })
-      .to(modalRef.current, {
-        scale: 1,
-        opacity: 1,
-        y: 0,
-        duration: 0.35,
-        ease: 'power2.out'
-      }, '-=0.15');
+        .to(modalRef.current, {
+          scale: 1,
+          opacity: 1,
+          y: 0,
+          duration: 0.35,
+          ease: 'power2.out'
+        }, '-=0.15');
     }
   }, [isOpen]);
 
   if (!isOpen || !space) return null;
-  
+
   // Check if space is unavailable
   const isUnavailable = space.is_available === false;
-  
-  // Debug log to see the space data
-  console.log('BookingModal - Space Data:', {
-    name: space.name,
-    is_available: space.is_available,
-    unavailable_reason: space.unavailable_reason,
-    fullSpace: space
-  });
 
   /**
    * Reset all states when modal closes
    */
   const handleClose = () => {
     if (isClosing) return; // Prevent multiple close animations
-    
+
     setIsClosing(true);
-    
+
     // Animate out
     const tl = gsap.timeline({
       onComplete: () => {
@@ -71,7 +130,7 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
         setIsClosing(false);
       }
     });
-    
+
     tl.to(modalRef.current, {
       scale: 0.95,
       opacity: 0,
@@ -79,11 +138,11 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
       duration: 0.25,
       ease: 'power1.in'
     })
-    .to(backdropRef.current, {
-      opacity: 0,
-      duration: 0.2,
-      ease: 'power1.in'
-    }, '-=0.15');
+      .to(backdropRef.current, {
+        opacity: 0,
+        duration: 0.2,
+        ease: 'power1.in'
+      }, '-=0.15');
   };
 
   /**
@@ -111,20 +170,15 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
       end_at: formatDateTime(bookingDetails.date, bookingDetails.endTime),
     };
 
-    console.log('Creating booking:', bookingPayload);
-    
     createBooking(bookingPayload, {
       onSuccess: (response) => {
-        console.log('Booking created successfully:', response);
-        
-        // Show success toast
         showToastMessage({
           type: 'success',
           title: 'Booking confirmed!',
           message: response.message || `${space.name} has been booked successfully.`,
           duration: 5000
         });
-        
+
         // Success animation: smooth pulse effect
         if (modalRef.current) {
           gsap.to(modalRef.current, {
@@ -140,7 +194,6 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
         }
       },
       onError: (err) => {
-        // Show error toast
         showToastMessage({
           type: 'error',
           title: 'Booking failed',
@@ -151,210 +204,190 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
     });
   };
 
-  const amenityIcons = {
-    'Monitor': '/assets/f710a8532bb7f6be7023184b940c0b2b5746bc70.svg',
-    'Power Outlet': '/assets/123375ea5e26ce44b7119cf0c7842bbfe3d1acf6.svg',
-    'Standing Desk': '/assets/184edf44907e8ea4d64d9756ae4a72901920ea57.svg',
-    'Whiteboard': '/assets/013426a4beb4fcc79d3fa615feda380fd8cc6599.svg',
-    'Projector': '/assets/2470b495aa90fa962b67cb001b73a4573bb33800.svg',
-    'Video Conference': '/assets/2470b495aa90fa962b67cb001b73a4573bb33800.svg',
+  const handleConfirmClick = () => {
+    hapticClick(confirmButtonRef.current, handleConfirmBooking);
+  };
+
+  const handleCancelClick = () => {
+    hapticClick(cancelButtonRef.current, handleClose);
+  };
+
+  const handleCloseClick = () => {
+    hapticClick(closeButtonRef.current, handleClose);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop with blur */}
-      <div 
+      <div
         ref={backdropRef}
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={handleClose}
       />
-      
-      {/* Modal */}
-      <div 
-        ref={modalRef}
-        className="relative bg-white border border-[rgba(0,0,0,0.1)] rounded-[24px] w-full max-w-[512px] shadow-xl"
-      >
-        {/* Close button */}
-        <button
-          onClick={handleClose}
-          className="absolute right-[17px] top-[17px] w-4 h-4 opacity-70 hover:opacity-100 transition-opacity"
-        >
-          <img src="/assets/9e12764e91cf36e92c672b4ceb011cb1b5c0cb56.svg" alt="Close" className="w-full h-full" />
-        </button>
 
-        <div className="p-[25px]">
-          {/* Header */}
-          <div className="flex flex-col gap-2 mb-4">
-            <h2 className="font-semibold text-[18px] leading-[18px] tracking-[-0.4395px] text-neutral-950">
-              Confirm Booking
+      {/* Modal */}
+      <div
+        ref={modalRef}
+        className="relative bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+      >
+        {/* Header */}
+        <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+          <div>
+            <h2 className="text-xl font-bold text-neutral-950 tracking-tight">
+              {isUnavailable ? 'Space Unavailable' : 'Confirm Booking'}
             </h2>
-            <p className="font-normal text-[14px] leading-[20px] tracking-[-0.1504px] text-[#717182]">
-              Review your booking details before confirming
+            <p className="text-sm text-gray-500 mt-1">
+              {isUnavailable ? 'This space cannot be booked at this time' : 'Review details before confirming'}
             </p>
           </div>
+          <button
+            onClick={handleClose}
+            className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+          >
+            <X size={18} className="text-gray-600" />
+          </button>
+        </div>
 
-          {/* Booking Details Container */}
-          <div className="flex flex-col gap-6 pt-4">
-            {isUnavailable ? (
-              /* Unavailable Space - Show Reason */
-              <>
-                {/* Space Info Box */}
-                <div className="bg-gray-50 rounded-[16px] p-6 flex flex-col gap-3">
-                  {/* Space Name & Capacity */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex flex-col gap-1">
-                      <h3 className="font-normal text-[16px] leading-[24px] tracking-[-0.3125px] text-neutral-950">
-                        {space.name}
-                      </h3>
-                      <p className="font-normal text-[14px] leading-[20px] tracking-[-0.1504px] text-[#717182]">
-                        {space.type}
-                      </p>
-                    </div>
-                    <div className="bg-red-100 border border-red-200 rounded-[8px] px-2 py-1 flex items-center gap-2 h-[22px]">
-                      <p className="font-medium text-[12px] leading-[16px] text-red-700">
-                        Unavailable
-                      </p>
-                    </div>
-                  </div>
+        <div className="p-6 overflow-y-auto">
+          {/* Space Info Card */}
+          <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl mb-6 border border-gray-100">
+            <div className={`w-12 h-12 rounded-xl ${typeConfig.iconBg} flex items-center justify-center flex-shrink-0 shadow-sm`}>
+              <TypeIcon className="w-6 h-6 text-white" strokeWidth={2} />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-neutral-950 text-lg">
+                {space.name}
+              </h3>
+              <p className={`text-sm font-medium ${typeConfig.textAccent}`}>
+                {space.type}
+              </p>
+            </div>
+            <div className="px-2.5 py-1 bg-white rounded-md border border-gray-200 flex items-center gap-1.5 shadow-sm">
+              <Users size={14} className="text-gray-600" />
+              <span className="text-xs font-bold text-gray-700">{space.capacity}</span>
+            </div>
+          </div>
 
-                  {/* Date & Time */}
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <img src="/assets/b93a116f2f4d1a90e1d12e22f5c8011b996b9851.svg" alt="" className="w-4 h-4" />
-                      <p className="font-normal text-[14px] leading-[20px] tracking-[-0.1504px] text-[#717182]">
-                        {bookingDetails.date}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <img src="/assets/6c19041890678fea04354a56ac73a90d63546598.svg" alt="" className="w-4 h-4" />
-                      <p className="font-normal text-[14px] leading-[20px] tracking-[-0.1504px] text-[#717182]">
-                        {bookingDetails.startTime} - {bookingDetails.endTime}
-                      </p>
-                    </div>
-                  </div>
+          {/* Booking Details */}
+          <div className="space-y-4 mb-6">
+            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+              Date & Time
+            </h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl">
+                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
+                  <Calendar size={16} />
                 </div>
-
-                {/* Unavailable Reason */}
-                <div className="bg-red-50 border border-red-200 rounded-[16px] p-4">
-                  <p className="font-medium text-[14px] leading-[20px] tracking-[-0.1504px] text-red-900 mb-2">
-                    Space Not Available
-                  </p>
-                  <p className="font-normal text-[14px] leading-[20px] tracking-[-0.1504px] text-red-700">
-                    {space.unavailable_reason ? (
-                      // Parse and highlight user name and time in the unavailable reason
-                      <span dangerouslySetInnerHTML={{
-                        __html: space.unavailable_reason
-                          .replace(/(\w+)(?=\s+mulai)/gi, '<strong>$1</strong>')  // Bold the user name before "mulai"
-                          .replace(/(\d{2}:\d{2})/g, '<strong>$1</strong>')  // Bold all time patterns (HH:MM)
-                      }} />
-                    ) : (
-                      'This space is currently unavailable for the selected time slot.'
-                    )}
+                <div>
+                  <p className="text-xs text-gray-500 font-medium">Date</p>
+                  <p className="text-sm font-semibold text-gray-900">{bookingDetails.date}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl">
+                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
+                  <Clock size={16} />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-medium">Time</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {bookingDetails.startTime} - {bookingDetails.endTime}
                   </p>
                 </div>
-              </>
-            ) : (
-              /* Available Space - Show Booking Details */
-              <>
-                {/* Space Info Box */}
-                <div className="bg-gray-50 rounded-[16px] p-6 flex flex-col gap-3">
-                  {/* Space Name & Capacity */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex flex-col gap-1">
-                      <h3 className="font-normal text-[16px] leading-[24px] tracking-[-0.3125px] text-neutral-950">
-                        {space.name}
-                      </h3>
-                      <p className="font-normal text-[14px] leading-[20px] tracking-[-0.1504px] text-[#717182]">
-                        {space.type}
-                      </p>
-                    </div>
-                    <div className="bg-gray-200 border border-transparent rounded-[8px] px-2 py-1 flex items-center gap-2 h-[22px]">
-                      <img src="/assets/d5ce048667629374475c5e2698f94f4c7e50c11f.svg" alt="" className="w-3 h-3" />
-                      <p className="font-medium text-[12px] leading-[16px] text-[#364153]">
-                        {space.capacity}
-                      </p>
-                    </div>
-                  </div>
+              </div>
+            </div>
+          </div>
 
-                  {/* Date & Time */}
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <img src="/assets/b93a116f2f4d1a90e1d12e22f5c8011b996b9851.svg" alt="" className="w-4 h-4" />
-                      <p className="font-normal text-[14px] leading-[20px] tracking-[-0.1504px] text-[#717182]">
-                        {bookingDetails.date}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <img src="/assets/6c19041890678fea04354a56ac73a90d63546598.svg" alt="" className="w-4 h-4" />
-                      <p className="font-normal text-[14px] leading-[20px] tracking-[-0.1504px] text-[#717182]">
-                        {bookingDetails.startTime} - {bookingDetails.endTime}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Amenities */}
-                <div className="flex flex-col gap-3">
-                  <p className="font-normal text-[14px] leading-[20px] tracking-[-0.1504px] text-[#717182]">
-                    Amenities included
-                  </p>
+          {isUnavailable ? (
+            /* Unavailable Reason */
+            <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-semibold text-red-900 text-sm mb-1">Booking Conflict</h4>
+                <p className="text-sm text-red-700 leading-relaxed">
+                  {space.unavailable_reason ? (
+                    <span dangerouslySetInnerHTML={{
+                      __html: space.unavailable_reason
+                        .replace(/(\w+)(?=\s+mulai)/gi, '<strong>$1</strong>')
+                        .replace(/(\d{2}:\d{2})/g, '<strong>$1</strong>')
+                    }} />
+                  ) : (
+                    'This space is currently unavailable for the selected time slot.'
+                  )}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Amenities */}
+              {space.amenities && space.amenities.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    Included Amenities
+                  </h4>
                   <div className="flex flex-wrap gap-2">
-                    {space.amenities && space.amenities.slice(0, 4).map((amenity, index) => {
-                      // Handle both string and object formats
+                    {space.amenities.map((amenity, index) => {
                       const amenityName = typeof amenity === 'string' ? amenity : amenity.name;
+                      const Icon = getAmenityIcon(amenityName);
                       return (
-                        <div key={index} className="bg-gray-100 rounded-[10px] px-3 py-1.5 h-[32px] flex items-center">
-                          <p className="font-normal text-[14px] leading-[20px] tracking-[-0.1504px] text-[#4a5565]">
-                            {amenityName}
-                          </p>
+                        <div key={index} className="px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg flex items-center gap-2">
+                          <Icon size={14} className="text-gray-500" />
+                          <span className="text-xs font-medium text-gray-700">{amenityName}</span>
                         </div>
                       );
                     })}
                   </div>
                 </div>
+              )}
 
-                {/* Info Message */}
-                <div className="bg-blue-50 border border-blue-100 rounded-[16px] p-4">
-                  <p className="font-normal text-[14px] leading-[20px] tracking-[-0.1504px] text-[#1c398e]">
-                    You'll receive a check-in code via notification once your booking is confirmed.
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3 mt-6">
-            {isUnavailable ? (
-              /* Only show Close button for unavailable spaces */
-              <button
-                onClick={handleClose}
-                className="w-full bg-black rounded-[14px] px-4 py-2 h-[36px] flex items-center justify-center"
-              >
-                <p className="font-medium text-[14px] leading-[20px] tracking-[-0.1504px] text-white">
-                  Close
+              {/* Info Message */}
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3">
+                <Info className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                <p className="text-sm text-blue-800 leading-relaxed">
+                  You'll receive a check-in code and instructions via notification once your booking is confirmed.
                 </p>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="p-6 border-t border-gray-100 bg-gray-50">
+          <div className="flex gap-3">
+            {isUnavailable ? (
+              <button
+                ref={closeButtonRef}
+                onClick={handleCloseClick}
+                className="w-full bg-neutral-900 text-white rounded-xl px-4 py-3 font-semibold text-sm hover:bg-neutral-800 transition-colors"
+              >
+                Close
               </button>
             ) : (
-              /* Show Cancel and Confirm buttons for available spaces */
               <>
                 <button
-                  onClick={handleClose}
+                  ref={cancelButtonRef}
+                  onClick={handleCancelClick}
                   disabled={isSubmitting}
-                  className="flex-1 bg-white border border-gray-200 rounded-[14px] px-4 py-2 h-[36px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-white border border-gray-200 text-neutral-900 rounded-xl px-4 py-3 font-semibold text-sm hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <p className="font-medium text-[14px] leading-[20px] tracking-[-0.1504px] text-neutral-950">
-                    Cancel
-                  </p>
+                  Cancel
                 </button>
                 <button
-                  onClick={handleConfirmBooking}
+                  ref={confirmButtonRef}
+                  onClick={handleConfirmClick}
                   disabled={isSubmitting}
-                  className="flex-1 bg-black rounded-[14px] px-4 py-2 h-[36px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-neutral-900 text-white rounded-xl px-4 py-3 font-semibold text-sm hover:bg-neutral-800 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  <p className="font-medium text-[14px] leading-[20px] tracking-[-0.1504px] text-white">
-                    {isSubmitting ? 'Confirming...' : 'Confirm Booking'}
-                  </p>
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Confirm Booking</span>
+                      {/* <CheckCircle2 size={16} /> */}
+                    </>
+                  )}
                 </button>
               </>
             )}

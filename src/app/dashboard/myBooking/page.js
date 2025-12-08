@@ -5,11 +5,12 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import BookingCard from '@/component/BookingCard';
 import { useCurrentUser, useUserBookings, useCheckInBooking, useCheckOutBooking, useCancelBooking } from '@/hooks';
 import { useToast } from '@/contexts/ToastContext';
 import { formatDateWithDay } from '@/utils/date';
+import { Search, X } from 'lucide-react';
 
 // Map API status values to UI status values
 const mapStatusToUI = (status) => {
@@ -22,14 +23,15 @@ const mapStatusToUI = (status) => {
     'cancel': 'cancelled',
     'cancelled': 'cancelled'
   };
-  
+
   return statusMap[status?.toLowerCase()] || status;
 };
 
 export default function MyBookingPage() {
   const { currentUser } = useCurrentUser();
   const { showToastMessage } = useToast();
-  
+  const [searchQuery, setSearchQuery] = useState('');
+
   const { data: response, isLoading: loading, refetch } = useUserBookings();
   const { mutate: checkIn } = useCheckInBooking();
   const { mutate: checkOut } = useCheckOutBooking();
@@ -44,12 +46,30 @@ export default function MyBookingPage() {
       date: formatDateWithDay(booking.date)
     }));
 
+  // Filter bookings based on search query
+  const filteredBookings = useMemo(() => {
+    if (!searchQuery.trim()) return bookings;
+
+    const query = searchQuery.toLowerCase();
+    return bookings.filter(booking => {
+      const spaceName = booking.space_name?.toLowerCase() || '';
+      const date = booking.date?.toLowerCase() || '';
+      const status = booking.status?.toLowerCase() || '';
+      const spaceType = booking.space_type?.toLowerCase() || '';
+
+      return spaceName.includes(query) ||
+        date.includes(query) ||
+        status.includes(query) ||
+        spaceType.includes(query);
+    });
+  }, [bookings, searchQuery]);
+
   // Separate bookings into active and past
-  const activeBookings = bookings.filter(b => 
+  const activeBookings = filteredBookings.filter(b =>
     b.status === 'active' || b.status === 'checkin'
   );
-  
-  const pastBookings = bookings.filter(b => 
+
+  const pastBookings = filteredBookings.filter(b =>
     b.status === 'cancelled' || b.status === 'finished' || b.status === 'completed' || b.status === 'checkout'
   );
 
@@ -135,6 +155,9 @@ export default function MyBookingPage() {
     });
   };
 
+  const hasSearchResults = filteredBookings.length > 0;
+  const isSearching = searchQuery.trim().length > 0;
+
   return (
     <div className="min-h-full px-4 sm:px-6 md:px-8 py-8 md:py-10 bg-[#FFFFFF]">
       {/* Background Aesthetics */}
@@ -145,7 +168,7 @@ export default function MyBookingPage() {
 
       <div className="relative z-10 max-w-[1600px] mx-auto">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
           <div>
             <p className="text-sm font-semibold tracking-widest text-gray-400 uppercase mb-2">Your Reservations</p>
             <h1 className="text-4xl md:text-5xl font-light text-neutral-900 tracking-tight" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
@@ -154,10 +177,49 @@ export default function MyBookingPage() {
           </div>
         </div>
 
+        {/* Search Bar */}
+        <div className="mb-8">
+          <div className="relative max-w-2xl">
+            <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by space name, date, or status..."
+              className="w-full bg-white border border-gray-200 rounded-2xl pl-12 pr-12 py-3.5 text-sm text-neutral-950 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-200 transition-all shadow-sm"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Bookings List */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        ) : !hasSearchResults && isSearching ? (
+          <div className="bg-white rounded-[32px] p-12 text-center border border-gray-100 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+            <div className="relative z-10">
+              <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6 text-4xl mx-auto">🔍</div>
+              <p className="text-gray-600 mb-2 text-lg font-medium">No bookings found</p>
+              <p className="text-sm text-gray-500 mb-4">
+                Try searching with different keywords
+              </p>
+              <button
+                onClick={() => setSearchQuery('')}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Clear search
+              </button>
+            </div>
           </div>
         ) : bookings.length === 0 ? (
           <div className="bg-white rounded-[32px] p-12 text-center border border-gray-100 shadow-sm relative overflow-hidden">
@@ -179,7 +241,7 @@ export default function MyBookingPage() {
                 <h2 className="text-xl font-medium text-gray-900">Active Bookings</h2>
                 <span className="text-sm text-gray-400">({activeBookings.length})</span>
               </div>
-              
+
               {activeBookings.length === 0 ? (
                 <div className="bg-white rounded-[24px] p-8 text-center border border-gray-100 shadow-sm relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
@@ -212,7 +274,7 @@ export default function MyBookingPage() {
                 <h2 className="text-xl font-medium text-gray-900">Past Bookings</h2>
                 <span className="text-sm text-gray-400">({pastBookings.length})</span>
               </div>
-              
+
               {pastBookings.length === 0 ? (
                 <div className="bg-white rounded-[24px] p-8 text-center border border-gray-100 shadow-sm relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />

@@ -10,29 +10,55 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import LogoutButton from '@/component/LogoutButton';
+import Tooltip from '@/component/Tooltip';
 import { getUserDisplayName, getUserInitials } from '@/utils/user';
 import { gsap } from 'gsap';
+import {
+  Menu,
+  X,
+  LayoutDashboard,
+  BookSearch,
+  BookMarked,
+  Shield,
+  HelpCircle,
+  Settings,
+  LogOut
+} from 'lucide-react';
 
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { currentUser } = useCurrentUser();
-  
+
   // Refs for GSAP animations
   const sidebarRef = useRef(null);
   const headerTextRef = useRef(null);
   const navigationLabelsRef = useRef([]);
   const userProfileRef = useRef(null);
-  
-  // Manage sidebar open/close state with localStorage persistence
-  const [isOpen, setIsOpen] = useState(true);
 
-  // Load saved state from localStorage on mount
+  // Manage sidebar open/close state with localStorage persistence
+  // Always start with true to avoid hydration mismatch
+  const [isOpen, setIsOpen] = useState(true);
+  const [isReady, setIsReady] = useState(false);
+
+  const isInitialMount = useRef(true);
+
+  // Load from localStorage after mount to avoid hydration issues
   useEffect(() => {
     const savedState = localStorage.getItem('sidebarOpen');
     if (savedState !== null) {
       setIsOpen(savedState === 'true');
     }
+
+    // Mark as ready to show
+    setIsReady(true);
+
+    // Allow animations after initial render and storage load
+    const timer = setTimeout(() => {
+      isInitialMount.current = false;
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Save state to localStorage when it changes
@@ -40,7 +66,7 @@ export default function Sidebar() {
     const newState = !isOpen;
     setIsOpen(newState);
     localStorage.setItem('sidebarOpen', String(newState));
-    
+
     // Dispatch custom event for layout to listen
     window.dispatchEvent(new CustomEvent('sidebarToggle', { detail: { isOpen: newState } }));
   };
@@ -48,6 +74,9 @@ export default function Sidebar() {
   // GSAP Animation Effect
   useEffect(() => {
     if (!sidebarRef.current) return;
+
+    // Skip animation on initial mount to prevent flash
+    if (isInitialMount.current) return;
 
     const tl = gsap.timeline();
 
@@ -87,24 +116,12 @@ export default function Sidebar() {
         }, '-=0.2');
       }
 
-      // Animate user profile
-      if (userProfileRef.current) {
-        tl.fromTo(userProfileRef.current, {
-          opacity: 0,
-          y: 10
-        }, {
-          opacity: 1,
-          y: 0,
-          duration: 0.3,
-          ease: 'power2.out'
-        }, '-=0.1');
-      }
+      // User profile stays visible without animation
     } else {
       // Closing animation - hide content first, then shrink width
       const elementsToHide = [
         headerTextRef.current,
-        ...navigationLabelsRef.current.filter(Boolean),
-        userProfileRef.current
+        ...navigationLabelsRef.current.filter(Boolean)
       ].filter(Boolean);
 
       if (elementsToHide.length > 0) {
@@ -136,133 +153,135 @@ export default function Sidebar() {
   return (
     <div
       ref={sidebarRef}
-      className={`fixed left-0 top-0 h-screen bg-white border-r border-gray-200 flex flex-col z-20 ${
-        isOpen ? 'w-64' : 'w-[72px]'
-      }`}
-      style={{ overflow: 'hidden' }}
+      className="fixed left-0 top-0 h-screen bg-white border-r border-gray-200 flex flex-col z-20"
+      style={{
+        overflow: 'hidden',
+        width: isOpen ? '256px' : '72px',
+        visibility: isReady ? 'visible' : 'hidden'
+      }}
     >
-      {/* Header with Toggle */}
+      {/* Header with Logo Only */}
       <div className="px-4 pt-8 pb-6">
-        <div className={`h-[41px] rounded-lg flex items-center transition-colors ${
-          isOpen ? 'px-3 gap-3' : 'justify-center'
-        }`}>
-          <button
-            onClick={toggleSidebar}
-            className="flex items-center justify-center flex-shrink-0"
-          >
-            <svg
-              className="w-[15px] h-[15px] text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-            >
-              {isOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              )}
-            </svg>
-          </button>
-          {/* Header Text */}
+        <div className={`h-[48px] rounded-lg flex items-center transition-colors ${isOpen ? 'justify-center' : 'justify-center'
+          }`}>
+          {/* Header Logo - Open State */}
           {isOpen && (
-            <h1 
+            <img
               ref={headerTextRef}
-              className="text-[20px] font-normal text-neutral-950 tracking-[-0.8492px] leading-[30px]" 
-              style={{ fontFamily: 'Tanker-Regular, sans-serif' }}
-            >
-              OpenBO
-            </h1>
+              src="/mascott.png"
+              alt="OpenBO Logo"
+              className="h-12 w-auto object-contain"
+              style={{ opacity: isInitialMount.current ? 1 : undefined }}
+            />
+          )}
+          {/* Header Logo - Closed State */}
+          {!isOpen && (
+            <img
+              src="/mascott.png"
+              alt="OpenBO Logo"
+              className="h-10 w-auto object-contain"
+            />
           )}
         </div>
       </div>
 
+
       {/* Navigation */}
       <div className="flex-1 px-4 pt-4 flex flex-col gap-4">
+        {/* Toggle Button */}
+        <button
+          onClick={toggleSidebar}
+          className={`h-[41px] rounded-lg flex items-center transition-colors w-full ${isOpen ? 'px-3 gap-3' : 'justify-center'
+            } text-[#717182] hover:bg-gray-50`}
+        >
+          {isOpen ? (
+            <X size={18} className="flex-shrink-0" />
+          ) : (
+            <Menu size={18} className="flex-shrink-0" />
+          )}
+          {isOpen && (
+            <span
+              ref={el => navigationLabelsRef.current[0] = el}
+              className="text-sm font-normal tracking-[-0.3008px] leading-[21px]"
+              style={{ opacity: isInitialMount.current ? 1 : undefined }}
+            >
+              Collapse
+            </span>
+          )}
+        </button>
+
+
         {/* Main Navigation */}
         <div className="flex flex-col gap-1">
-          <button 
-            onClick={() => router.push('/dashboard')}
-            className={`h-[41px] rounded-lg flex items-center transition-colors ${
-              isOpen ? 'px-3 gap-3' : 'justify-center'
-            } ${
-              pathname === '/dashboard' 
-                ? 'bg-gray-100 text-neutral-950' 
-                : 'text-[#717182] hover:bg-gray-50'
-            }`}
-          >
-            <img
-              src="/assets/a24f59b1afa77a0af0fd52d01319957c8c1816ef.svg"
-              alt=""
-              className="w-[15px] h-[15px]"
-            />
-            {isOpen && (
-              <span 
-                ref={el => navigationLabelsRef.current[0] = el}
-                className="text-sm font-normal tracking-[-0.3008px] leading-[21px]"
-              >
-                Overview
-              </span>
-            )}
-          </button>
+          <Tooltip text="Overview" disabled={isOpen}>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className={`h-[41px] rounded-lg flex items-center transition-colors w-full ${isOpen ? 'px-3 gap-3' : 'justify-center'
+                } ${pathname === '/dashboard'
+                  ? 'bg-gray-100 text-neutral-950'
+                  : 'text-[#717182] hover:bg-gray-50'
+                }`}
+            >
+              <LayoutDashboard size={18} className="flex-shrink-0" />
+              {isOpen && (
+                <span
+                  ref={el => navigationLabelsRef.current[1] = el}
+                  className="text-sm font-normal tracking-[-0.3008px] leading-[21px]"
+                  style={{ opacity: isInitialMount.current ? 1 : undefined }}
+                >
+                  Overview
+                </span>
+              )}
+            </button>
+          </Tooltip>
 
-          <button 
-            onClick={() => router.push('/dashboard/booking')}
-            className={`h-[41px] rounded-lg flex items-center transition-colors ${
-              isOpen ? 'px-3 gap-3' : 'justify-center'
-            } ${
-              pathname === '/dashboard/booking' 
-                ? 'bg-gray-100 text-neutral-950' 
-                : 'text-[#717182] hover:bg-gray-50'
-            }`}
-          >
-            <img
-              src="/assets/d328689530a20f442c7a125bf97d5dc2a61fff01.svg"
-              alt=""
-              className="w-[15px] h-[15px]"
-            />
-            {isOpen && (
-              <span 
-                ref={el => navigationLabelsRef.current[1] = el}
-                className="text-sm font-normal tracking-[-0.3008px] leading-[21px]"
-              >
-                Spaces
-              </span>
-            )}
-          </button>
+          <Tooltip text="Spaces" disabled={isOpen}>
+            <button
+              onClick={() => router.push('/dashboard/booking')}
+              className={`h-[41px] rounded-lg flex items-center transition-colors w-full ${isOpen ? 'px-3 gap-3' : 'justify-center'
+                } ${pathname === '/dashboard/booking'
+                  ? 'bg-gray-100 text-neutral-950'
+                  : 'text-[#717182] hover:bg-gray-50'
+                }`}
+            >
+              <BookSearch size={18} className="flex-shrink-0" />
+              {isOpen && (
+                <span
+                  ref={el => navigationLabelsRef.current[2] = el}
+                  className="text-sm font-normal tracking-[-0.3008px] leading-[21px]"
+                  style={{ opacity: isInitialMount.current ? 1 : undefined }}
+                >
+                  Spaces
+                </span>
+              )}
+            </button>
+          </Tooltip>
 
-          <button 
-            onClick={() => router.push('/dashboard/myBooking')}
-            className={`h-[41px] rounded-lg flex items-center transition-colors ${
-              isOpen ? 'px-3 gap-3' : 'justify-center'
-            } ${
-              pathname === '/dashboard/myBooking' 
-                ? 'bg-gray-100 text-neutral-950' 
-                : 'text-[#717182] hover:bg-gray-50'
-            }`}
-          >
-            <img
-              src="/assets/60e4e55d9bb30bcf44214b60c31e3794ae6f3c4a.svg"
-              alt=""
-              className="w-[15px] h-[15px]"
-            />
-            {isOpen && (
-              <span 
-                ref={el => navigationLabelsRef.current[2] = el}
-                className="text-sm font-normal tracking-[-0.3008px] leading-[21px]"
-              >
-                Bookings
-              </span>
-            )}
-          </button>
+          <Tooltip text="Bookings" disabled={isOpen}>
+            <button
+              onClick={() => router.push('/dashboard/myBooking')}
+              className={`h-[41px] rounded-lg flex items-center transition-colors w-full ${isOpen ? 'px-3 gap-3' : 'justify-center'
+                } ${pathname === '/dashboard/myBooking'
+                  ? 'bg-gray-100 text-neutral-950'
+                  : 'text-[#717182] hover:bg-gray-50'
+                }`}
+            >
+              <img
+                src="/assets/60e4e55d9bb30bcf44214b60c31e3794ae6f3c4a.svg"
+                alt=""
+                className="w-[15px] h-[15px]"
+              />
+              {isOpen && (
+                <span
+                  ref={el => navigationLabelsRef.current[3] = el}
+                  className="text-sm font-normal tracking-[-0.3008px] leading-[21px]"
+                  style={{ opacity: isInitialMount.current ? 1 : undefined }}
+                >
+                  Bookings
+                </span>
+              )}
+            </button>
+          </Tooltip>
         </div>
 
         {/* Divider */}
@@ -272,124 +291,78 @@ export default function Sidebar() {
         <div className="flex flex-col gap-1">
           {/* Admin Dashboard - Only for superadmin */}
           {currentUser?.role === 'superadmin' && (
-            <button 
-              onClick={() => router.push('/dashboard/admin')}
-              className={`h-[41px] rounded-lg flex items-center transition-colors ${
-                isOpen ? 'px-3 gap-3' : 'justify-center'
-              } ${
-                pathname.startsWith('/dashboard/admin') 
-                  ? 'bg-gray-100 text-neutral-950' 
-                  : 'text-[#717182] hover:bg-gray-50'
-              }`}
-            >
-              <svg 
-                width="15" 
-                height="15" 
-                viewBox="0 0 15 15" 
-                fill="none" 
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-[15px] h-[15px]"
+            <Tooltip text="Admin Dashboard" disabled={isOpen}>
+              <button
+                onClick={() => router.push('/dashboard/admin')}
+                className={`h-[41px] rounded-lg flex items-center transition-colors w-full ${isOpen ? 'px-3 gap-3' : 'justify-center'
+                  } ${pathname.startsWith('/dashboard/admin')
+                    ? 'bg-gray-100 text-neutral-950'
+                    : 'text-[#717182] hover:bg-gray-50'
+                  }`}
               >
-                <path 
-                  d="M7.5 1.25C6.375 1.25 5.5 2.125 5.5 3.25C5.5 4.375 6.375 5.25 7.5 5.25C8.625 5.25 9.5 4.375 9.5 3.25C9.5 2.125 8.625 1.25 7.5 1.25ZM3.5 6.25C2.375 6.25 1.5 7.125 1.5 8.25C1.5 9.375 2.375 10.25 3.5 10.25C4.625 10.25 5.5 9.375 5.5 8.25C5.5 7.125 4.625 6.25 3.5 6.25ZM11.5 6.25C10.375 6.25 9.5 7.125 9.5 8.25C9.5 9.375 10.375 10.25 11.5 10.25C12.625 10.25 13.5 9.375 13.5 8.25C13.5 7.125 12.625 6.25 11.5 6.25ZM7.5 11.25C6.375 11.25 5.5 12.125 5.5 13.25C5.5 14.375 6.375 15.25 7.5 15.25C8.625 15.25 9.5 14.375 9.5 13.25C9.5 12.125 8.625 11.25 7.5 11.25Z" 
-                  fill="currentColor"
-                />
-              </svg>
+                <Shield size={18} className="flex-shrink-0" />
+                {isOpen && (
+                  <span
+                    ref={el => navigationLabelsRef.current[4] = el}
+                    className="text-sm font-normal tracking-[-0.3008px] leading-[21px]"
+                    style={{ opacity: isInitialMount.current ? 1 : undefined }}
+                  >
+                    Admin Dashboard
+                  </span>
+                )}
+              </button>
+            </Tooltip>
+          )}
+
+          <Tooltip text="Support" disabled={isOpen}>
+            <button
+              className={`h-[41px] rounded-lg flex items-center text-[#717182] hover:bg-gray-50 transition-colors w-full ${isOpen ? 'px-3 gap-3' : 'justify-center'
+                }`}
+            >
+              <HelpCircle size={18} className="flex-shrink-0" />
               {isOpen && (
-                <span 
-                  ref={el => navigationLabelsRef.current[3] = el}
+                <span
+                  ref={el => navigationLabelsRef.current[currentUser?.role === 'superadmin' ? 5 : 4] = el}
                   className="text-sm font-normal tracking-[-0.3008px] leading-[21px]"
+                  style={{ opacity: isInitialMount.current ? 1 : undefined }}
                 >
-                  Admin Dashboard
+                  Support
                 </span>
               )}
             </button>
-          )}
+          </Tooltip>
 
-          <button 
-            className={`h-[41px] rounded-lg flex items-center text-[#717182] hover:bg-gray-50 transition-colors ${
-              isOpen ? 'px-3 gap-3' : 'justify-center'
-            }`}
-          >
-            <img
-              src="/assets/c2fd7a7308e28ed684a5f5392a35f554e5a5e9cd.svg"
-              alt=""
-              className="w-[15px] h-[15px]"
-            />
-            {isOpen && (
-              <span 
-                ref={el => navigationLabelsRef.current[currentUser?.role === 'superadmin' ? 4 : 3] = el}
-                className="text-sm font-normal tracking-[-0.3008px] leading-[21px]"
-              >
-                Support
-              </span>
-            )}
-          </button>
-
-          <button 
-            className={`h-[41px] rounded-lg flex items-center text-[#717182] hover:bg-gray-50 transition-colors ${
-              isOpen ? 'px-3 gap-3' : 'justify-center'
-            }`}
-          >
-            <img
-              src="/assets/7e187711dac8dba400baff787c183bcc5cebc2fe.svg"
-              alt=""
-              className="w-[15px] h-[15px]"
-            />
-            {isOpen && (
-              <span 
-                ref={el => navigationLabelsRef.current[currentUser?.role === 'superadmin' ? 5 : 4] = el}
-                className="text-sm font-normal tracking-[-0.3008px] leading-[21px]"
-              >
-                Settings
-              </span>
-            )}
-          </button>
+          <Tooltip text="Settings" disabled={isOpen}>
+            <button
+              className={`h-[41px] rounded-lg flex items-center text-[#717182] hover:bg-gray-50 transition-colors w-full ${isOpen ? 'px-3 gap-3' : 'justify-center'
+                }`}
+            >
+              <Settings size={18} className="flex-shrink-0" />
+              {isOpen && (
+                <span
+                  ref={el => navigationLabelsRef.current[currentUser?.role === 'superadmin' ? 6 : 5] = el}
+                  className="text-sm font-normal tracking-[-0.3008px] leading-[21px]"
+                  style={{ opacity: isInitialMount.current ? 1 : undefined }}
+                >
+                  Settings
+                </span>
+              )}
+            </button>
+          </Tooltip>
         </div>
       </div>
 
       {/* User Profile & Sign Out */}
-      <div className="border-t border-gray-200 px-4 py-[17px] flex flex-col gap-2">
-        {isOpen ? (
-          <div ref={userProfileRef}>
-            {/* User Profile */}
-            <div className="flex items-center gap-3 px-2 rounded-[14px]">
-              <div className="w-10 h-10 bg-[#101828] rounded-full flex items-center justify-center text-white shrink-0">
-                {currentUser?.avatar ? (
-                  <img
-                    src={currentUser.avatar}
-                    alt=""
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="text-sm">{getUserInitials(currentUser)}</span>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-normal text-[#101828] truncate leading-[20px] tracking-[-0.1504px]">
-                  {getUserDisplayName(currentUser)}
-                </p>
-                <p className="text-xs font-normal text-[#717182] truncate leading-[16px] tracking-[-0.1504px]">
-                  {currentUser?.email || 'user@company.com'}
-                </p>
-              </div>
-            </div>
-            {/* Sign Out Button */}
-            <LogoutButton className="h-9 rounded-[14px] flex items-center gap-3 px-3 text-[#4a5565] hover:bg-gray-50 transition-colors">
-              <img
-                src="/assets/fab12f232bbb3c666849a981e9234d87ca4e3c92.svg"
-                alt=""
-                className="w-[27px] h-[27px]"
-              />
-              <span className="text-sm font-medium tracking-[-0.1504px] leading-[20px]">
-                Sign Out
-              </span>
-            </LogoutButton>
-          </div>
-        ) : (
-          <>
-            {/* User Avatar Only */}
-            <div className="w-10 h-10 bg-[#101828] rounded-full flex items-center justify-center text-white mx-auto">
+      <div className="border-t border-gray-200 px-4 py-4 flex flex-col gap-3">
+        {/* Full Profile - Shown when open */}
+        <div
+          ref={userProfileRef}
+          className="flex flex-col gap-2"
+          style={{ display: isOpen ? 'flex' : 'none' }}
+        >
+          {/* User Profile */}
+          <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-gray-50 transition-colors">
+            <div className="w-10 h-10 bg-neutral-900 rounded-full flex items-center justify-center text-white shrink-0">
               {currentUser?.avatar ? (
                 <img
                   src={currentUser.avatar}
@@ -397,19 +370,50 @@ export default function Sidebar() {
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                <span className="text-sm">{getUserInitials(currentUser)}</span>
+                <span className="text-sm font-bold">{getUserInitials(currentUser)}</span>
               )}
             </div>
-            {/* Sign Out Icon Only */}
-            <LogoutButton className="w-[26px] h-[26px] flex items-center justify-center mx-auto hover:opacity-70 transition-opacity">
-              <img
-                src="/assets/fab12f232bbb3c666849a981e9234d87ca4e3c92.svg"
-                alt=""
-                className="w-full h-full"
-              />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-neutral-950 truncate">
+                {getUserDisplayName(currentUser)}
+              </p>
+              <p className="text-xs font-medium text-gray-500 truncate">
+                {currentUser?.email || 'user@company.com'}
+              </p>
+            </div>
+          </div>
+          {/* Sign Out Button */}
+          <LogoutButton className="h-10 rounded-xl flex items-center gap-3 px-3 text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all font-medium">
+            <LogOut size={18} className="flex-shrink-0" />
+            <span className="text-sm">
+              Sign Out
+            </span>
+          </LogoutButton>
+        </div>
+
+        {/* Compact Profile - Shown when closed */}
+        <div style={{ display: !isOpen ? 'flex' : 'none' }} className="flex flex-col gap-3">
+          {/* User Avatar Only */}
+          <Tooltip text={getUserDisplayName(currentUser)} disabled={false}>
+            <div className="w-10 h-10 bg-neutral-900 rounded-full flex items-center justify-center text-white mx-auto cursor-pointer hover:ring-2 hover:ring-gray-200 transition-all">
+              {currentUser?.avatar ? (
+                <img
+                  src={currentUser.avatar}
+                  alt=""
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <span className="text-sm font-bold">{getUserInitials(currentUser)}</span>
+              )}
+            </div>
+          </Tooltip>
+          {/* Sign Out Icon Only */}
+          <Tooltip text="Sign Out" disabled={false}>
+            <LogoutButton className="w-10 h-10 flex items-center justify-center mx-auto hover:bg-red-50 rounded-lg transition-colors group">
+              <LogOut size={18} className="text-gray-600 group-hover:text-red-600 transition-colors" />
             </LogoutButton>
-          </>
-        )}
+          </Tooltip>
+        </div>
       </div>
     </div>
   );

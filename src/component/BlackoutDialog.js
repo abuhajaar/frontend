@@ -6,6 +6,7 @@ import { Calendar } from 'lucide-react';
 import { DateRange } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
+import '@/styles/calendar-glassy.css';
 
 export default function BlackoutDialog({ isOpen, onClose, mode = 'create', blackoutData = null, onSubmit }) {
     const modalRef = useRef(null);
@@ -272,7 +273,7 @@ export default function BlackoutDialog({ isOpen, onClose, mode = 'create', black
                                 </button>
 
                                 {showCalendar && (
-                                    <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-[8px] shadow-lg border border-gray-200 overflow-hidden">
+                                    <div className="absolute top-full left-0 mt-2 z-50 rounded-[16px] overflow-hidden glass-calendar-wrapper">
                                         <DateRange
                                             editableDateInputs={true}
                                             onChange={item => setDateRange([item.selection])}
