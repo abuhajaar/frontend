@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import StatsCard from '@/component/StatsCard';
 import { useAuth } from '@/lib/useAuth';
 import { useCurrentUser, useDashboardStats } from '@/hooks';
@@ -8,12 +8,19 @@ import { useToast } from '@/contexts/ToastContext';
 import { getUserDisplayName } from '@/utils/user';
 import { useRouter } from 'next/navigation';
 import { Activity, Calendar, Clock, MapPin } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+// Dynamically import Pomodoro to prevent SSR issues
+const PomodoroOverlay = dynamic(() => import('@/component/PomodoroOverlay'), { ssr: false });
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const { currentUser } = useCurrentUser();
   const { showToastMessage } = useToast();
   const router = useRouter();
+  const pomodoroButtonRef = useRef(null);
+  const [showPomodoro, setShowPomodoro] = useState(false);
+  const [pomodoroPosition, setPomodoroPosition] = useState({ x: 50, y: 50 });
 
   const { data: response, isLoading: loading, error } = useDashboardStats(currentUser?.id);
   const stats = response?.data;
@@ -26,9 +33,9 @@ export default function DashboardPage() {
   ];
 
   const workModes = [
-    { id: 'focus', title: 'Deep Focus', desc: 'Quiet soundproof booths', icon: '🤫', color: 'bg-indigo-50 text-indigo-600 border-indigo-100 group-hover:border-indigo-200' },
+    { id: 'focus', title: 'Deep Focus', desc: 'Pomodoro Timer & Zen Mode', icon: '⏱️', color: 'bg-black text-white border-black' },
     { id: 'collab', title: 'Team Sync', desc: 'Meeting rooms with TV', icon: '👥', color: 'bg-blue-50 text-blue-600 border-blue-100 group-hover:border-blue-200' },
-    { id: 'creative', title: 'Brainstorm', desc: 'Whiteboards & open space', icon: '�', color: 'bg-amber-50 text-amber-600 border-amber-100 group-hover:border-amber-200' },
+    { id: 'creative', title: 'Brainstorm', desc: 'Whiteboards & open space', icon: '🎨', color: 'bg-amber-50 text-amber-600 border-amber-100 group-hover:border-amber-200' },
     { id: 'social', title: 'Socialize', desc: 'Coffee bar & lounge', icon: '☕️', color: 'bg-rose-50 text-rose-600 border-rose-100 group-hover:border-rose-200' },
   ];
 
@@ -123,19 +130,40 @@ export default function DashboardPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
-                {workModes.map(mode => (
-                  <button
-                    key={mode.id}
-                    onClick={() => router.push(`/dashboard/booking?mode=${mode.id}`)}
-                    className={`flex flex-col p-5 rounded-2xl border-[3px] border-black transition-all duration-300 group hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-left bg-white`}
-                  >
-                    <div className={`w-12 h-12 rounded-full border-2 border-black flex items-center justify-center text-2xl mb-4 ${mode.id === 'focus' ? 'bg-indigo-100' : mode.id === 'collab' ? 'bg-blue-100' : mode.id === 'creative' ? 'bg-amber-100' : 'bg-rose-100'}`}>
-                      {mode.icon}
-                    </div>
-                    <span className="font-bold text-black text-lg mb-1">{mode.title}</span>
-                    <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">{mode.desc}</span>
-                  </button>
-                ))}
+                {workModes.map(mode => {
+                  const isFocus = mode.id === 'focus';
+                  return (
+                    <button
+                      key={mode.id}
+                      ref={isFocus ? pomodoroButtonRef : null}
+                      onClick={(e) => {
+                        if (isFocus) {
+                          const buttonElement = e.currentTarget;
+                          const rect = buttonElement.getBoundingClientRect();
+                          const xPercent = ((rect.left + rect.width / 2) / window.innerWidth) * 100;
+                          const yPercent = ((rect.top + rect.height / 2) / window.innerHeight) * 100;
+                          setPomodoroPosition({ x: xPercent, y: yPercent });
+                          setShowPomodoro(true);
+                        } else {
+                          router.push(`/dashboard/booking?mode=${mode.id}`);
+                        }
+                      }}
+                      className={`flex flex-col p-5 rounded-2xl border-[3px] border-black transition-all duration-300 group hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-left
+                        ${isFocus ? 'bg-black text-white' : 'bg-white text-black'}
+                      `}
+                    >
+                      <div className={`w-12 h-12 rounded-full border-2 border-black flex items-center justify-center text-2xl mb-4 
+                        ${isFocus ? 'bg-white text-black' :
+                          mode.id === 'collab' ? 'bg-blue-100' :
+                            mode.id === 'creative' ? 'bg-amber-100' : 'bg-rose-100'}
+                      `}>
+                        {mode.icon}
+                      </div>
+                      <span className={`font-bold text-lg mb-1 ${isFocus ? 'text-white' : 'text-black'}`}>{mode.title}</span>
+                      <span className={`text-xs font-bold uppercase tracking-wider ${isFocus ? 'text-gray-400' : 'text-gray-500'}`}>{mode.desc}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -222,6 +250,14 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Pomodoro Overlay - renders on top without unmounting dashboard */}
+      {showPomodoro && (
+        <PomodoroOverlay
+          position={pomodoroPosition}
+          onClose={() => setShowPomodoro(false)}
+        />
+      )}
     </div>
   );
 }
