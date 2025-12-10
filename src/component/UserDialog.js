@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
+import { Eye, EyeOff } from 'lucide-react';
 import { getAllDepartments } from '@/services/departmentService';
 
-export default function UserDialog({ isOpen, onClose, mode = 'create', userData = null, onSubmit }) {
+export default function UserDialog({ isOpen, onClose, mode = 'create', userData = null, onSubmit, isManager = false }) {
     const modalRef = useRef(null);
     const backdropRef = useRef(null);
     const [isClosing, setIsClosing] = useState(false);
@@ -33,8 +34,14 @@ export default function UserDialog({ isOpen, onClose, mode = 'create', userData 
         status: true
     });
 
-    // Fetch departments on mount
+    // Password visibility toggle
+    const [showPassword, setShowPassword] = useState(false);
+
+    // Fetch departments on mount (only for non-managers)
     useEffect(() => {
+        // Skip fetching departments if user is a manager
+        if (isManager) return;
+
         const fetchDepartments = async () => {
             try {
                 const response = await getAllDepartments();
@@ -47,7 +54,7 @@ export default function UserDialog({ isOpen, onClose, mode = 'create', userData 
         };
 
         fetchDepartments();
-    }, []);
+    }, [isManager]);
 
     // Populate form data when editing
     useEffect(() => {
@@ -168,7 +175,8 @@ export default function UserDialog({ isOpen, onClose, mode = 'create', userData 
             newErrors.phone = 'Phone is required';
         }
 
-        if (!formData.department_id) {
+        // Only validate department_id for non-managers (superadmin/admin)
+        if (!isManager && !formData.department_id) {
             newErrors.department_id = 'Department is required';
         }
 
@@ -191,13 +199,20 @@ export default function UserDialog({ isOpen, onClose, mode = 'create', userData 
                 username: formData.username,
                 email: formData.email,
                 phone: `${countryCode}${formData.phone}`, // Combine country code with phone
-                role: formData.role,
-                department_id: parseInt(formData.department_id),
-                status: formData.status
+                is_active: formData.status
             };
+
+            // Only include role and department for non-managers (superadmin/admin)
+            if (!isManager) {
+                submitData.role = formData.role;
+                submitData.department_id = parseInt(formData.department_id);
+            }
 
             // Only include password in create mode
             if (mode === 'create') {
+                submitData.password = formData.password;
+            } else if (mode === 'edit' && formData.password.trim()) {
+                // Include password in edit mode only if a new password is provided
                 submitData.password = formData.password;
             }
 
@@ -243,165 +258,223 @@ export default function UserDialog({ isOpen, onClose, mode = 'create', userData 
             {/* Modal */}
             <div
                 ref={modalRef}
-                className="relative bg-white border border-[rgba(0,0,0,0.1)] rounded-[16px] w-full max-w-[510px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)]"
+                className="relative bg-white border-[3px] border-black rounded-2xl w-full max-w-[520px] overflow-hidden"
             >
                 {/* Close button */}
                 <button
                     onClick={handleClose}
-                    className="absolute right-4 top-4 w-4 h-4 opacity-70 hover:opacity-100 transition-opacity z-10"
+                    className="absolute right-4 top-4 p-2 bg-white border-2 border-transparent hover:border-black rounded-lg hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all z-10"
                 >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                 </button>
 
                 {/* Header */}
-                <div className="border-b border-gray-200 px-[25px] pt-[25px] pb-[24px]">
-                    <h2 className="font-semibold text-[20px] leading-[30px] tracking-[-0.8984px] text-neutral-950">
+                <div className="bg-black text-white px-8 py-6 border-b-[3px] border-black">
+                    <h2 className="text-3xl font-black uppercase tracking-tighter" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
                         {mode === 'create' ? 'Add New User' : 'Edit User'}
                     </h2>
+                    <p className="text-white/70 font-medium text-sm mt-1">
+                        {mode === 'create' ? 'Enter user details below' : 'Update existing user information'}
+                    </p>
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="px-[25px] pt-[20px] pb-[25px]">
-                    <div className="flex flex-col gap-[20px]">
+                <form onSubmit={handleSubmit} className="px-8 py-8 bg-[#FFFEF8]">
+                    <div className="flex flex-col gap-5">
                         {/* Username */}
-                        <div className="flex flex-col gap-[8px]">
-                            <label className="font-medium text-[14px] leading-[21px] tracking-[-0.3008px] text-neutral-950">
+                        <div className="flex flex-col gap-2">
+                            <label className="font-bold text-sm uppercase tracking-wider text-black">
                                 Username
                             </label>
                             <input
                                 type="text"
                                 value={formData.username}
                                 onChange={(e) => handleInputChange('username', e.target.value)}
-                                className={`h-[42px] px-3 bg-white border ${errors.username ? 'border-red-500' : 'border-gray-200'} rounded-[8px] text-[14px] tracking-[-0.1504px] text-neutral-950 placeholder:text-[#717182] focus:outline-none focus:ring-2 focus:ring-neutral-950`}
+                                className={`h-12 px-4 bg-white border-2 ${errors.username ? 'border-red-500' : 'border-black'} rounded-xl text-black font-bold placeholder:text-gray-400 focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all`}
                                 placeholder="Enter username"
                                 autoComplete="off"
                             />
                             {errors.username && (
-                                <p className="text-[12px] text-red-500">{errors.username}</p>
+                                <p className="text-xs font-bold text-red-500 flex items-center gap-1">
+                                    <span className="w-1 h-1 bg-red-500 rounded-full inline-block"></span>
+                                    {errors.username}
+                                </p>
                             )}
                         </div>
 
                         {/* Email */}
-                        <div className="flex flex-col gap-[8px]">
-                            <label className="font-medium text-[14px] leading-[21px] tracking-[-0.3008px] text-neutral-950">
+                        <div className="flex flex-col gap-2">
+                            <label className="font-bold text-sm uppercase tracking-wider text-black">
                                 Email
                             </label>
                             <input
                                 type="email"
                                 value={formData.email}
                                 onChange={(e) => handleInputChange('email', e.target.value)}
-                                className={`h-[42px] px-3 bg-white border ${errors.email ? 'border-red-500' : 'border-gray-200'} rounded-[8px] text-[14px] tracking-[-0.1504px] text-neutral-950 placeholder:text-[#717182] focus:outline-none focus:ring-2 focus:ring-neutral-950`}
+                                className={`h-12 px-4 bg-white border-2 ${errors.email ? 'border-red-500' : 'border-black'} rounded-xl text-black font-bold placeholder:text-gray-400 focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all`}
                                 placeholder="Enter email"
                             />
                             {errors.email && (
-                                <p className="text-[12px] text-red-500">{errors.email}</p>
+                                <p className="text-xs font-bold text-red-500 flex items-center gap-1">
+                                    <span className="w-1 h-1 bg-red-500 rounded-full inline-block"></span>
+                                    {errors.email}
+                                </p>
                             )}
                         </div>
 
-                        {/* Password - Only show in create mode */}
-                        {mode === 'create' && (
-                            <div className="flex flex-col gap-[8px]">
-                                <label className="font-medium text-[14px] leading-[21px] tracking-[-0.3008px] text-neutral-950">
-                                    Password
-                                </label>
+
+                        {/* Password */}
+                        <div className="flex flex-col gap-2">
+                            <label className="font-bold text-sm uppercase tracking-wider text-black">
+                                Password {mode === 'edit' && <span className="text-gray-400 normal-case text-xs">(Leave blank to keep current)</span>}
+                            </label>
+                            <div className="relative">
                                 <input
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     value={formData.password}
                                     onChange={(e) => handleInputChange('password', e.target.value)}
-                                    className={`h-[42px] px-3 bg-white border ${errors.password ? 'border-red-500' : 'border-gray-200'} rounded-[8px] text-[14px] tracking-[-0.1504px] text-neutral-950 placeholder:text-[#717182] focus:outline-none focus:ring-2 focus:ring-neutral-950`}
-                                    placeholder="Enter password"
+                                    className={`h-12 px-4 pr-12 bg-white border-2 ${errors.password ? 'border-red-500' : 'border-black'} rounded-xl text-black font-bold placeholder:text-gray-400 focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all w-full`}
+                                    placeholder={mode === 'create' ? 'Enter password' : 'Enter new password (optional)'}
                                     autoComplete="new-password"
                                 />
-                                {errors.password && (
-                                    <p className="text-[12px] text-red-500">{errors.password}</p>
-                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                >
+                                    {showPassword ? (
+                                        <EyeOff size={18} className="text-gray-600" strokeWidth={2.5} />
+                                    ) : (
+                                        <Eye size={18} className="text-gray-600" strokeWidth={2.5} />
+                                    )}
+                                </button>
                             </div>
-                        )}
+                            {errors.password && (
+                                <p className="text-xs font-bold text-red-500 flex items-center gap-1">
+                                    <span className="w-1 h-1 bg-red-500 rounded-full inline-block"></span>
+                                    {errors.password}
+                                </p>
+                            )}
+                        </div>
 
                         {/* Phone */}
-                        <div className="flex flex-col gap-[8px]">
-                            <label className="font-medium text-[14px] leading-[21px] tracking-[-0.3008px] text-neutral-950">
+                        <div className="flex flex-col gap-2">
+                            <label className="font-bold text-sm uppercase tracking-wider text-black">
                                 Phone
                             </label>
-                            <div className="flex gap-2">
+                            <div className="flex gap-3">
                                 {/* Country Code Selector */}
-                                <select
-                                    value={countryCode}
-                                    onChange={(e) => setCountryCode(e.target.value)}
-                                    className="h-[42px] px-2 bg-white border border-gray-200 rounded-[8px] text-[14px] tracking-[-0.1504px] text-neutral-950 focus:outline-none focus:ring-2 focus:ring-neutral-950 w-[100px]"
-                                >
-                                    {countryCodes.map((country) => (
-                                        <option key={country.code} value={country.code}>
-                                            {country.flag} {country.code}
-                                        </option>
-                                    ))}
-                                </select>
+                                <div className="relative">
+                                    <select
+                                        value={countryCode}
+                                        onChange={(e) => setCountryCode(e.target.value)}
+                                        className="h-12 pl-3 pr-8 bg-white border-2 border-black rounded-xl text-black font-bold focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all appearance-none cursor-pointer min-w-[100px]"
+                                    >
+                                        {countryCodes.map((country) => (
+                                            <option key={country.code} value={country.code}>
+                                                {country.flag} {country.code}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M6 9l6 6 6-6" />
+                                        </svg>
+                                    </div>
+                                </div>
                                 {/* Phone Number Input */}
                                 <input
                                     type="text"
                                     value={formData.phone}
                                     onChange={(e) => handleInputChange('phone', e.target.value)}
-                                    className={`flex-1 h-[42px] px-3 bg-white border ${errors.phone ? 'border-red-500' : 'border-gray-200'} rounded-[8px] text-[14px] tracking-[-0.1504px] text-neutral-950 placeholder:text-[#717182] focus:outline-none focus:ring-2 focus:ring-neutral-950`}
+                                    className={`flex-1 h-12 px-4 bg-white border-2 ${errors.phone ? 'border-red-500' : 'border-black'} rounded-xl text-black font-bold placeholder:text-gray-400 focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all`}
                                     placeholder="Enter phone number"
                                 />
                             </div>
                             {errors.phone && (
-                                <p className="text-[12px] text-red-500">{errors.phone}</p>
+                                <p className="text-xs font-bold text-red-500 flex items-center gap-1">
+                                    <span className="w-1 h-1 bg-red-500 rounded-full inline-block"></span>
+                                    {errors.phone}
+                                </p>
                             )}
-                        </div>
-                        {/* Role */}
-                        <div className="flex flex-col gap-[8px]">
-                            <label className="font-medium text-[14px] leading-[21px] tracking-[-0.3008px] text-neutral-950">
-                                Role
-                            </label>
-                            <select
-                                value={formData.role}
-                                onChange={(e) => handleInputChange('role', e.target.value)}
-                                className="h-[42px] px-3 bg-white border border-gray-200 rounded-[8px] text-[14px] tracking-[-0.1504px] text-neutral-950 focus:outline-none focus:ring-2 focus:ring-neutral-950"
-                            >
-                                <option value="employee">Employee</option>
-                                <option value="manager">Manager</option>
-                                <option value="admin">Admin</option>
-                                <option value="superadmin">Super Admin</option>
-                            </select>
                         </div>
 
-                        {/* Department */}
-                        <div className="flex flex-col gap-[8px]">
-                            <label className="font-medium text-[14px] leading-[21px] tracking-[-0.3008px] text-neutral-950">
-                                Department
-                            </label>
-                            <select
-                                value={formData.department_id}
-                                onChange={(e) => handleInputChange('department_id', e.target.value)}
-                                className={`h-[42px] px-3 bg-white border ${errors.department_id ? 'border-red-500' : 'border-gray-200'} rounded-[8px] text-[14px] tracking-[-0.1504px] text-neutral-950 focus:outline-none focus:ring-2 focus:ring-neutral-950`}
-                            >
-                                <option value="">Select department</option>
-                                {departments.map((dept) => (
-                                    <option key={dept.id} value={dept.id}>
-                                        {dept.name}
-                                    </option>
-                                ))}
-                            </select>
-                            {errors.department_id && (
-                                <p className="text-[12px] text-red-500">{errors.department_id}</p>
-                            )}
-                        </div>
+
+                        {/* Role & Department Row - Hidden for managers */}
+                        {!isManager && (
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Role */}
+                                <div className="flex flex-col gap-2">
+                                    <label className="font-bold text-sm uppercase tracking-wider text-black">
+                                        Role
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            value={formData.role}
+                                            onChange={(e) => handleInputChange('role', e.target.value)}
+                                            className="w-full h-12 px-4 bg-white border-2 border-black rounded-xl text-black font-bold focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all appearance-none cursor-pointer"
+                                        >
+                                            <option value="employee">Employee</option>
+                                            <option value="manager">Manager</option>
+                                            <option value="admin">Admin</option>
+                                            <option value="superadmin">Super Admin</option>
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M6 9l6 6 6-6" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Department */}
+                                <div className="flex flex-col gap-2">
+                                    <label className="font-bold text-sm uppercase tracking-wider text-black">
+                                        Department
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            value={formData.department_id}
+                                            onChange={(e) => handleInputChange('department_id', e.target.value)}
+                                            className={`w-full h-12 px-4 bg-white border-2 ${errors.department_id ? 'border-red-500' : 'border-black'} rounded-xl text-black font-bold focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all appearance-none cursor-pointer`}
+                                        >
+                                            <option value="">Select Dept</option>
+                                            {departments.map((dept) => (
+                                                <option key={dept.id} value={dept.id}>
+                                                    {dept.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M6 9l6 6 6-6" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    {errors.department_id && (
+                                        <p className="text-xs font-bold text-red-500 absolute -bottom-5 left-0 w-full truncate">
+                                            Required
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Status */}
-                        <div className="flex flex-col gap-[8px]">
-                            <label className="font-medium text-[14px] leading-[21px] tracking-[-0.3008px] text-neutral-950">
+                        <div className="flex flex-col gap-2">
+                            <label className="font-bold text-sm uppercase tracking-wider text-black">
                                 Status
                             </label>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 bg-white p-1 rounded-xl border-2 border-black">
                                 <button
                                     type="button"
                                     onClick={() => handleInputChange('status', true)}
-                                    className={`flex-1 h-[42px] px-3 border rounded-[8px] text-[14px] tracking-[-0.1504px] font-medium transition-colors ${formData.status
-                                        ? 'bg-green-50 border-green-500 text-green-700'
-                                        : 'bg-white border-gray-200 text-[#717182]'
+                                    className={`flex-1 h-10 rounded-lg text-sm font-black uppercase tracking-wider transition-all border-2 ${formData.status
+                                        ? 'bg-green-400 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] translate-y-[-1px]'
+                                        : 'bg-transparent border-transparent text-gray-400 hover:text-black'
                                         }`}
                                 >
                                     Active
@@ -409,9 +482,9 @@ export default function UserDialog({ isOpen, onClose, mode = 'create', userData 
                                 <button
                                     type="button"
                                     onClick={() => handleInputChange('status', false)}
-                                    className={`flex-1 h-[42px] px-3 border rounded-[8px] text-[14px] tracking-[-0.1504px] font-medium transition-colors ${!formData.status
-                                        ? 'bg-red-50 border-red-500 text-red-700'
-                                        : 'bg-white border-gray-200 text-[#717182]'
+                                    className={`flex-1 h-10 rounded-lg text-sm font-black uppercase tracking-wider transition-all border-2 ${!formData.status
+                                        ? 'bg-red-400 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] translate-y-[-1px]'
+                                        : 'bg-transparent border-transparent text-gray-400 hover:text-black'
                                         }`}
                                 >
                                     Inactive
@@ -421,25 +494,28 @@ export default function UserDialog({ isOpen, onClose, mode = 'create', userData 
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-3 mt-[24px]">
+                    <div className="flex gap-4 mt-8 pt-6 border-t-2 border-dashed border-black/20">
                         <button
                             type="button"
                             onClick={handleClose}
                             disabled={isSubmitting}
-                            className="flex-1 bg-white border border-gray-200 rounded-[14px] px-4 py-2 h-[36px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                            className="flex-1 bg-white text-black border-[3px] border-black rounded-xl h-14 flex items-center justify-center font-black uppercase tracking-wider hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-2px] active:shadow-none active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <span className="font-medium text-[14px] leading-[20px] tracking-[-0.1504px] text-neutral-950">
-                                Cancel
-                            </span>
+                            Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="flex-1 bg-black rounded-[14px] px-4 py-2 h-[36px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-800 transition-colors"
+                            className="flex-1 bg-black text-white border-[3px] border-black rounded-xl h-14 flex items-center justify-center font-black uppercase tracking-wider shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <span className="font-medium text-[14px] leading-[20px] tracking-[-0.1504px] text-white">
-                                {isSubmitting ? (mode === 'create' ? 'Creating...' : 'Updating...') : (mode === 'create' ? 'Create User' : 'Update User')}
-                            </span>
+                            {isSubmitting ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    <span>Processing...</span>
+                                </div>
+                            ) : (
+                                mode === 'create' ? 'Create User' : 'Update User'
+                            )}
                         </button>
                     </div>
                 </form>

@@ -38,6 +38,8 @@ export const API_ENDPOINTS = {
   USER_PROFILE: '/api/user/profile',
   UPDATE_PROFILE: '/api/user/profile',
   USERS: '/api/users',
+  TEAM_USERS: '/api/users/department/my-team',
+  TEAM_USER_BY_ID: (id) => `/api/users/department/my-team/${id}`,
 
   // Departments
   DEPARTMENTS: '/api/departments',
@@ -53,4 +55,7 @@ export const API_ENDPOINTS = {
 
   // Stats
   STATS_EMPLOYEE: (userId) => `/api/stats_employee/${userId}`,
+
+  // Announcements
+  ANNOUNCEMENTS: '/api/announcements',
 };

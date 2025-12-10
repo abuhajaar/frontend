@@ -314,6 +314,31 @@ export default function Sidebar() {
             </Tooltip>
           )}
 
+          {/* Manager Dashboard - Only for manager */}
+          {currentUser?.role === 'manager' && (
+            <Tooltip text="Manager Dashboard" disabled={isOpen}>
+              <button
+                onClick={() => router.push('/dashboard/manager')}
+                className={`h-[41px] rounded-lg flex items-center transition-colors w-full ${isOpen ? 'px-3 gap-3' : 'justify-center'
+                  } ${pathname.startsWith('/dashboard/manager')
+                    ? 'bg-gray-100 text-neutral-950'
+                    : 'text-[#717182] hover:bg-gray-50'
+                  }`}
+              >
+                <Shield size={18} className="flex-shrink-0" />
+                {isOpen && (
+                  <span
+                    ref={el => navigationLabelsRef.current[4] = el}
+                    className="text-sm font-normal tracking-[-0.3008px] leading-[21px]"
+                    style={{ opacity: isInitialMount.current ? 1 : undefined }}
+                  >
+                    Manager Dashboard
+                  </span>
+                )}
+              </button>
+            </Tooltip>
+          )}
+
           <Tooltip text="Support" disabled={isOpen}>
             <button
               className={`h-[41px] rounded-lg flex items-center text-[#717182] hover:bg-gray-50 transition-colors w-full ${isOpen ? 'px-3 gap-3' : 'justify-center'

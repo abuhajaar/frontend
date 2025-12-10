@@ -9,7 +9,7 @@ export default function StatsCard({ icon, label, value, description, shadowColor
   const displayValue = isNumeric ? value : value;
 
   return (
-    <div className={`bg-white rounded-[24px] p-6 relative group overflow-hidden border-[3px] border-black transition-all duration-300 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${className}`}>
+    <div className={`bg-white rounded-[24px] p-6 relative z-0 group overflow-hidden border-[3px] border-black transition-all duration-300 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${className}`}>
       {/* Subtle Gradient Overlay */}
       <div
         className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none"

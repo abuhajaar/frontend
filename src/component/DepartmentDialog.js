@@ -154,84 +154,96 @@ export default function DepartmentDialog({ isOpen, onClose, mode = 'create', dep
             {/* Modal */}
             <div
                 ref={modalRef}
-                className="relative bg-white border border-[rgba(0,0,0,0.1)] rounded-[16px] w-full max-w-[510px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)]"
+                className="relative bg-white border-[3px] border-black rounded-2xl w-full max-w-[510px] overflow-hidden"
             >
                 {/* Close button */}
                 <button
                     onClick={handleClose}
-                    className="absolute right-4 top-4 w-4 h-4 opacity-70 hover:opacity-100 transition-opacity z-10"
+                    className="absolute right-4 top-4 p-2 bg-white border-2 border-transparent hover:border-black rounded-lg hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all z-10"
                 >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                 </button>
 
                 {/* Header */}
-                <div className="border-b border-gray-200 px-[25px] pt-[25px] pb-[24px]">
-                    <h2 className="font-semibold text-[20px] leading-[30px] tracking-[-0.8984px] text-neutral-950">
+                <div className="bg-black text-white px-8 py-6 border-b-[3px] border-black">
+                    <h2 className="text-3xl font-black uppercase tracking-tighter" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
                         {mode === 'create' ? 'Add New Department' : 'Edit Department'}
                     </h2>
+                    <p className="text-white/70 font-medium text-sm mt-1">
+                        {mode === 'create' ? 'Create a new organizational unit' : 'Update department details'}
+                    </p>
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="px-[25px] pt-[20px] pb-[25px]">
-                    <div className="flex flex-col gap-[20px]">
+                <form onSubmit={handleSubmit} className="px-8 py-8 bg-[#FFFEF8]">
+                    <div className="flex flex-col gap-6">
                         {/* Name */}
-                        <div className="flex flex-col gap-[8px]">
-                            <label className="font-medium text-[14px] leading-[21px] tracking-[-0.3008px] text-neutral-950">
+                        <div className="flex flex-col gap-2">
+                            <label className="font-bold text-sm uppercase tracking-wider text-black">
                                 Department Name
                             </label>
                             <input
                                 type="text"
                                 value={formData.name}
                                 onChange={(e) => handleInputChange('name', e.target.value)}
-                                className={`h-[42px] px-3 bg-white border ${errors.name ? 'border-red-500' : 'border-gray-200'} rounded-[8px] text-[14px] tracking-[-0.1504px] text-neutral-950 placeholder:text-[#717182] focus:outline-none focus:ring-2 focus:ring-neutral-950`}
+                                className={`h-12 px-4 bg-white border-2 ${errors.name ? 'border-red-500' : 'border-black'} rounded-xl text-black font-bold placeholder:text-gray-400 focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all`}
                                 placeholder="Enter department name"
                                 autoComplete="off"
                             />
                             {errors.name && (
-                                <p className="text-[12px] text-red-500">{errors.name}</p>
+                                <p className="text-xs font-bold text-red-500 flex items-center gap-1">
+                                    <span className="w-1 h-1 bg-red-500 rounded-full inline-block"></span>
+                                    {errors.name}
+                                </p>
                             )}
                         </div>
 
                         {/* Description */}
-                        <div className="flex flex-col gap-[8px]">
-                            <label className="font-medium text-[14px] leading-[21px] tracking-[-0.3008px] text-neutral-950">
+                        <div className="flex flex-col gap-2">
+                            <label className="font-bold text-sm uppercase tracking-wider text-black">
                                 Description
                             </label>
                             <textarea
                                 value={formData.description}
                                 onChange={(e) => handleInputChange('description', e.target.value)}
-                                className={`min-h-[100px] px-3 py-2 bg-white border ${errors.description ? 'border-red-500' : 'border-gray-200'} rounded-[8px] text-[14px] tracking-[-0.1504px] text-neutral-950 placeholder:text-[#717182] focus:outline-none focus:ring-2 focus:ring-neutral-950 resize-vertical`}
+                                className={`min-h-[120px] px-4 py-3 bg-white border-2 ${errors.description ? 'border-red-500' : 'border-black'} rounded-xl text-black font-bold placeholder:text-gray-400 focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all resize-vertical`}
                                 placeholder="Enter department description"
                                 rows={4}
                             />
                             {errors.description && (
-                                <p className="text-[12px] text-red-500">{errors.description}</p>
+                                <p className="text-xs font-bold text-red-500 flex items-center gap-1">
+                                    <span className="w-1 h-1 bg-red-500 rounded-full inline-block"></span>
+                                    {errors.description}
+                                </p>
                             )}
                         </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-3 mt-[24px]">
+                    <div className="flex gap-4 mt-8 pt-6 border-t-2 border-dashed border-black/20">
                         <button
                             type="button"
                             onClick={handleClose}
                             disabled={isSubmitting}
-                            className="flex-1 bg-white border border-gray-200 rounded-[14px] px-4 py-2 h-[36px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                            className="flex-1 bg-white text-black border-[3px] border-black rounded-xl h-14 flex items-center justify-center font-black uppercase tracking-wider hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-2px] active:shadow-none active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <span className="font-medium text-[14px] leading-[20px] tracking-[-0.1504px] text-neutral-950">
-                                Cancel
-                            </span>
+                            Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="flex-1 bg-black rounded-[14px] px-4 py-2 h-[36px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-800 transition-colors"
+                            className="flex-1 bg-black text-white border-[3px] border-black rounded-xl h-14 flex items-center justify-center font-black uppercase tracking-wider shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <span className="font-medium text-[14px] leading-[20px] tracking-[-0.1504px] text-white">
-                                {isSubmitting ? (mode === 'create' ? 'Creating...' : 'Updating...') : (mode === 'create' ? 'Create Department' : 'Update Department')}
-                            </span>
+                            {isSubmitting ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    <span>Processing...</span>
+                                </div>
+                            ) : (
+                                mode === 'create' ? 'Create Department' : 'Update Department'
+                            )}
                         </button>
                     </div>
                 </form>

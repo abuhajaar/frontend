@@ -29,3 +29,6 @@ export * from './amenityService';
 
 // Stats
 export * from './statsService';
+
+// Announcements
+export * from './announcementService';

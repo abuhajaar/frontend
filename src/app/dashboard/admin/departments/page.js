@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { getAllDepartments, createDepartment, updateDepartment, deleteDepartment } from '@/services/departmentService';
-import { Plus, Search, Edit2, Trash2, Building2, Users, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Building2, Users, ChevronUp, ChevronDown, BarChart3 } from 'lucide-react';
 import DepartmentDialog from '@/component/DepartmentDialog';
 import DeleteConfirmDialog from '@/component/DeleteConfirmDialog';
+import StatsCard from '@/component/StatsCard';
 
 export default function AdminDepartmentsPage() {
   const [departments, setDepartments] = useState([]);
@@ -155,176 +156,197 @@ export default function AdminDepartmentsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-[1400px] mx-auto w-full">
+    <div className="flex flex-col gap-8 w-full">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-black text-[30px] leading-[45px] font-bold tracking-[-0.2045px]">
-            Department Management
+          <h1 className="text-5xl font-black text-black tracking-tighter uppercase mb-2" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
+            Departments
           </h1>
-          <p className="text-[#717182] text-[16px] leading-[24px] tracking-[-0.625px]">
-            Manage organizational departments and managers
+          <p className="text-lg text-gray-500 font-medium">
+            Manage organizational departments and teams.
           </p>
         </div>
         <button
           onClick={handleAddDepartment}
-          className="bg-black text-white px-5 h-[36px] rounded-[14px] text-[14px] font-medium flex items-center gap-2 hover:bg-gray-800 transition-colors"
+          className="px-6 py-3 bg-black text-white border-[3px] border-black rounded-xl font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none transition-all flex items-center gap-2"
         >
-          <Plus size={16} />
-          Add Department
+          <Plus size={20} strokeWidth={3} />
+          <span>Add Department</span>
         </button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-[14px] p-[21px] border border-gray-200">
-          <p className="text-[#717182] text-[14px] leading-[21px] tracking-[-0.3008px]">Total Departments</p>
-          <p className="text-[24px] font-normal leading-[36px] tracking-[-0.4097px] text-neutral-950">{stats.totalDepartments}</p>
-        </div>
-        <div className="bg-white rounded-[14px] p-[21px] border border-gray-200">
-          <p className="text-[#717182] text-[14px] leading-[21px] tracking-[-0.3008px]">Total Employees</p>
-          <p className="text-[24px] font-normal leading-[36px] tracking-[-0.4097px] text-neutral-950">{stats.totalEmployees}</p>
-        </div>
-        <div className="bg-white rounded-[14px] p-[21px] border border-gray-200">
-          <p className="text-[#717182] text-[14px] leading-[21px] tracking-[-0.3008px]">Avg per Department</p>
-          <p className="text-[24px] font-normal leading-[36px] tracking-[-0.4097px] text-neutral-950">{stats.avgPerDepartment}</p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <StatsCard
+          icon={<Building2 size={24} strokeWidth={3} />}
+          label="Total Departments"
+          value={stats.totalDepartments}
+          description="Active teams"
+          shadowColor="#000000"
+        />
+        <StatsCard
+          icon={<Users size={24} strokeWidth={3} />}
+          label="Total Employees"
+          value={stats.totalEmployees}
+          description="Across organisation"
+          shadowColor="#22C55E"
+        />
+        <StatsCard
+          icon={<BarChart3 size={24} strokeWidth={3} />}
+          label="Avg. Size"
+          value={stats.avgPerDepartment}
+          description="Employees per department"
+          shadowColor="#F97316"
+        />
       </div>
 
       {/* Search */}
-      <div>
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#717182]" size={16} />
+      <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 border-[3px] border-black rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div className="flex-1 relative w-full">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+            <Search className="w-5 h-5" strokeWidth={2.5} />
+          </div>
           <input
             type="text"
             placeholder="Search departments..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-[42px] pl-11 pr-3 bg-[#f3f3f5] rounded-[14px] text-[14px] leading-normal tracking-[-0.1504px] text-[#717182] outline-none focus:ring-2 focus:ring-gray-300 border border-gray-200"
+            className="w-full h-12 pl-12 pr-4 bg-gray-50 border-2 border-black rounded-xl font-bold text-black placeholder:text-gray-400 focus:outline-none focus:ring-0 focus:bg-white transition-colors"
           />
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-[16px] border border-gray-200 overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="text-left px-6 py-3 text-[14px] font-bold leading-[21px] tracking-[-0.3008px] text-[#717182]">Department</th>
-              <th className="text-left px-6 py-3 text-[14px] font-bold leading-[21px] tracking-[-0.3008px] text-[#717182]">Manager</th>
-              <th
-                className="text-left px-6 py-3 text-[14px] font-bold leading-[21px] tracking-[-0.3008px] text-[#717182] cursor-pointer hover:text-neutral-950 transition-colors"
-                onClick={() => handleSort('total_employees')}
-              >
-                <div className="flex items-center gap-1">
-                  Employees
-                  {sortField === 'total_employees' && (
-                    sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                  )}
-                </div>
-              </th>
-              <th className="text-left px-6 py-3 text-[14px] font-bold leading-[21px] tracking-[-0.3008px] text-[#717182]">Description</th>
-              <th
-                className="text-left px-6 py-3 text-[14px] font-bold leading-[21px] tracking-[-0.3008px] text-[#717182] cursor-pointer hover:text-neutral-950 transition-colors"
-                onClick={() => handleSort('created_at')}
-              >
-                <div className="flex items-center gap-1">
-                  Created
-                  {sortField === 'created_at' && (
-                    sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                  )}
-                </div>
-              </th>
-              <th className="text-left px-6 py-3 text-[14px] font-bold leading-[21px] tracking-[-0.3008px] text-[#717182]">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredAndSortedDepartments.length === 0 ? (
+      <div className="bg-white border-[3px] border-black rounded-2xl overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-black text-white">
               <tr>
-                <td colSpan="6" className="text-center py-12 text-[#717182]">
-                  {searchQuery ? 'No departments found matching your search' : 'No departments available'}
-                </td>
-              </tr>
-            ) : (
-              filteredAndSortedDepartments.map((dept, index) => (
-                <tr
-                  key={dept.id || index}
-                  className="border-t border-gray-200 hover:bg-gray-50"
+                <th className="text-left px-6 py-4 font-black uppercase tracking-wider text-sm">Department</th>
+                <th className="text-left px-6 py-4 font-black uppercase tracking-wider text-sm">Manager</th>
+                <th
+                  className="text-left px-6 py-4 font-black uppercase tracking-wider text-sm cursor-pointer hover:text-yellow-400 transition-colors"
+                  onClick={() => handleSort('total_employees')}
                 >
-                  {/* Department Name */}
-                  <td className="px-6 py-[27px]">
-                    <div className="flex items-center gap-2">
-                      <Building2 size={16} className="text-neutral-950 flex-shrink-0" />
-                      <span className="text-[14px] leading-[21px] tracking-[-0.3008px] font-normal text-neutral-950">
-                        {dept.name}
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* Manager */}
-                  <td className="px-6 py-[18px]">
-                    <div className="flex flex-col gap-0">
-                      <span className="text-[14px] leading-[21px] tracking-[-0.3008px] font-normal text-neutral-950">
-                        {dept.manager_name || 'Not assigned'}
-                      </span>
-                      {dept.manager_email && (
-                        <span className="text-[12px] leading-[18px] text-[#717182]">
-                          {dept.manager_email}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-
-                  {/* Employees */}
-                  <td className="px-6 py-[27px]">
-                    <div className="flex items-center gap-2">
-                      <Users size={14} className="text-neutral-950" />
-                      <span className="text-[14px] leading-[21px] tracking-[-0.3008px] font-normal text-neutral-950">
-                        {dept.total_users || 0}
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* Description */}
-                  <td className="px-6 py-[27px]">
-                    <div className="max-w-[300px] overflow-hidden">
-                      <p className="text-[14px] leading-[21px] tracking-[-0.3008px] font-normal text-[#717182] truncate">
-                        {dept.description || 'No description'}
-                      </p>
-                    </div>
-                  </td>
-
-                  {/* Created Date */}
-                  <td className="px-6 py-[27px]">
-                    <span className="text-[14px] leading-[21px] tracking-[-0.3008px] font-normal text-[#717182]">
-                      {formatDate(dept.created_at)}
-                    </span>
-                  </td>
-
-                  {/* Actions */}
-                  <td className="px-6 py-[23.5px]">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleEditDepartment(dept)}
-                        className="p-[6px] rounded-lg hover:bg-gray-100 transition-colors"
-                        title="Edit department"
-                      >
-                        <Edit2 size={16} className="text-neutral-950" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(dept)}
-                        className="p-[6px] rounded-lg hover:bg-gray-100 transition-colors"
-                        title="Delete department"
-                      >
-                        <Trash2 size={16} className="text-[#e7000b]" />
-                      </button>
+                  <div className="flex items-center gap-1">
+                    Employees
+                    {sortField === 'total_employees' && (
+                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </div>
+                </th>
+                <th className="text-left px-6 py-4 font-black uppercase tracking-wider text-sm">Description</th>
+                <th
+                  className="text-left px-6 py-4 font-black uppercase tracking-wider text-sm cursor-pointer hover:text-yellow-400 transition-colors"
+                  onClick={() => handleSort('created_at')}
+                >
+                  <div className="flex items-center gap-1">
+                    Created
+                    {sortField === 'created_at' && (
+                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </div>
+                </th>
+                <th className="text-left px-6 py-4 font-black uppercase tracking-wider text-sm">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y-2 divide-gray-100">
+              {filteredAndSortedDepartments.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="text-center py-12">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 border-2 border-black">
+                        <Search size={24} className="text-gray-400" />
+                      </div>
+                      <h3 className="text-lg font-black uppercase text-black">No departments found</h3>
+                      <p className="text-gray-500 font-medium">{searchQuery ? 'Try adjusting your search.' : 'Get started by creating a new department.'}</p>
                     </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredAndSortedDepartments.map((dept, index) => (
+                  <tr
+                    key={dept.id || index}
+                    className="hover:bg-yellow-50/50 transition-colors group"
+                  >
+                    {/* Department Name */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white border-2 border-black rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] group-hover:-translate-y-0.5 group-hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all">
+                          <Building2 size={20} className="text-black" strokeWidth={2} />
+                        </div>
+                        <span className="font-bold text-black text-base">
+                          {dept.name}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Manager */}
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-black text-sm">
+                          {dept.manager_name || 'Not assigned'}
+                        </span>
+                        {dept.manager_email && (
+                          <span className="text-xs font-medium text-gray-500">
+                            {dept.manager_email}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Employees */}
+                    <td className="px-6 py-4">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                        <Users size={14} className="text-gray-500" />
+                        <span className="font-bold text-black text-sm">
+                          {dept.total_users || 0}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Description */}
+                    <td className="px-6 py-4">
+                      <div className="max-w-[250px]">
+                        <p className="text-sm font-medium text-gray-500 truncate">
+                          {dept.description || 'No description'}
+                        </p>
+                      </div>
+                    </td>
+
+                    {/* Created Date */}
+                    <td className="px-6 py-4">
+                      <span className="inline-block px-3 py-1 rounded-lg bg-gray-50 border border-gray-100 font-mono text-xs font-medium text-gray-500">
+                        {formatDate(dept.created_at)}
+                      </span>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleEditDepartment(dept)}
+                          className="p-2 bg-white text-black border-2 border-black rounded-lg transition-all hover:bg-black hover:text-white"
+                          title="Edit"
+                        >
+                          <Edit2 size={16} strokeWidth={2.5} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(dept)}
+                          className="p-2 bg-white text-black border-2 border-black rounded-lg transition-all hover:bg-[#e7000b] hover:text-white hover:border-[#e7000b]"
+                          title="Delete"
+                        >
+                          <Trash2 size={16} strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Department Dialog */}

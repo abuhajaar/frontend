@@ -228,68 +228,68 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
       {/* Modal */}
       <div
         ref={modalRef}
-        className="relative bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative bg-white border-[3px] border-black rounded-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Header */}
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+        <div className="p-6 border-b-[3px] border-black flex items-center justify-between sticky top-0 bg-black z-10">
           <div>
-            <h2 className="text-xl font-bold text-neutral-950 tracking-tight">
+            <h2 className="text-3xl font-black text-white uppercase tracking-tighter" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
               {isUnavailable ? 'Space Unavailable' : 'Confirm Booking'}
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {isUnavailable ? 'This space cannot be booked at this time' : 'Review details before confirming'}
+            <p className="text-sm font-bold text-white/70 mt-1 uppercase tracking-wide">
+              {isUnavailable ? 'Cannot be booked now' : 'Review details below'}
             </p>
           </div>
           <button
             onClick={handleClose}
-            className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+            className="w-10 h-10 rounded-lg bg-white border-2 border-black flex items-center justify-center hover:bg-gray-200 transition-colors shadow-[2px_2px_0px_0px_rgba(255,255,255,0.5)] active:translate-y-px active:shadow-none"
           >
-            <X size={18} className="text-gray-600" />
+            <X size={20} className="text-black" strokeWidth={3} />
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto">
+        <div className="p-6 overflow-y-auto bg-[#FFFEF8]">
           {/* Space Info Card */}
-          <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl mb-6 border border-gray-100">
-            <div className={`w-12 h-12 rounded-xl ${typeConfig.iconBg} flex items-center justify-center flex-shrink-0 shadow-sm`}>
-              <TypeIcon className="w-6 h-6 text-white" strokeWidth={2} />
+          <div className="flex items-start gap-4 p-4 bg-white border-2 border-black rounded-xl mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className={`w-14 h-14 rounded-xl ${typeConfig.iconBg} border-2 border-black flex items-center justify-center flex-shrink-0 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]`}>
+              <TypeIcon className="w-7 h-7 text-white" strokeWidth={2.5} />
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-neutral-950 text-lg">
+              <h3 className="font-black text-black text-xl uppercase tracking-wide">
                 {space.name}
               </h3>
-              <p className={`text-sm font-medium ${typeConfig.textAccent}`}>
+              <p className={`text-sm font-bold uppercase tracking-wider ${typeConfig.textAccent}`}>
                 {space.type}
               </p>
             </div>
-            <div className="px-2.5 py-1 bg-white rounded-md border border-gray-200 flex items-center gap-1.5 shadow-sm">
-              <Users size={14} className="text-gray-600" />
-              <span className="text-xs font-bold text-gray-700">{space.capacity}</span>
+            <div className="px-3 py-1 bg-black text-white rounded-lg border-2 border-black flex items-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)]">
+              <Users size={14} className="text-white" strokeWidth={3} />
+              <span className="text-xs font-black">{space.capacity}</span>
             </div>
           </div>
 
           {/* Booking Details */}
-          <div className="space-y-4 mb-6">
-            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+          <div className="space-y-4 mb-8">
+            <h4 className="text-xs font-black text-black uppercase tracking-widest border-b-2 border-black inline-block pb-1">
               Date & Time
             </h4>
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl">
-                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
-                  <Calendar size={16} />
+              <div className="flex items-center gap-3 p-3 border-2 border-black rounded-xl bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center text-white">
+                  <Calendar size={20} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 font-medium">Date</p>
-                  <p className="text-sm font-semibold text-gray-900">{bookingDetails.date}</p>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Date</p>
+                  <p className="text-sm font-black text-black">{bookingDetails.date}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl">
-                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
-                  <Clock size={16} />
+              <div className="flex items-center gap-3 p-3 border-2 border-black rounded-xl bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center text-white">
+                  <Clock size={20} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 font-medium">Time</p>
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Time</p>
+                  <p className="text-sm font-black text-black">
                     {bookingDetails.startTime} - {bookingDetails.endTime}
                   </p>
                 </div>
@@ -299,11 +299,11 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
 
           {isUnavailable ? (
             /* Unavailable Reason */
-            <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="bg-red-50 border-2 border-black rounded-xl p-4 flex gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
               <div>
-                <h4 className="font-semibold text-red-900 text-sm mb-1">Booking Conflict</h4>
-                <p className="text-sm text-red-700 leading-relaxed">
+                <h4 className="font-black text-black text-sm mb-1 uppercase tracking-wide">Booking Conflict</h4>
+                <p className="text-sm text-black font-medium leading-relaxed">
                   {space.unavailable_reason ? (
                     <span dangerouslySetInnerHTML={{
                       __html: space.unavailable_reason
@@ -320,8 +320,8 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
             <>
               {/* Amenities */}
               {space.amenities && space.amenities.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                <div className="mb-8">
+                  <h4 className="text-xs font-black text-black uppercase tracking-widest border-b-2 border-black inline-block pb-1 mb-3">
                     Included Amenities
                   </h4>
                   <div className="flex flex-wrap gap-2">
@@ -329,9 +329,9 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
                       const amenityName = typeof amenity === 'string' ? amenity : amenity.name;
                       const Icon = getAmenityIcon(amenityName);
                       return (
-                        <div key={index} className="px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg flex items-center gap-2">
-                          <Icon size={14} className="text-gray-500" />
-                          <span className="text-xs font-medium text-gray-700">{amenityName}</span>
+                        <div key={index} className="px-3 py-1.5 bg-white border-2 border-black rounded-lg flex items-center gap-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                          <Icon size={14} className="text-black" strokeWidth={2.5} />
+                          <span className="text-xs font-bold text-black uppercase tracking-wide">{amenityName}</span>
                         </div>
                       );
                     })}
@@ -340,9 +340,9 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
               )}
 
               {/* Info Message */}
-              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3">
-                <Info className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                <p className="text-sm text-blue-800 leading-relaxed">
+              <div className="bg-blue-50 border-2 border-black rounded-xl p-4 flex gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <Info className="w-6 h-6 text-black flex-shrink-0" strokeWidth={2.5} />
+                <p className="text-sm text-black font-bold leading-relaxed">
                   You'll receive a check-in code and instructions via notification once your booking is confirmed.
                 </p>
               </div>
@@ -351,13 +351,13 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
         </div>
 
         {/* Footer Actions */}
-        <div className="p-6 border-t border-gray-100 bg-gray-50">
-          <div className="flex gap-3">
+        <div className="p-6 border-t-[3px] border-black bg-white">
+          <div className="flex gap-4">
             {isUnavailable ? (
               <button
                 ref={closeButtonRef}
                 onClick={handleCloseClick}
-                className="w-full bg-neutral-900 text-white rounded-xl px-4 py-3 font-semibold text-sm hover:bg-neutral-800 transition-colors"
+                className="w-full bg-black text-white border-[3px] border-black rounded-xl px-4 py-4 font-black text-sm uppercase tracking-widest hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none transition-all"
               >
                 Close
               </button>
@@ -367,7 +367,7 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
                   ref={cancelButtonRef}
                   onClick={handleCancelClick}
                   disabled={isSubmitting}
-                  className="flex-1 bg-white border border-gray-200 text-neutral-900 rounded-xl px-4 py-3 font-semibold text-sm hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-white border-[3px] border-black text-black rounded-xl px-4 py-4 font-black text-sm uppercase tracking-widest hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
@@ -375,7 +375,7 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
                   ref={confirmButtonRef}
                   onClick={handleConfirmClick}
                   disabled={isSubmitting}
-                  className="flex-1 bg-neutral-900 text-white rounded-xl px-4 py-3 font-semibold text-sm hover:bg-neutral-800 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 bg-black border-[3px] border-black text-white rounded-xl px-4 py-4 font-black text-sm uppercase tracking-widest hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
                     <>
@@ -385,7 +385,6 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
                   ) : (
                     <>
                       <span>Confirm Booking</span>
-                      {/* <CheckCircle2 size={16} /> */}
                     </>
                   )}
                 </button>

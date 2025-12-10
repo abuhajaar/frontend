@@ -10,9 +10,11 @@
 import { useState, useEffect } from 'react';
 import Sidebar from '@/component/Sidebar';
 import NotificationPanel from '@/component/NotificationPanel';
+import CommandPalette from '@/component/CommandPalette';
 
 export default function DashboardLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
   // Listen to sidebar toggle events
   useEffect(() => {
@@ -31,6 +33,20 @@ export default function DashboardLayout({ children }) {
     return () => {
       window.removeEventListener('sidebarToggle', handleSidebarToggle);
     };
+  }, []);
+
+  // Global keyboard shortcut for Command Palette
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Cmd+K or Ctrl+K to open command palette
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   return (
@@ -53,6 +69,12 @@ export default function DashboardLayout({ children }) {
           {children}
         </main>
       </div>
+
+      {/* Global Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+      />
     </div>
   );
 }

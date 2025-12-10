@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { getAllSpacesForManage, updateSpaceStatus } from '@/services/spaceService';
-import { Search, ChevronUp, ChevronDown, RefreshCw, Save } from 'lucide-react';
+import { Search, ChevronUp, ChevronDown, RefreshCw, Save, LayoutGrid, CheckCircle, User, Wrench } from 'lucide-react';
 import { HotDeskIcon, MeetingRoomIcon, PrivateRoomIcon } from '@/component/icons/SpaceTypeIcons';
 import AnimatedStatusToggle from '@/component/AnimatedStatusToggle';
+import StatsCard from '@/component/StatsCard';
 
 export default function AdminSpacesPage() {
   const [spaces, setSpaces] = useState([]);
@@ -180,204 +181,165 @@ export default function AdminSpacesPage() {
     );
   }
 
+
   return (
-    <div className="flex flex-col gap-6 max-w-[1400px] mx-auto w-full">
+    <div className="flex flex-col gap-8 w-full">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-black text-[30px] font-bold tracking-[-0.2045px]">
+          <h1 className="text-5xl font-black text-black tracking-tighter uppercase mb-2" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
             Workspace Management
           </h1>
-          <p className="text-[#717182] text-[16px] tracking-[-0.625px]">
-            Manage all workspace inventory
+          <p className="text-lg text-gray-500 font-medium">
+            Manage all workspace inventory.
           </p>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white rounded-[14px] p-[21px] border border-gray-200">
-          <p className="text-[#717182] text-[14px] tracking-[-0.3008px] mb-1">Total Spaces</p>
-          <p className="text-[24px] font-bold text-neutral-950">{stats.total}</p>
-        </div>
-        <div className="bg-white rounded-[14px] p-[21px] border border-gray-200">
-          <p className="text-[#717182] text-[14px] tracking-[-0.3008px] mb-1">Available</p>
-          <p className="text-[24px] font-bold text-[#016630]">{stats.available}</p>
-        </div>
-        <div className="bg-white rounded-[14px] p-[21px] border border-gray-200">
-          <p className="text-[#717182] text-[14px] tracking-[-0.3008px] mb-1">Occupied</p>
-          <p className="text-[24px] font-bold text-[#f54900]">{stats.occupied}</p>
-        </div>
-        <div className="bg-white rounded-[14px] p-[21px] border border-gray-200">
-          <p className="text-[#717182] text-[14px] tracking-[-0.3008px] mb-1">Under Maintenance</p>
-          <p className="text-[24px] font-bold text-[#e7000b]">{stats.maintenance}</p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatsCard
+          icon={<LayoutGrid size={24} strokeWidth={3} />}
+          label="Total Spaces"
+          value={stats.total}
+          description="All rooms & desks"
+          shadowColor="#000000"
+        />
+        <StatsCard
+          icon={<CheckCircle size={24} strokeWidth={3} />}
+          label="Available"
+          value={stats.available}
+          description="Ready to book"
+          shadowColor="#22C55E"
+        />
+        <StatsCard
+          icon={<User size={24} strokeWidth={3} />}
+          label="Occupied"
+          value={stats.occupied}
+          description="Currently in use"
+          shadowColor="#F97316"
+        />
+        <StatsCard
+          icon={<Wrench size={24} strokeWidth={3} />}
+          label="In Maintenance"
+          value={stats.maintenance}
+          description="Unavailable"
+          shadowColor="#EF4444"
+        />
       </div>
 
       {/* Search and Filters */}
-      <div className="flex gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#717182]" size={16} />
+      <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 border-[3px] border-black rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div className="flex-1 relative w-full">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+            <Search className="w-5 h-5" strokeWidth={2.5} />
+          </div>
           <input
             type="text"
             placeholder="Search workspaces..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full text-black h-[42px] pl-11 pr-4 bg-[#f3f3f5] rounded-[14px] text-[14px] tracking-[-0.3008px] outline-none focus:ring-2 focus:ring-gray-300"
+            className="w-full h-12 pl-12 pr-4 bg-gray-50 border-2 border-black rounded-xl font-bold text-black placeholder:text-gray-400 focus:outline-none focus:ring-0 focus:bg-white transition-colors"
           />
         </div>
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="text-black w-[200px] h-[42px] px-4 bg-white border border-gray-200 rounded-[14px] text-[14px] tracking-[-0.3008px] outline-none focus:ring-2 focus:ring-gray-300"
+          className="h-12 px-4 bg-white border-2 border-black rounded-xl font-bold text-black focus:outline-none hover:bg-gray-50 cursor-pointer min-w-[200px]"
         >
           <option value="all">All Types</option>
           <option value="hot_desk">Hot Desk</option>
           <option value="meeting_room">Meeting Room</option>
           <option value="private_room">Private Room</option>
         </select>
+        {/* Save Button */}
+        <button
+          onClick={handleSaveChanges}
+          disabled={Object.keys(pendingChanges).length === 0 || isSaving}
+          className={`h-12 px-6 rounded-xl font-black uppercase tracking-wider border-2 border-black transition-all flex items-center gap-2 ${Object.keys(pendingChanges).length > 0
+            ? 'bg-yellow-400 text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'
+            : 'bg-gray-100 text-gray-400 border-gray-300 shadow-none cursor-not-allowed'
+            }`}
+        >
+          {isSaving ? <RefreshCw className="animate-spin" size={20} /> : <Save size={20} />}
+          <span>Save Changes {Object.keys(pendingChanges).length > 0 && `(${Object.keys(pendingChanges).length})`}</span>
+        </button>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-[16px] border border-gray-200 overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left px-6 py-4 text-[14px] font-bold tracking-[-0.3008px] text-[#717182]">Name</th>
-              <th
-                className="text-left px-6 py-4 text-[14px] font-bold tracking-[-0.3008px] text-[#717182] cursor-pointer hover:text-neutral-950 transition-colors"
-                onClick={() => handleSort('type')}
-              >
-                <div className="flex items-center gap-1">
-                  Type
-                  {sortField === 'type' && (
-                    sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                  )}
-                </div>
-              </th>
-              <th
-                className="text-left px-6 py-4 text-[14px] font-bold tracking-[-0.3008px] text-[#717182] cursor-pointer hover:text-neutral-950 transition-colors"
-                onClick={() => handleSort('floor_name')}
-              >
-                <div className="flex items-center gap-1">
-                  Floor
-                  {sortField === 'floor_name' && (
-                    sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                  )}
-                </div>
-              </th>
-              <th
-                className="text-left px-6 py-4 text-[14px] font-bold tracking-[-0.3008px] text-[#717182] cursor-pointer hover:text-neutral-950 transition-colors"
-                onClick={() => handleSort('capacity')}
-              >
-                <div className="flex items-center gap-1">
-                  Capacity
-                  {sortField === 'capacity' && (
-                    sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                  )}
-                </div>
-              </th>
-              <th className="text-left px-6 py-4 text-[14px] font-bold tracking-[-0.3008px] text-[#717182]">Amenities</th>
-              <th className="text-left px-6 py-4 text-[14px] font-bold tracking-[-0.3008px] text-[#717182]">
-                Status
-              </th>
-              <th className="text-right pl-2 pr-6 py-4">
-                <button
-                  onClick={handleSaveChanges}
-                  disabled={Object.keys(pendingChanges).length === 0 || isSaving}
-                  className={`inline-flex items-center justify-center w-8 h-8 rounded-[8px] transition-all relative ${Object.keys(pendingChanges).length > 0
-                    ? 'bg-black text-white hover:bg-neutral-800'
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    }`}
-                  title={`Save ${Object.keys(pendingChanges).length} pending change${Object.keys(pendingChanges).length !== 1 ? 's' : ''}`}
-                >
-                  {isSaving ? (
-                    <RefreshCw size={16} className="animate-spin" />
-                  ) : (
-                    <>
-                      <Save size={16} />
-                      {Object.keys(pendingChanges).length > 0 && (
-                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                          {Object.keys(pendingChanges).length}
-                        </span>
-                      )}
-                    </>
-                  )}
-                </button>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredAndSortedSpaces.length === 0 ? (
+      <div className="bg-white border-[3px] border-black rounded-2xl overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-black text-white">
               <tr>
-                <td colSpan="7" className="text-center py-12 text-[#717182]">
-                  {searchQuery || typeFilter !== 'all'
-                    ? 'No spaces found matching your filters'
-                    : 'No spaces available'}
-                </td>
+                <th className="text-left px-6 py-4 font-black uppercase tracking-wider text-sm">Name</th>
+                <th className="text-left px-6 py-4 font-black uppercase tracking-wider text-sm cursor-pointer hover:text-yellow-400 transition-colors" onClick={() => handleSort('type')}>
+                  <div className="flex items-center gap-1">
+                    Type {sortField === 'type' && (sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
+                  </div>
+                </th>
+                <th className="text-left px-6 py-4 font-black uppercase tracking-wider text-sm cursor-pointer hover:text-yellow-400 transition-colors" onClick={() => handleSort('floor_name')}>
+                  <div className="flex items-center gap-1">
+                    Floor {sortField === 'floor_name' && (sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
+                  </div>
+                </th>
+                <th className="text-left px-6 py-4 font-black uppercase tracking-wider text-sm cursor-pointer hover:text-yellow-400 transition-colors" onClick={() => handleSort('capacity')}>
+                  <div className="flex items-center gap-1">
+                    Capacity {sortField === 'capacity' && (sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
+                  </div>
+                </th>
+                <th className="text-left px-6 py-4 font-black uppercase tracking-wider text-sm">Amenities</th>
+                <th className="text-left px-6 py-4 font-black uppercase tracking-wider text-sm">Status</th>
               </tr>
-            ) : (
-              filteredAndSortedSpaces.map((space, index) => {
-                const statusConfig = getStatusConfig(space.status);
-                const SpaceIcon = getSpaceIcon(space.type);
+            </thead>
+            <tbody className="divide-y-2 divide-gray-100">
+              {filteredAndSortedSpaces.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="text-center py-12 text-gray-500 font-medium">
+                    {searchQuery || typeFilter !== 'all' ? 'No spaces found matching your filters' : 'No spaces available'}
+                  </td>
+                </tr>
+              ) : (
+                filteredAndSortedSpaces.map((space, index) => {
+                  const statusConfig = getStatusConfig(space.status);
+                  const SpaceIcon = getSpaceIcon(space.type);
 
-                return (
-                  <tr
-                    key={space.id || index}
-                    className="border-t border-gray-200 hover:bg-gray-50"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                          <SpaceIcon size={16} className="text-[#717182]" />
+                  return (
+                    <tr key={space.id || index} className="hover:bg-yellow-50/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-white border-2 border-black flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <SpaceIcon size={20} className="text-black" />
+                          </div>
+                          <span className="font-bold text-black">{space.name}</span>
                         </div>
-                        <span className="text-[14px] tracking-[-0.3008px] font-medium text-[#717182]">
-                          {space.name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-[14px] tracking-[-0.3008px] text-[#717182]">
+                      </td>
+                      <td className="px-6 py-4 font-medium text-gray-700">
                         {formatSpaceType(space.type)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-[14px] tracking-[-0.3008px] text-[#717182]">
+                      </td>
+                      <td className="px-6 py-4 font-bold text-black">
                         {space.floor_name}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-[14px] tracking-[-0.3008px] text-[#717182]">
-                        {space.capacity}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        {space.total_amenities > 0 ? (
-                          <span className="text-[14px] tracking-[-0.3008px] text-[#717182]">
-                            {space.total_amenities} {space.total_amenities === 1 ? 'amenity' : 'amenities'}
-                          </span>
-                        ) : (
-                          <span className="text-[14px] tracking-[-0.3008px] text-[#717182]">
-                            No amenities
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <AnimatedStatusToggle
-                        status={getEffectiveStatus(space)}
-                        onClick={() => handleToggleStatus(space)}
-                        isPending={!!pendingChanges[space.id]}
-                      />
-                    </td>
-                    <td className="pl-2 pr-6 py-4"></td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                      </td>
+                      <td className="px-6 py-4 font-tabular-nums text-gray-700">
+                        {space.capacity} ppl
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {space.total_amenities > 0 ? `${space.total_amenities} amenities` : 'Basic'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <AnimatedStatusToggle
+                          status={getEffectiveStatus(space)}
+                          onClick={() => handleToggleStatus(space)}
+                          isPending={!!pendingChanges[space.id]}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
