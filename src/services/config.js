@@ -6,7 +6,7 @@
  */
 
 export const API_CONFIG = {
-  BASE_URL: 'https://backend-openbo.devmosel.com/',
+  BASE_URL: 'http://192.168.1.101:5000/',
   TIMEOUT: 10000, // 10 seconds
   HEADERS: {
     'Content-Type': 'application/json',
@@ -58,4 +58,14 @@ export const API_ENDPOINTS = {
 
   // Announcements
   ANNOUNCEMENTS: '/api/announcements',
+
+  // Assignments
+  ASSIGNMENTS: '/api/assignments',
+  ASSIGNMENT_BY_ID: (id) => `/api/assignments/${id}`,
+
+  // Tasks
+  TASKS_BY_ASSIGNMENT: (assignmentId) => `/api/tasks/assignment/${assignmentId}`,
+  POST_TASK_TO_ASSIGNMENT: (assignmentId) => `/api/tasks/assignment/${assignmentId}`,
+  UPDATE_TASK: (taskId) => `/api/tasks/${taskId}`,
+  DELETE_TASK: (taskId) => `/api/tasks/${taskId}`,
 };

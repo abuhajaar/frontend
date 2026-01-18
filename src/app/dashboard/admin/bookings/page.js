@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Search, Calendar, Clock, Trash2, ChevronUp, ChevronDown, CheckCircle, CheckSquare } from 'lucide-react';
+import { Search, ChevronUp, ChevronDown, Filter, Download, Calendar, Clock, MapPin, Hash, Trash2, CheckCircle, CheckSquare } from 'lucide-react';
 import { getAllBookingsForManage, deleteBooking } from '@/services/bookingService';
 import DeleteConfirmDialog from '@/component/DeleteConfirmDialog';
 import StatsCard from '@/component/StatsCard';
@@ -276,7 +276,7 @@ export default function AdminBookingsPage() {
     <div className="flex flex-col gap-8 w-full">
       {/* Header */}
       <div>
-        <h1 className="text-5xl font-black text-black tracking-tighter uppercase mb-2" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
+        <h1 className="text-5xl font-black text-black tracking-widest uppercase mb-4" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
           Booking Management
         </h1>
         <p className="text-lg text-gray-500 font-medium">
@@ -356,7 +356,7 @@ export default function AdminBookingsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border-[3px] border-black rounded-2xl overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+      <div className="bg-white border-[3px] border-black rounded-2xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center p-12">
             <div className="text-gray-500 font-bold animate-pulse">Loading bookings...</div>
@@ -423,9 +423,12 @@ export default function AdminBookingsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-block bg-gray-100 border-2 border-gray-200 rounded-lg px-2 py-1 font-mono font-bold text-sm">
-                          {booking.check_in_code || '---'}
-                        </span>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border-2 border-black rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] group-hover:translate-x-[1px] group-hover:translate-y-[1px] group-hover:shadow-none transition-all">
+                          <Hash size={14} className="text-black" strokeWidth={2.5} />
+                          <span className="font-bold text-black text-sm font-mono tracking-wider">
+                            {booking.check_in_code || '---'}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border-2 font-bold text-xs uppercase tracking-wide ${booking.status === 'active' ? 'bg-green-100 border-green-200 text-green-700' :
@@ -437,13 +440,15 @@ export default function AdminBookingsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <button
-                          onClick={() => handleDeleteClick(booking)}
-                          className="p-2 rounded-lg border-2 border-black hover:bg-red-500 hover:text-white hover:border-red-500 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px]"
-                          title="Delete Booking"
-                        >
-                          <Trash2 size={16} strokeWidth={2.5} />
-                        </button>
+                        <div className="flex justify-center">
+                          <button
+                            onClick={() => handleDeleteClick(booking)}
+                            className="p-2 bg-white text-black border-2 border-black rounded-lg transition-all hover:bg-[#e7000b] hover:text-white hover:border-[#e7000b]"
+                            title="Delete Booking"
+                          >
+                            <Trash2 size={16} strokeWidth={2.5} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

@@ -82,10 +82,101 @@ export default function ManagerUsersPage() {
       }
     } catch (error) {
       console.error('Error fetching team users:', error);
+
+      // Use mock data as fallback
+      const mockUsers = [
+        {
+          id: 1,
+          username: 'Sarah Johnson',
+          email: 'sarah.johnson@company.com',
+          phone: '+49 151 1234 5678',
+          role: 'employee',
+          is_active: true,
+          total_bookings: 24,
+          created_at: '2024-01-15'
+        },
+        {
+          id: 2,
+          username: 'Michael Chen',
+          email: 'michael.chen@company.com',
+          phone: '+49 151 2345 6789',
+          role: 'employee',
+          is_active: true,
+          total_bookings: 18,
+          created_at: '2024-02-20'
+        },
+        {
+          id: 3,
+          username: 'Emma Wilson',
+          email: 'emma.wilson@company.com',
+          phone: '+49 151 3456 7890',
+          role: 'manager',
+          is_active: true,
+          total_bookings: 31,
+          created_at: '2024-03-10'
+        },
+        {
+          id: 4,
+          username: 'David Martinez',
+          email: 'david.martinez@company.com',
+          phone: '+49 151 4567 8901',
+          role: 'employee',
+          is_active: true,
+          total_bookings: 12,
+          created_at: '2024-01-05'
+        },
+        {
+          id: 5,
+          username: 'Lisa Anderson',
+          email: 'lisa.anderson@company.com',
+          phone: '+49 151 5678 9012',
+          role: 'employee',
+          is_active: false,
+          total_bookings: 8,
+          created_at: '2024-04-12'
+        },
+        {
+          id: 6,
+          username: 'James Taylor',
+          email: 'james.taylor@company.com',
+          phone: '+49 151 6789 0123',
+          role: 'employee',
+          is_active: true,
+          total_bookings: 15,
+          created_at: '2024-05-08'
+        },
+        {
+          id: 7,
+          username: 'Anna Schmidt',
+          email: 'anna.schmidt@company.com',
+          phone: '+49 151 7890 1234',
+          role: 'employee',
+          is_active: true,
+          total_bookings: 22,
+          created_at: '2024-06-18'
+        },
+        {
+          id: 8,
+          username: 'Robert Garcia',
+          email: 'robert.garcia@company.com',
+          phone: '+49 151 8901 2345',
+          role: 'employee',
+          is_active: true,
+          total_bookings: 19,
+          created_at: '2024-07-22'
+        }
+      ];
+
+      setUsers(mockUsers);
+      setDepartment({
+        name: 'Engineering Team',
+        description: 'Software development and technical operations'
+      });
+
       showToastMessage({
-        type: 'error',
-        title: 'Failed to load users',
-        message: error.message || 'Could not fetch team users.',
+        type: 'warning',
+        title: 'Using mock data',
+        message: 'Could not connect to backend. Displaying sample data.',
         duration: 5000
       });
     } finally {
@@ -210,7 +301,7 @@ export default function ManagerUsersPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-5xl font-black text-black tracking-tighter uppercase mb-2" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
+          <h1 className="text-5xl font-black text-black tracking-widest uppercase mb-4" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
             {department?.name || 'User Management'}
           </h1>
           <p className="text-lg text-gray-500 font-medium">
@@ -305,7 +396,7 @@ export default function ManagerUsersPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border-[3px] border-black rounded-2xl overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+      <div className="bg-white border-[3px] border-black rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-black text-white">

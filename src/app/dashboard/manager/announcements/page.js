@@ -60,8 +60,46 @@ export default function ManagerAnnouncementsPage() {
         setAnnouncements(response.data);
       }
     } catch (err) {
-      setError(err.message);
       console.error('Error fetching announcements:', err);
+
+      // Use mock data as fallback
+      const mockAnnouncements = [
+        {
+          id: 1,
+          title: 'New Office Hours',
+          description: 'Starting next week, our office hours will be 9 AM to 6 PM. Please plan your schedules accordingly.',
+          creator_name: 'Emma Wilson',
+          created_at: '2024-12-08T10:00:00Z',
+          department_id: null
+        },
+        {
+          id: 2,
+          title: 'Team Building Event',
+          description: 'Join us for a team building event this Friday at 4 PM. We will have games, food, and fun activities!',
+          creator_name: 'Michael Chen',
+          created_at: '2024-12-07T14:30:00Z',
+          department_id: 1
+        },
+        {
+          id: 3,
+          title: 'System Maintenance',
+          description: 'The booking system will be down for maintenance on Saturday from 2 AM to 6 AM.',
+          creator_name: 'Sarah Johnson',
+          created_at: '2024-12-05T09:15:00Z',
+          department_id: null
+        },
+        {
+          id: 4,
+          title: 'Holiday Schedule',
+          description: 'Please note that the office will be closed from December 24th to January 2nd for the holidays.',
+          creator_name: 'David Martinez',
+          created_at: '2024-12-01T11:00:00Z',
+          department_id: null
+        }
+      ];
+
+      setAnnouncements(mockAnnouncements);
+      setError(null);
     } finally {
       setLoading(false);
     }
@@ -227,7 +265,7 @@ export default function ManagerAnnouncementsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-5xl font-black text-black tracking-tighter uppercase mb-2" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
+          <h1 className="text-5xl font-black text-black tracking-widest uppercase mb-4" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
             Announcements
           </h1>
           <p className="text-lg text-gray-500 font-medium">

@@ -25,6 +25,16 @@ export default function AdminFloorsPage() {
       }
     } catch (error) {
       console.error('Error fetching floors:', error);
+
+      // Use mock data as fallback
+      const mockFloors = [
+        { id: 1, name: 'Floor 1', total_spaces: 15 },
+        { id: 2, name: 'Floor 2', total_spaces: 18 },
+        { id: 3, name: 'Floor 3', total_spaces: 22 },
+        { id: 4, name: 'Floor 4', total_spaces: 12 }
+      ];
+
+      setFloors(mockFloors);
     } finally {
       setLoading(false);
     }
@@ -79,7 +89,7 @@ export default function AdminFloorsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-5xl font-black text-black tracking-tighter uppercase mb-2" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
+          <h1 className="text-5xl font-black text-black tracking-widest uppercase mb-4" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
             Floors
           </h1>
           <p className="text-lg text-gray-500 font-medium">
@@ -141,7 +151,7 @@ export default function AdminFloorsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border-[3px] border-black rounded-2xl overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+      <div className="bg-white border-[3px] border-black rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-black text-white">

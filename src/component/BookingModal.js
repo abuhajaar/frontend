@@ -228,12 +228,12 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
       {/* Modal */}
       <div
         ref={modalRef}
-        className="relative bg-white border-[3px] border-black rounded-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative bg-white border-[3px] border-black rounded-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Header */}
         <div className="p-6 border-b-[3px] border-black flex items-center justify-between sticky top-0 bg-black z-10">
           <div>
-            <h2 className="text-3xl font-black text-white uppercase tracking-tighter" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
+            <h2 className="text-3xl font-black text-white uppercase tracking-widest" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
               {isUnavailable ? 'Space Unavailable' : 'Confirm Booking'}
             </h2>
             <p className="text-sm font-bold text-white/70 mt-1 uppercase tracking-wide">
@@ -242,7 +242,7 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
           </div>
           <button
             onClick={handleClose}
-            className="w-10 h-10 rounded-lg bg-white border-2 border-black flex items-center justify-center hover:bg-gray-200 transition-colors shadow-[2px_2px_0px_0px_rgba(255,255,255,0.5)] active:translate-y-px active:shadow-none"
+            className="w-10 h-10 rounded-lg bg-white border-2 border-black flex items-center justify-center hover:bg-gray-200 transition-colors active:translate-y-px"
           >
             <X size={20} className="text-black" strokeWidth={3} />
           </button>
@@ -340,7 +340,7 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
               )}
 
               {/* Info Message */}
-              <div className="bg-blue-50 border-2 border-black rounded-xl p-4 flex gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <div className="bg-blue-50 border-2 border-black rounded-xl p-4 flex gap-3">
                 <Info className="w-6 h-6 text-black flex-shrink-0" strokeWidth={2.5} />
                 <p className="text-sm text-black font-bold leading-relaxed">
                   You'll receive a check-in code and instructions via notification once your booking is confirmed.
@@ -375,7 +375,7 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
                   ref={confirmButtonRef}
                   onClick={handleConfirmClick}
                   disabled={isSubmitting}
-                  className="flex-1 bg-black border-[3px] border-black text-white rounded-xl px-4 py-4 font-black text-sm uppercase tracking-widest hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 bg-black border-[3px] border-black text-white rounded-xl px-4 py-4 font-black text-sm uppercase tracking-widest hover:translate-y-[-2px] active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
                     <>

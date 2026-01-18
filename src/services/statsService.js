@@ -13,11 +13,11 @@ import { auth } from '@/lib/auth';
 const getAuthHeaders = () => {
   const token = auth.getToken();
   const headers = { ...API_CONFIG.HEADERS };
-  
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
   return headers;
 };
 
@@ -38,7 +38,7 @@ export const getEmployeeStats = async (userId) => {
 
     const result = await response.json();
     console.log('Stats API response:', result);
-    
+
     // Handle API response format: { success, message, status_code, data }
     if (!result.success) {
       const error = new Error(result.message || 'Failed to fetch statistics');

@@ -1,117 +1,343 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Search, ClipboardList, Calendar, Users, Edit2, Trash2, CheckCircle, ChevronDown, ChevronUp, Check, Clock, CheckSquare, Square } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Search, ClipboardList, Calendar, Users, Edit2, Trash2, CheckCircle, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import StatsCard from '@/component/StatsCard';
+import AssignmentDialog from '@/component/AssignmentDialog';
+import TaskDialog from '@/component/TaskDialog';
+import { getAllAssignments, createAssignment, updateAssignment, deleteAssignment } from '@/services/assignmentService';
+import { getTasksByAssignment, createTask, updateTask, deleteTask } from '@/services/taskService';
+import { getTeamUsers } from '@/services/userService';
+import { useToast } from '@/contexts/ToastContext';
+import DeleteConfirmDialog from '@/component/DeleteConfirmDialog';
 
 export default function ManagerAssignmentsPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'completed'
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [assignmentToEdit, setAssignmentToEdit] = useState(null);
     const [expandedAssignmentId, setExpandedAssignmentId] = useState(null);
+    const [assignmentTasks, setAssignmentTasks] = useState({});
+    const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+    const [isEditTaskDialogOpen, setIsEditTaskDialogOpen] = useState(false);
+    const [taskToEdit, setTaskToEdit] = useState(null);
+    const [deleteTaskDialogOpen, setDeleteTaskDialogOpen] = useState(false);
+    const [taskToDelete, setTaskToDelete] = useState(null);
+    const [currentAssignmentForTask, setCurrentAssignmentForTask] = useState(null);
+    const [users, setUsers] = useState([]);
+    const [assignments, setAssignments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [assignmentToDelete, setAssignmentToDelete] = useState(null);
+    const { showToastMessage } = useToast();
 
-    // Mock stats
+    // Fetch assignments and users on mount
+    useEffect(() => {
+        fetchAssignments();
+        fetchUsers();
+    }, []);
+
+    const fetchUsers = async () => {
+        try {
+            const response = await getTeamUsers();
+            if (response.success) {
+                // Extract users array from the response
+                setUsers(response.data || []);
+            }
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        }
+    };
+
+    const fetchAssignments = async () => {
+        try {
+            setLoading(true);
+            const response = await getAllAssignments();
+            if (response.success) {
+                setAssignments(response.data || []);
+            }
+        } catch (error) {
+            showToastMessage({
+                type: 'error',
+                title: 'Error',
+                message: error.message || 'Failed to fetch assignments',
+                duration: 5000
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDeleteAssignment = async () => {
+        if (!assignmentToDelete) return;
+
+        try {
+            await deleteAssignment(assignmentToDelete.id);
+            showToastMessage({
+                type: 'success',
+                title: 'Success',
+                message: 'Assignment deleted successfully',
+                duration: 3000
+            });
+            fetchAssignments();
+        } catch (error) {
+            showToastMessage({
+                type: 'error',
+                title: 'Error',
+                message: error.message || 'Failed to delete assignment',
+                duration: 5000
+            });
+        } finally {
+            setDeleteDialogOpen(false);
+            setAssignmentToDelete(null);
+        }
+    };
+
+    const handleCreateAssignment = async (formData) => {
+        try {
+            const response = await createAssignment(formData);
+            showToastMessage({
+                type: 'success',
+                title: 'Success',
+                message: 'Assignment created successfully',
+                duration: 3000
+            });
+            fetchAssignments();
+            setIsCreateModalOpen(false);
+        } catch (error) {
+            showToastMessage({
+                type: 'error',
+                title: 'Error',
+                message: error.message || 'Failed to create assignment',
+                duration: 5000
+            });
+            throw error;
+        }
+    };
+
+    const handleEditAssignment = async (formData) => {
+        if (!assignmentToEdit) return;
+
+        try {
+            const response = await updateAssignment(assignmentToEdit.id, formData);
+            showToastMessage({
+                type: 'success',
+                title: 'Success',
+                message: 'Assignment updated successfully',
+                duration: 3000
+            });
+            fetchAssignments();
+            setIsEditModalOpen(false);
+            setAssignmentToEdit(null);
+        } catch (error) {
+            showToastMessage({
+                type: 'error',
+                title: 'Error',
+                message: error.message || 'Failed to update assignment',
+                duration: 5000
+            });
+            throw error;
+        }
+    };
+
+    const fetchAssignmentTasks = async (assignmentId) => {
+        console.log('Fetching tasks for assignment:', assignmentId);
+        try {
+            const response = await getTasksByAssignment(assignmentId);
+            console.log('Tasks response:', response);
+            if (response.success) {
+                setAssignmentTasks(prev => ({
+                    ...prev,
+                    [assignmentId]: response.data
+                }));
+            }
+        } catch (error) {
+            console.error('Error fetching tasks:', error);
+            showToastMessage({
+                type: 'error',
+                title: 'Error',
+                message: error.message || 'Failed to fetch tasks',
+                duration: 3000
+            });
+        }
+    };
+
+    const handleToggleExpand = (assignmentId) => {
+        console.log('Toggle expand for assignment:', assignmentId);
+        console.log('Current expanded ID:', expandedAssignmentId);
+        console.log('Current tasks cache:', assignmentTasks);
+        
+        const newExpandedId = expandedAssignmentId === assignmentId ? null : assignmentId;
+        setExpandedAssignmentId(newExpandedId);
+        
+        // Fetch tasks when expanding if not already loaded
+        if (newExpandedId && !assignmentTasks[assignmentId]) {
+            console.log('Fetching tasks...');
+            fetchAssignmentTasks(assignmentId);
+        } else {
+            console.log('Not fetching - either collapsing or tasks already loaded');
+        }
+    };
+
+    const handleCreateTask = async (taskData) => {
+        if (!currentAssignmentForTask) return;
+
+        try {
+            await createTask(currentAssignmentForTask, taskData);
+            showToastMessage({
+                type: 'success',
+                title: 'Success',
+                message: 'Task created successfully',
+                duration: 3000
+            });
+            // Refresh tasks for this assignment
+            fetchAssignmentTasks(currentAssignmentForTask);
+            setIsTaskDialogOpen(false);
+            setCurrentAssignmentForTask(null);
+        } catch (error) {
+            showToastMessage({
+                type: 'error',
+                title: 'Error',
+                message: error.message || 'Failed to create task',
+                duration: 5000
+            });
+            throw error;
+        }
+    };
+
+    const handleEditTask = async (taskData) => {
+        if (!taskToEdit) return;
+
+        try {
+            await updateTask(taskToEdit.id, taskData);
+            showToastMessage({
+                type: 'success',
+                title: 'Success',
+                message: 'Task updated successfully',
+                duration: 3000
+            });
+            // Refresh tasks for the assignment
+            fetchAssignmentTasks(taskToEdit.assignment_id);
+            setIsEditTaskDialogOpen(false);
+            setTaskToEdit(null);
+        } catch (error) {
+            showToastMessage({
+                type: 'error',
+                title: 'Error',
+                message: error.message || 'Failed to update task',
+                duration: 5000
+            });
+            throw error;
+        }
+    };
+
+    const handleToggleTaskDone = async (task, assignmentId) => {
+        try {
+            await updateTask(task.id, {
+                title: task.title,
+                priority: task.priority,
+                user_id: task.user_id,
+                is_done: !task.is_done
+            });
+            // Refresh tasks for this assignment
+            fetchAssignmentTasks(assignmentId);
+        } catch (error) {
+            showToastMessage({
+                type: 'error',
+                title: 'Error',
+                message: error.message || 'Failed to update task',
+                duration: 3000
+            });
+        }
+    };
+
+    const handleDeleteTask = async () => {
+        if (!taskToDelete) return;
+
+        try {
+            await deleteTask(taskToDelete.task.id);
+            showToastMessage({
+                type: 'success',
+                title: 'Success',
+                message: 'Task deleted successfully',
+                duration: 3000
+            });
+            // Refresh tasks for the assignment
+            fetchAssignmentTasks(taskToDelete.assignmentId);
+        } catch (error) {
+            showToastMessage({
+                type: 'error',
+                title: 'Error',
+                message: error.message || 'Failed to delete task',
+                duration: 5000
+            });
+        } finally {
+            setDeleteTaskDialogOpen(false);
+            setTaskToDelete(null);
+        }
+    };
+
+    // Calculate stats from assignments
     const stats = {
-        totalAssignments: 8,
-        activeAssignments: 5,
-        completedAssignments: 3,
-        thisWeek: 2
+        totalAssignments: assignments.length,
+        activeAssignments: assignments.filter(a => a.task_done < a.task_count).length,
+        completedAssignments: assignments.filter(a => a.task_done === a.task_count).length,
+        departments: [...new Set(assignments.map(a => a.department_name))].length
     };
 
-    // Mock assignments data
-    const mockAssignments = [
-        {
-            id: 1,
-            title: 'Q4 Report Submission',
-            description: 'Please submit your quarterly reports by end of this week.',
-            author: 'Sarah Manager',
-            date: '2024-12-08',
-            priority: 'urgent',
-            dueDate: '2024-12-15',
-            assignedTo: 15,
-            completedBy: 8,
-            status: 'active',
-            tasks: [
-                { id: 1, title: 'Collect departmental data', completed: true },
-                { id: 2, title: 'Draft initial summary', completed: true },
-                { id: 3, title: 'Review with team leads', completed: false },
-                { id: 4, title: 'Finalize financial metrics', completed: false },
-                { id: 5, title: 'Upload to portal', completed: false },
-            ]
-        },
-        {
-            id: 2,
-            title: 'Team Building Survey',
-            description: 'Complete the team building activity preferences survey.',
-            author: 'John Manager',
-            date: '2024-12-05',
-            priority: 'normal',
-            dueDate: '2024-12-12',
-            assignedTo: 12,
-            completedBy: 12,
-            status: 'completed',
-            tasks: [
-                { id: 1, title: 'Design survey questions', completed: true },
-                { id: 2, title: 'Distribute to staff', completed: true },
-                { id: 3, title: 'Analyze responses', completed: true },
-            ]
-        },
-        {
-            id: 3,
-            title: 'Safety Training Module',
-            description: 'Complete the mandatory workplace safety training online.',
-            author: 'HR Manager',
-            date: '2024-12-07',
-            priority: 'high',
-            dueDate: '2024-12-20',
-            assignedTo: 20,
-            completedBy: 6,
-            status: 'active',
-            tasks: [
-                { id: 1, title: 'Watch safety video', completed: true },
-                { id: 2, title: 'Score 80% on quiz', completed: false },
-                { id: 3, title: 'Sign acknowledgement', completed: false },
-            ]
-        },
-    ];
-
-    const [assignments, setAssignments] = useState(mockAssignments);
-
-    const toggleTask = (assignmentId, taskId) => {
-        setAssignments(prev => prev.map(assignment => {
-            if (assignment.id !== assignmentId) return assignment;
-            return {
-                ...assignment,
-                tasks: assignment.tasks.map(task =>
-                    task.id === taskId ? { ...task, completed: !task.completed } : task
-                )
-            };
-        }));
+    const getProgressStatus = (taskDone, taskCount) => {
+        if (taskCount === 0) return 'empty';
+        if (taskDone === taskCount) return 'completed';
+        if (taskDone > 0) return 'in_progress';
+        return 'not_started';
     };
 
-    const getPriorityConfig = (priority) => {
+    const getStatusConfig = (taskDone, taskCount) => {
+        const status = getProgressStatus(taskDone, taskCount);
         const configs = {
-            urgent: { bg: 'bg-red-100', text: 'text-[#e7000b]', label: 'URGENT' },
-            high: { bg: 'bg-orange-100', text: 'text-[#f97316]', label: 'HIGH' },
-            normal: { bg: 'bg-blue-100', text: 'text-[#1447e6]', label: 'NORMAL' },
-            low: { bg: 'bg-gray-100', text: 'text-[#364153]', label: 'LOW' }
+            completed: { bg: 'bg-green-100', text: 'text-green-700', label: 'COMPLETED' },
+            in_progress: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'ACTIVE' },
+            not_started: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'PENDING' },
+            empty: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'NO TASKS' }
         };
-        return configs[priority] || configs.normal;
+        return configs[status] || configs.not_started;
     };
 
-    const getStatusConfig = (status) => {
-        const configs = {
-            active: { bg: 'bg-yellow-100', text: 'text-[#f59e0b]', label: 'ACTIVE' },
-            completed: { bg: 'bg-green-100', text: 'text-[#016630]', label: 'COMPLETED' }
-        };
-        return configs[status] || configs.active;
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const formatDateTime = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const isOverdue = (dueDate) => {
+        if (!dueDate) return false;
+        return new Date(dueDate) < new Date();
     };
 
     const filteredAssignments = assignments.filter(assignment => {
         const matchesSearch =
             assignment.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            assignment.description?.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesStatus = statusFilter === 'all' || assignment.status === statusFilter;
+            assignment.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            assignment.department_name?.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        const status = getProgressStatus(assignment.task_done, assignment.task_count);
+        const matchesStatus = statusFilter === 'all' || 
+            (statusFilter === 'completed' && status === 'completed') ||
+            (statusFilter === 'active' && status !== 'completed');
+        
         return matchesSearch && matchesStatus;
     });
 
@@ -141,29 +367,29 @@ export default function ManagerAssignmentsPage() {
                 <StatsCard
                     icon={<ClipboardList size={24} strokeWidth={3} />}
                     label="Total Assignments"
-                    value={stats.totalAssignments}
+                    value={loading ? '...' : stats.totalAssignments}
                     description="All assignments"
                     shadowColor="#000000"
                 />
                 <StatsCard
                     icon={<Users size={24} strokeWidth={3} />}
                     label="Active Assignments"
-                    value={stats.activeAssignments}
-                    description="Pending completion"
+                    value={loading ? '...' : stats.activeAssignments}
+                    description="In progress"
                     shadowColor="#F59E0B"
                 />
                 <StatsCard
                     icon={<CheckCircle size={24} strokeWidth={3} />}
                     label="Completed"
-                    value={stats.completedAssignments}
-                    description="Finished assignments"
+                    value={loading ? '...' : stats.completedAssignments}
+                    description="Finished"
                     shadowColor="#22C55E"
                 />
                 <StatsCard
                     icon={<Calendar size={24} strokeWidth={3} />}
-                    label="This Week"
-                    value={stats.thisWeek}
-                    description="Created this week"
+                    label="Departments"
+                    value={loading ? '...' : stats.departments}
+                    description="Involved departments"
                     shadowColor="#3B82F6"
                 />
             </div>
@@ -195,7 +421,18 @@ export default function ManagerAssignmentsPage() {
 
             {/* Assignments List */}
             <div className="flex flex-col gap-4">
-                {filteredAssignments.length === 0 ? (
+                {loading ? (
+                    // Loading state
+                    <div className="flex flex-col gap-4">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="bg-white border-[3px] border-black rounded-2xl p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] animate-pulse">
+                                <div className="h-6 bg-gray-200 rounded w-1/3 mb-3"></div>
+                                <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
+                                <div className="h-3 bg-gray-200 rounded w-full"></div>
+                            </div>
+                        ))}
+                    </div>
+                ) : filteredAssignments.length === 0 ? (
                     <div className="bg-white border-[3px] border-black rounded-2xl p-12 text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 border-2 border-black mx-auto">
                             <Search size={24} className="text-gray-400" />
@@ -205,44 +442,44 @@ export default function ManagerAssignmentsPage() {
                     </div>
                 ) : (
                     filteredAssignments.map((assignment) => {
-                        const priorityConfig = getPriorityConfig(assignment.priority);
-                        const statusConfig = getStatusConfig(assignment.status);
-                        const completionPercentage = Math.round((assignment.completedBy / assignment.assignedTo) * 100);
+                        const statusConfig = getStatusConfig(assignment.task_done, assignment.task_count);
+                        const completionPercentage = assignment.task_count > 0 
+                            ? Math.round((assignment.task_done / assignment.task_count) * 100) 
+                            : 0;
                         const isExpanded = expandedAssignmentId === assignment.id;
+                        const overdueStatus = isOverdue(assignment.due_date);
 
                         return (
                             <div
                                 key={assignment.id}
-                                className={`bg-white border-[3px] border-black rounded-2xl p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all group ${isExpanded ? 'translate-y-[-2px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]' : ''}`}
+                                className={`bg-white border-[3px] border-black rounded-2xl p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all ${isExpanded ? 'translate-y-[-2px] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]' : ''}`}
                             >
-                                <div className="flex items-start justify-between gap-4 cursor-pointer" onClick={() => setExpandedAssignmentId(isExpanded ? null : assignment.id)}>
-                                    <div className="flex-1">
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="flex-1 cursor-pointer" onClick={() => handleToggleExpand(assignment.id)}>
                                         {/* Header */}
                                         <div className="flex items-start gap-3 mb-3">
                                             <div className="p-2 bg-purple-100 border-2 border-black rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                                                 <ClipboardList size={20} className="text-purple-600" strokeWidth={2.5} />
                                             </div>
                                             <div className="flex-1">
-                                                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                                <div className="flex items-center gap-2 mb-2 flex-wrap">
                                                     <h3 className="text-xl font-black text-black">{assignment.title}</h3>
-                                                    <div className={`inline-flex items-center px-2 py-1 rounded-lg border-2 border-black ${priorityConfig.bg} ${priorityConfig.text} font-bold text-xs`}>
-                                                        {priorityConfig.label}
-                                                    </div>
-                                                    <div className={`inline-flex items-center px-2 py-1 rounded-lg border-2 border-black ${statusConfig.bg} ${statusConfig.text} font-bold text-xs`}>
-                                                        {statusConfig.label}
-                                                    </div>
                                                 </div>
                                                 <p className="text-gray-600 font-medium text-sm mb-3">{assignment.description}</p>
 
                                                 {/* Progress Bar */}
                                                 <div className="mb-3">
                                                     <div className="flex items-center justify-between mb-1">
-                                                        <span className="text-xs font-bold text-gray-600 uppercase">Completion Progress</span>
-                                                        <span className="text-xs font-black text-black">{completionPercentage}%</span>
+                                                        <span className="text-xs font-bold text-gray-600 uppercase">Task Progress</span>
+                                                        <span className="text-xs font-black text-black">{assignment.task_done}/{assignment.task_count} tasks • {completionPercentage}%</span>
                                                     </div>
                                                     <div className="w-full h-3 bg-gray-100 border-2 border-black rounded-lg overflow-hidden">
                                                         <div
-                                                            className="h-full bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-300"
+                                                            className={`h-full transition-all duration-300 ${
+                                                                completionPercentage === 100 
+                                                                    ? 'bg-gradient-to-r from-green-500 to-green-600' 
+                                                                    : 'bg-gradient-to-r from-purple-500 to-purple-600'
+                                                            }`}
                                                             style={{ width: `${completionPercentage}%` }}
                                                         />
                                                     </div>
@@ -254,70 +491,178 @@ export default function ManagerAssignmentsPage() {
                                         <div className="flex items-center gap-6 text-sm font-medium text-gray-500 flex-wrap">
                                             <div className="flex items-center gap-1.5">
                                                 <Calendar size={14} strokeWidth={2.5} />
-                                                <span>Created: {assignment.date}</span>
+                                                <span>Created: {formatDate(assignment.created_at)}</span>
                                             </div>
                                             <div className="flex items-center gap-1.5">
                                                 <Users size={14} strokeWidth={2.5} />
-                                                <span>{assignment.author}</span>
+                                                <span>{assignment.creator_name}</span>
                                             </div>
-                                            <span className="text-blue-600 font-bold">Due: {assignment.dueDate}</span>
-                                            <span className="text-purple-600 font-bold">{assignment.completedBy}/{assignment.assignedTo} completed</span>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-md font-bold text-xs">
+                                                    {assignment.department_name}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 font-bold text-blue-600">
+                                                <Calendar size={14} strokeWidth={2.5} />
+                                                <span>Due: {formatDateTime(assignment.due_date)}</span>
+                                            </div>
                                         </div>
                                     </div>
 
                                     {/* Actions & Expand Toggle */}
                                     <div className="flex flex-col gap-2 items-end">
-                                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                                            <button className="p-2 bg-white text-black border-2 border-black rounded-lg transition-all hover:bg-black hover:text-white">
+                                        <div className="flex items-center gap-2">
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setAssignmentToEdit(assignment);
+                                                    setIsEditModalOpen(true);
+                                                }}
+                                                className="p-2 bg-white text-black border-2 border-black rounded-lg transition-all hover:bg-black hover:text-white"
+                                            >
                                                 <Edit2 size={16} strokeWidth={2.5} />
                                             </button>
-                                            <button className="p-2 bg-white text-black border-2 border-black rounded-lg transition-all hover:bg-[#e7000b] hover:text-white hover:border-[#e7000b]">
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setAssignmentToDelete(assignment);
+                                                    setDeleteDialogOpen(true);
+                                                }}
+                                                className="p-2 bg-white text-black border-2 border-black rounded-lg transition-all hover:bg-[#e7000b] hover:text-white hover:border-[#e7000b]"
+                                            >
                                                 <Trash2 size={16} strokeWidth={2.5} />
                                             </button>
                                         </div>
-                                        <div className="mt-2">
+                                        <button 
+                                            onClick={() => handleToggleExpand(assignment.id)}
+                                            className="mt-2 p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                                        >
                                             {isExpanded ? <ChevronUp size={24} strokeWidth={2.5} /> : <ChevronDown size={24} strokeWidth={2.5} />}
-                                        </div>
+                                        </button>
                                     </div>
                                 </div>
 
-                                {/* Checklist / Tasks Dropdown */}
+                                {/* Expanded Details - Task List */}
                                 {isExpanded && (
                                     <div className="mt-6 pt-6 border-t-2 border-dashed border-gray-200">
-                                        <h4 className="font-bold text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
-                                            <ClipboardList size={16} />
-                                            Tasks Checklist
-                                        </h4>
-                                        <div className="flex flex-col gap-3">
-                                            {assignment.tasks?.map((task) => (
-                                                <div
-                                                    key={task.id}
-                                                    className={`p-4 rounded-xl border-2 transition-all flex items-center justify-between gap-4 cursor-pointer group/task ${task.completed
-                                                        ? 'bg-green-50 border-green-200 hover:bg-green-100'
-                                                        : 'bg-white border-gray-200 hover:bg-gray-50'
-                                                        }`}
-                                                    onClick={() => toggleTask(assignment.id, task.id)}
+                                        {!assignmentTasks[assignment.id] ? (
+                                            <div className="flex items-center justify-center py-8">
+                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+                                            </div>
+                                        ) : assignmentTasks[assignment.id].tasks?.length === 0 ? (
+                                            <div className="flex flex-col items-center justify-center py-8 gap-4">
+                                                <p className="text-sm text-gray-500 font-medium">
+                                                    No tasks found for this assignment
+                                                </p>
+                                                <button
+                                                    onClick={() => {
+                                                        setCurrentAssignmentForTask(assignment.id);
+                                                        setIsTaskDialogOpen(true);
+                                                    }}
+                                                    className="px-4 py-2 bg-black text-white border-2 border-black rounded-lg font-bold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none transition-all flex items-center gap-2"
                                                 >
-                                                    <div className="flex-1">
-                                                        <p className={`font-bold text-sm transition-colors ${task.completed ? 'text-green-900 line-through decoration-2 decoration-green-500/50' : 'text-gray-900'
-                                                            }`}>
-                                                            {task.title}
-                                                        </p>
-                                                    </div>
-                                                    <div className={`transition-all transform duration-200 ${task.completed ? 'text-green-600 scale-110' : 'text-gray-300 group-hover/task:text-gray-400'
-                                                        }`}>
-                                                        {task.completed ? (
-                                                            <CheckSquare size={24} strokeWidth={2.5} />
-                                                        ) : (
-                                                            <Square size={24} strokeWidth={2.5} />
-                                                        )}
+                                                    <Plus size={16} strokeWidth={3} />
+                                                    <span>Add Task</span>
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <h4 className="text-sm font-bold uppercase tracking-wider text-gray-600">
+                                                        Task Breakdown
+                                                    </h4>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-xs font-bold text-gray-500">
+                                                            {assignmentTasks[assignment.id].completed_tasks}/{assignmentTasks[assignment.id].total_tasks} completed
+                                                        </span>
+                                                        <button
+                                                            onClick={() => {
+                                                                setCurrentAssignmentForTask(assignment.id);
+                                                                setIsTaskDialogOpen(true);
+                                                            }}
+                                                            className="p-1.5 bg-black text-white border-2 border-black rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none transition-all"
+                                                            title="Add Task"
+                                                        >
+                                                            <Plus size={14} strokeWidth={3} />
+                                                        </button>
                                                     </div>
                                                 </div>
-                                            ))}
-                                            {(!assignment.tasks || assignment.tasks.length === 0) && (
-                                                <p className="text-gray-500 italic text-sm">No tasks available.</p>
-                                            )}
-                                        </div>
+                                                {assignmentTasks[assignment.id].tasks?.map((task) => {
+                                                    const priorityColors = {
+                                                        high: 'bg-red-100 text-red-700 border-red-300',
+                                                        medium: 'bg-yellow-100 text-yellow-700 border-yellow-300',
+                                                        low: 'bg-green-100 text-green-700 border-green-300'
+                                                    };
+                                                    
+                                                    return (
+                                                        <div 
+                                                            key={task.id}
+                                                            className="flex items-start gap-3 p-3 bg-gray-50 border-2 border-gray-200 rounded-lg hover:border-black transition-colors cursor-pointer"
+                                                            onClick={() => {
+                                                                setTaskToEdit(task);
+                                                                setIsEditTaskDialogOpen(true);
+                                                            }}
+                                                        >
+                                                            {/* Checkbox */}
+                                                            <div className="flex-shrink-0 mt-0.5">
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleToggleTaskDone(task, assignment.id);
+                                                                    }}
+                                                                    className={`w-5 h-5 border-2 border-black rounded flex items-center justify-center hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all ${
+                                                                        task.is_done ? 'bg-black' : 'bg-white'
+                                                                    }`}
+                                                                >
+                                                                    {task.is_done && (
+                                                                        <svg className="w-3 h-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path d="M5 13l4 4L19 7"></path>
+                                                                        </svg>
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                            
+                                                            {/* Task Info */}
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-start justify-between gap-2 mb-1">
+                                                                    <p className={`font-bold text-sm ${
+                                                                        task.is_done ? 'text-gray-400 line-through' : 'text-black'
+                                                                    }`}>
+                                                                        {task.title}
+                                                                    </p>
+                                                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                                                        <span className={`px-2 py-0.5 text-xs font-bold uppercase rounded border ${
+                                                                            priorityColors[task.priority] || 'bg-gray-100 text-gray-700 border-gray-300'
+                                                                        }`}>
+                                                                            {task.priority}
+                                                                        </span>
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setTaskToDelete({ task, assignmentId: assignment.id });
+                                                                                setDeleteTaskDialogOpen(true);
+                                                                            }}
+                                                                            className="p-1 bg-white text-black border-2 border-black rounded hover:bg-[#e7000b] hover:text-white hover:border-[#e7000b] transition-all"
+                                                                            title="Delete task"
+                                                                        >
+                                                                            <Trash2 size={14} strokeWidth={2.5} />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center gap-3 text-xs text-gray-500 font-medium">
+                                                                    <span className="flex items-center gap-1">
+                                                                        <Users size={12} strokeWidth={2.5} />
+                                                                        {task.user_name}
+                                                                    </span>
+                                                                    <span>•</span>
+                                                                    <span>{formatDate(task.created_at)}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -325,33 +670,76 @@ export default function ManagerAssignmentsPage() {
                     })
                 )}
             </div>
+            {/* Delete Confirmation Dialog */}
+            <DeleteConfirmDialog
+                isOpen={deleteDialogOpen}
+                onClose={() => {
+                    setDeleteDialogOpen(false);
+                    setAssignmentToDelete(null);
+                }}
+                onConfirm={handleDeleteAssignment}
+                title="Delete Assignment"
+                message={`Are you sure you want to delete "${assignmentToDelete?.title}"? This action cannot be undone.`}
+            />
 
-            {/* Create Modal Placeholder */}
-            {isCreateModalOpen && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white border-[3px] border-black rounded-2xl p-8 max-w-2xl w-full mx-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                        <h2 className="text-3xl font-black text-black mb-6 uppercase" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
-                            Create Assignment
-                        </h2>
-                        <p className="text-gray-500 font-medium mb-6">
-                            Form will be implemented here...
-                        </p>
-                        <div className="flex gap-3 justify-end">
-                            <button
-                                onClick={() => setIsCreateModalOpen(false)}
-                                className="px-6 py-3 bg-white text-black border-2 border-black rounded-xl font-bold hover:bg-gray-50 transition-all"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className="px-6 py-3 bg-black text-white border-[3px] border-black rounded-xl font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all"
-                            >
-                                Create
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Create Assignment Dialog */}
+            <AssignmentDialog
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                mode="create"
+                onSubmit={handleCreateAssignment}
+            />
+
+            {/* Edit Assignment Dialog */}
+            <AssignmentDialog
+                isOpen={isEditModalOpen}
+                onClose={() => {
+                    setIsEditModalOpen(false);
+                    setAssignmentToEdit(null);
+                }}
+                mode="edit"
+                assignmentData={assignmentToEdit}
+                onSubmit={handleEditAssignment}
+            />
+
+            {/* Task Dialog */}
+            <TaskDialog
+                isOpen={isTaskDialogOpen}
+                onClose={() => {
+                    setIsTaskDialogOpen(false);
+                    setCurrentAssignmentForTask(null);
+                }}
+                onSubmit={handleCreateTask}
+                assignmentId={currentAssignmentForTask}
+                users={users}
+                mode="create"
+            />
+
+            {/* Edit Task Dialog */}
+            <TaskDialog
+                isOpen={isEditTaskDialogOpen}
+                onClose={() => {
+                    setIsEditTaskDialogOpen(false);
+                    setTaskToEdit(null);
+                }}
+                onSubmit={handleEditTask}
+                assignmentId={taskToEdit?.assignment_id}
+                users={users}
+                mode="edit"
+                taskData={taskToEdit}
+            />
+
+            {/* Delete Task Confirmation Dialog */}
+            <DeleteConfirmDialog
+                isOpen={deleteTaskDialogOpen}
+                onClose={() => {
+                    setDeleteTaskDialogOpen(false);
+                    setTaskToDelete(null);
+                }}
+                onConfirm={handleDeleteTask}
+                title="Delete Task"
+                message={`Are you sure you want to delete "${taskToDelete?.task?.title}"? This action cannot be undone.`}
+            />
         </div>
     );
 }

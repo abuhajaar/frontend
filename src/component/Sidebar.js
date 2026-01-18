@@ -18,7 +18,7 @@ import {
   X,
   LayoutDashboard,
   BookSearch,
-  BookMarked,
+  BookCheck,
   Shield,
   HelpCircle,
   Settings,
@@ -153,7 +153,7 @@ export default function Sidebar() {
   return (
     <div
       ref={sidebarRef}
-      className="fixed left-0 top-0 h-screen bg-white border-r border-gray-200 flex flex-col z-20"
+      className="fixed left-0 top-0 h-screen bg-[#FFFEF8] border-r-[3px] border-black flex flex-col z-20"
       style={{
         overflow: 'hidden',
         width: isOpen ? '256px' : '72px',
@@ -191,8 +191,8 @@ export default function Sidebar() {
         {/* Toggle Button */}
         <button
           onClick={toggleSidebar}
-          className={`h-[41px] rounded-lg flex items-center transition-colors w-full ${isOpen ? 'px-3 gap-3' : 'justify-center'
-            } text-[#717182] hover:bg-gray-50`}
+          className={`h-[41px] rounded-xl flex items-center transition-all w-full font-bold ${isOpen ? 'px-3 gap-3' : 'justify-center'
+            } text-black hover:bg-white`}
         >
           {isOpen ? (
             <X size={18} className="flex-shrink-0" />
@@ -216,10 +216,10 @@ export default function Sidebar() {
           <Tooltip text="Overview" disabled={isOpen}>
             <button
               onClick={() => router.push('/dashboard')}
-              className={`h-[41px] rounded-lg flex items-center transition-colors w-full ${isOpen ? 'px-3 gap-3' : 'justify-center'
+              className={`h-[41px] rounded-xl flex items-center transition-all w-full font-bold ${isOpen ? 'px-3 gap-3' : 'justify-center'
                 } ${pathname === '/dashboard'
-                  ? 'bg-gray-100 text-neutral-950'
-                  : 'text-[#717182] hover:bg-gray-50'
+                  ? 'bg-black text-white'
+                  : 'text-black hover:bg-white'
                 }`}
             >
               <LayoutDashboard size={18} className="flex-shrink-0" />
@@ -238,10 +238,10 @@ export default function Sidebar() {
           <Tooltip text="Spaces" disabled={isOpen}>
             <button
               onClick={() => router.push('/dashboard/booking')}
-              className={`h-[41px] rounded-lg flex items-center transition-colors w-full ${isOpen ? 'px-3 gap-3' : 'justify-center'
+              className={`h-[41px] rounded-xl flex items-center transition-all w-full font-bold ${isOpen ? 'px-3 gap-3' : 'justify-center'
                 } ${pathname === '/dashboard/booking'
-                  ? 'bg-gray-100 text-neutral-950'
-                  : 'text-[#717182] hover:bg-gray-50'
+                  ? 'bg-black text-white'
+                  : 'text-black hover:bg-white'
                 }`}
             >
               <BookSearch size={18} className="flex-shrink-0" />
@@ -260,17 +260,13 @@ export default function Sidebar() {
           <Tooltip text="Bookings" disabled={isOpen}>
             <button
               onClick={() => router.push('/dashboard/myBooking')}
-              className={`h-[41px] rounded-lg flex items-center transition-colors w-full ${isOpen ? 'px-3 gap-3' : 'justify-center'
+              className={`h-[41px] rounded-xl flex items-center transition-all w-full font-bold ${isOpen ? 'px-3 gap-3' : 'justify-center'
                 } ${pathname === '/dashboard/myBooking'
-                  ? 'bg-gray-100 text-neutral-950'
-                  : 'text-[#717182] hover:bg-gray-50'
+                  ? 'bg-black text-white'
+                  : 'text-black hover:bg-white'
                 }`}
             >
-              <img
-                src="/assets/60e4e55d9bb30bcf44214b60c31e3794ae6f3c4a.svg"
-                alt=""
-                className="w-[15px] h-[15px]"
-              />
+              <BookCheck size={18} className="flex-shrink-0" strokeWidth={2.5} />
               {isOpen && (
                 <span
                   ref={el => navigationLabelsRef.current[3] = el}
@@ -285,7 +281,7 @@ export default function Sidebar() {
         </div>
 
         {/* Divider */}
-        <div className="h-px bg-gray-200" />
+        <div className="h-[2px] bg-black/10" />
 
         {/* Settings Navigation */}
         <div className="flex flex-col gap-1">
@@ -294,10 +290,10 @@ export default function Sidebar() {
             <Tooltip text="Admin Dashboard" disabled={isOpen}>
               <button
                 onClick={() => router.push('/dashboard/admin')}
-                className={`h-[41px] rounded-lg flex items-center transition-colors w-full ${isOpen ? 'px-3 gap-3' : 'justify-center'
+                className={`h-[41px] rounded-xl flex items-center transition-all w-full font-bold ${isOpen ? 'px-3 gap-3' : 'justify-center'
                   } ${pathname.startsWith('/dashboard/admin')
-                    ? 'bg-gray-100 text-neutral-950'
-                    : 'text-[#717182] hover:bg-gray-50'
+                    ? 'bg-black text-white'
+                    : 'text-black hover:bg-white'
                   }`}
               >
                 <Shield size={18} className="flex-shrink-0" />
@@ -319,10 +315,10 @@ export default function Sidebar() {
             <Tooltip text="Manager Dashboard" disabled={isOpen}>
               <button
                 onClick={() => router.push('/dashboard/manager')}
-                className={`h-[41px] rounded-lg flex items-center transition-colors w-full ${isOpen ? 'px-3 gap-3' : 'justify-center'
+                className={`h-[41px] rounded-xl flex items-center transition-all w-full font-bold ${isOpen ? 'px-3 gap-3' : 'justify-center'
                   } ${pathname.startsWith('/dashboard/manager')
-                    ? 'bg-gray-100 text-neutral-950'
-                    : 'text-[#717182] hover:bg-gray-50'
+                    ? 'bg-black text-white'
+                    : 'text-black hover:bg-white'
                   }`}
               >
                 <Shield size={18} className="flex-shrink-0" />
@@ -341,7 +337,11 @@ export default function Sidebar() {
 
           <Tooltip text="Support" disabled={isOpen}>
             <button
-              className={`h-[41px] rounded-lg flex items-center text-[#717182] hover:bg-gray-50 transition-colors w-full ${isOpen ? 'px-3 gap-3' : 'justify-center'
+              onClick={() => router.push('/dashboard/support')}
+              className={`h-[41px] rounded-xl flex items-center transition-all w-full font-bold ${isOpen ? 'px-3 gap-3' : 'justify-center'
+                } ${pathname.startsWith('/dashboard/support')
+                  ? 'bg-black text-white'
+                  : 'text-black hover:bg-white'
                 }`}
             >
               <HelpCircle size={18} className="flex-shrink-0" />
@@ -359,7 +359,7 @@ export default function Sidebar() {
 
           <Tooltip text="Settings" disabled={isOpen}>
             <button
-              className={`h-[41px] rounded-lg flex items-center text-[#717182] hover:bg-gray-50 transition-colors w-full ${isOpen ? 'px-3 gap-3' : 'justify-center'
+              className={`h-[41px] rounded-xl flex items-center transition-all w-full font-bold text-black hover:bg-white ${isOpen ? 'px-3 gap-3' : 'justify-center'
                 }`}
             >
               <Settings size={18} className="flex-shrink-0" />
@@ -378,7 +378,7 @@ export default function Sidebar() {
       </div>
 
       {/* User Profile & Sign Out */}
-      <div className="border-t border-gray-200 px-4 py-4 flex flex-col gap-3">
+      <div className="border-t-[2px] border-black/10 px-4 py-4 flex flex-col gap-3">
         {/* Full Profile - Shown when open */}
         <div
           ref={userProfileRef}
@@ -386,7 +386,10 @@ export default function Sidebar() {
           style={{ display: isOpen ? 'flex' : 'none' }}
         >
           {/* User Profile */}
-          <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-gray-50 transition-colors">
+          <button
+            onClick={() => router.push('/dashboard/profile')}
+            className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-gray-50 transition-colors w-full text-left"
+          >
             <div className="w-10 h-10 bg-neutral-900 rounded-full flex items-center justify-center text-white shrink-0">
               {currentUser?.avatar ? (
                 <img
@@ -406,7 +409,7 @@ export default function Sidebar() {
                 {currentUser?.email || 'user@company.com'}
               </p>
             </div>
-          </div>
+          </button>
           {/* Sign Out Button */}
           <LogoutButton className="h-10 rounded-xl flex items-center gap-3 px-3 text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all font-medium">
             <LogOut size={18} className="flex-shrink-0" />
@@ -420,7 +423,10 @@ export default function Sidebar() {
         <div style={{ display: !isOpen ? 'flex' : 'none' }} className="flex flex-col gap-3">
           {/* User Avatar Only */}
           <Tooltip text={getUserDisplayName(currentUser)} disabled={false}>
-            <div className="w-10 h-10 bg-neutral-900 rounded-full flex items-center justify-center text-white mx-auto cursor-pointer hover:ring-2 hover:ring-gray-200 transition-all">
+            <button
+              onClick={() => router.push('/dashboard/profile')}
+              className="w-10 h-10 bg-neutral-900 rounded-full flex items-center justify-center text-white mx-auto cursor-pointer hover:ring-2 hover:ring-gray-200 transition-all"
+            >
               {currentUser?.avatar ? (
                 <img
                   src={currentUser.avatar}
@@ -430,7 +436,7 @@ export default function Sidebar() {
               ) : (
                 <span className="text-sm font-bold">{getUserInitials(currentUser)}</span>
               )}
-            </div>
+            </button>
           </Tooltip>
           {/* Sign Out Icon Only */}
           <Tooltip text="Sign Out" disabled={false}>

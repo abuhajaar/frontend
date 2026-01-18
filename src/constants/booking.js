@@ -5,7 +5,7 @@
  * http://192.168.1.101:5000/api/health
  */
 
-export const API_BASE_URL = 'https://backend-openbo.devmosel.com/api/health';
+export const API_BASE_URL = 'http://192.168.1.101:5000/api/health';
 
 export const TIME_SLOTS = [
   '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',

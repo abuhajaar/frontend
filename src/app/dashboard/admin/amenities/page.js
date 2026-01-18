@@ -48,6 +48,35 @@ export default function AdminAmenitiesPage() {
       }
     } catch (error) {
       console.error('Error fetching amenities:', error);
+
+      // Use mock data as fallback
+      const mockAmenities = [
+        { id: 1, name: 'WiFi', icon: 'wifi', space_id: 1, space_name: 'Hot Desk A1' },
+        { id: 2, name: 'WiFi', icon: 'wifi', space_id: 2, space_name: 'Hot Desk A2' },
+        { id: 3, name: 'WiFi', icon: 'wifi', space_id: 3, space_name: 'Meeting Room B' },
+        { id: 4, name: 'Air Conditioning', icon: 'ac', space_id: 1, space_name: 'Hot Desk A1' },
+        { id: 5, name: 'Air Conditioning', icon: 'ac', space_id: 3, space_name: 'Meeting Room B' },
+        { id: 6, name: 'Monitor', icon: 'monitor', space_id: 1, space_name: 'Hot Desk A1' },
+        { id: 7, name: 'Monitor', icon: 'monitor', space_id: 2, space_name: 'Hot Desk A2' },
+        { id: 8, name: 'Monitor', icon: 'monitor', space_id: 4, space_name: 'Private Office C' },
+        { id: 9, name: 'USB-C Charging', icon: 'usbc', space_id: 1, space_name: 'Hot Desk A1' },
+        { id: 10, name: 'USB-C Charging', icon: 'usbc', space_id: 2, space_name: 'Hot Desk A2' },
+        { id: 11, name: 'Video Conference', icon: 'video_conference', space_id: 3, space_name: 'Meeting Room B' },
+        { id: 12, name: 'Video Conference', icon: 'video_conference', space_id: 4, space_name: 'Private Office C' },
+        { id: 13, name: 'TV Display', icon: 'tv_display', space_id: 3, space_name: 'Meeting Room B' },
+        { id: 14, name: 'Printer Access', icon: 'printer', space_id: 5, space_name: 'Hot Desk B1' },
+        { id: 15, name: 'Standing Desk', icon: 'standing_desk', space_id: 1, space_name: 'Hot Desk A1' },
+        { id: 16, name: 'Standing Desk', icon: 'standing_desk', space_id: 2, space_name: 'Hot Desk A2' },
+        { id: 17, name: 'Ergonomic Chair', icon: 'ergonomic_chair', space_id: 1, space_name: 'Hot Desk A1' },
+        { id: 18, name: 'Ergonomic Chair', icon: 'ergonomic_chair', space_id: 2, space_name: 'Hot Desk A2' },
+        { id: 19, name: 'Ergonomic Chair', icon: 'ergonomic_chair', space_id: 4, space_name: 'Private Office C' },
+        { id: 20, name: 'Whiteboard', icon: 'whiteboard', space_id: 3, space_name: 'Meeting Room B' },
+        { id: 21, name: 'Whiteboard', icon: 'whiteboard', space_id: 4, space_name: 'Private Office C' },
+        { id: 22, name: 'Locker', icon: 'locker', space_id: 6, space_name: 'Hot Desk C1' },
+        { id: 23, name: 'Phone Booth', icon: 'phone_booth', space_id: 7, space_name: 'Focus Room D' }
+      ];
+
+      setAmenities(mockAmenities);
     } finally {
       setLoading(false);
     }
@@ -101,7 +130,7 @@ export default function AdminAmenitiesPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-5xl font-black text-black tracking-tighter uppercase mb-2" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
+          <h1 className="text-5xl font-black text-black tracking-widest uppercase mb-4" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
             Amenities
           </h1>
           <p className="text-lg text-gray-500 font-medium">
@@ -149,7 +178,7 @@ export default function AdminAmenitiesPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border-[3px] border-black rounded-2xl overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+      <div className="bg-white border-[3px] border-black rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-black text-white">

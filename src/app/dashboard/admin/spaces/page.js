@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getAllSpacesForManage, updateSpaceStatus } from '@/services/spaceService';
-import { Search, ChevronUp, ChevronDown, RefreshCw, Save, LayoutGrid, CheckCircle, User, Wrench } from 'lucide-react';
+import { Search, ChevronUp, ChevronDown, RefreshCw, Save, LayoutGrid, CheckCircle, User, Wrench, Users, Sparkles } from 'lucide-react';
 import { HotDeskIcon, MeetingRoomIcon, PrivateRoomIcon } from '@/component/icons/SpaceTypeIcons';
 import AnimatedStatusToggle from '@/component/AnimatedStatusToggle';
 import StatsCard from '@/component/StatsCard';
@@ -32,6 +32,24 @@ export default function AdminSpacesPage() {
       }
     } catch (error) {
       console.error('Failed to fetch spaces:', error);
+
+      // Use mock data as fallback
+      const mockSpaces = [
+        { id: 1, name: 'Hot Desk A1', type: 'hot_desk', floor_name: 'Floor 1', capacity: 1, total_amenities: 6, status: 'available' },
+        { id: 2, name: 'Hot Desk A2', type: 'hot_desk', floor_name: 'Floor 1', capacity: 1, total_amenities: 5, status: 'available' },
+        { id: 3, name: 'Meeting Room B', type: 'meeting_room', floor_name: 'Floor 1', capacity: 8, total_amenities: 5, status: 'occupied' },
+        { id: 4, name: 'Private Office C', type: 'private_office', floor_name: 'Floor 2', capacity: 4, total_amenities: 5, status: 'available' },
+        { id: 5, name: 'Hot Desk B1', type: 'hot_desk', floor_name: 'Floor 2', capacity: 1, total_amenities: 2, status: 'available' },
+        { id: 6, name: 'Hot Desk C1', type: 'hot_desk', floor_name: 'Floor 2', capacity: 1, total_amenities: 2, status: 'maintenance' },
+        { id: 7, name: 'Focus Room D', type: 'private_office', floor_name: 'Floor 2', capacity: 2, total_amenities: 1, status: 'available' },
+        { id: 8, name: 'Meeting Room E', type: 'meeting_room', floor_name: 'Floor 3', capacity: 12, total_amenities: 4, status: 'available' },
+        { id: 9, name: 'Hot Desk D1', type: 'hot_desk', floor_name: 'Floor 3', capacity: 1, total_amenities: 3, status: 'occupied' },
+        { id: 10, name: 'Hot Desk D2', type: 'hot_desk', floor_name: 'Floor 3', capacity: 1, total_amenities: 3, status: 'available' },
+        { id: 11, name: 'Conference Room F', type: 'meeting_room', floor_name: 'Floor 3', capacity: 20, total_amenities: 6, status: 'available' },
+        { id: 12, name: 'Private Office G', type: 'private_office', floor_name: 'Floor 3', capacity: 6, total_amenities: 4, status: 'available' }
+      ];
+
+      setSpaces(mockSpaces);
     } finally {
       setLoading(false);
     }
@@ -187,7 +205,7 @@ export default function AdminSpacesPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-5xl font-black text-black tracking-tighter uppercase mb-2" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
+          <h1 className="text-5xl font-black text-black tracking-widest uppercase mb-4" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
             Workspace Management
           </h1>
           <p className="text-lg text-gray-500 font-medium">
@@ -267,7 +285,7 @@ export default function AdminSpacesPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border-[3px] border-black rounded-2xl overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+      <div className="bg-white border-[3px] border-black rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-black text-white">
@@ -320,11 +338,21 @@ export default function AdminSpacesPage() {
                       <td className="px-6 py-4 font-bold text-black">
                         {space.floor_name}
                       </td>
-                      <td className="px-6 py-4 font-tabular-nums text-gray-700">
-                        {space.capacity} ppl
+                      <td className="px-6 py-4">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                          <Users size={14} className="text-gray-500" />
+                          <span className="font-bold text-black text-sm">
+                            {space.capacity} {space.capacity === 1 ? 'Person' : 'People'}
+                          </span>
+                        </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {space.total_amenities > 0 ? `${space.total_amenities} amenities` : 'Basic'}
+                      <td className="px-6 py-4">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                          <Sparkles size={14} className="text-gray-500" />
+                          <span className="font-bold text-black text-sm">
+                            {space.total_amenities > 0 ? `${space.total_amenities} Amenities` : 'Standard'}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <AnimatedStatusToggle

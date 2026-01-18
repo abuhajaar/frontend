@@ -6,7 +6,7 @@ export default function AdminOverviewPage() {
     <div className="flex flex-col gap-12">
       {/* Header */}
       <div>
-        <h1 className="text-5xl md:text-7xl font-black text-black tracking-tighter uppercase mb-4" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
+        <h1 className="text-5xl md:text-7xl font-black text-black tracking-widest uppercase mb-4" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
           Admin Overview
         </h1>
         <p className="text-xl text-gray-500 font-medium max-w-2xl">
@@ -53,7 +53,7 @@ export default function AdminOverviewPage() {
           <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mb-2">
             <Users size={24} strokeWidth={2.5} />
           </div>
-          <h3 className="text-2xl font-black uppercase">Manage Users</h3>
+          <h3 className="text-2xl font-black text-black uppercase">Manage Users</h3>
           <p className="text-gray-500 font-medium mb-4">Add, remove, or update user permissions and roles.</p>
           <button className="w-full py-3 bg-gray-100 hover:bg-black hover:text-white border-2 border-black rounded-xl font-bold transition-all">
             Go to Users
@@ -65,7 +65,7 @@ export default function AdminOverviewPage() {
           <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mb-2">
             <Settings size={24} strokeWidth={2.5} />
           </div>
-          <h3 className="text-2xl font-black uppercase">Configure Spaces</h3>
+          <h3 className="text-2xl font-black text-black uppercase">Configure Spaces</h3>
           <p className="text-gray-500 font-medium mb-4">Edit floor plans, amenities, and seating arrangements.</p>
           <button className="w-full py-3 bg-gray-100 hover:bg-black hover:text-white border-2 border-black rounded-xl font-bold transition-all">
             Manage Spaces
@@ -77,7 +77,7 @@ export default function AdminOverviewPage() {
           <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mb-2">
             <Plus size={24} strokeWidth={2.5} />
           </div>
-          <h3 className="text-2xl font-black uppercase">Quick Add</h3>
+          <h3 className="text-2xl font-black text-black uppercase">Quick Add</h3>
           <p className="text-gray-700 font-medium mb-4">Fast track new resource creation.</p>
           <div className="flex gap-2 w-full">
             <button className="flex-1 py-3 bg-white hover:bg-black hover:text-white border-2 border-black rounded-xl font-bold transition-all text-sm">

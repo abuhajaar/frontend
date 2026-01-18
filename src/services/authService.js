@@ -25,19 +25,19 @@ export const login = async (username, password) => {
     }
 
     const data = await response.json();
-    
+
     // Extract token and user data from response
     const token = data.data?.access_token || data.data?.token || data.access_token || data.token;
     const userData = data.data?.user || data.user;
-    
+
     if (!token) {
       throw new Error('No token received from server');
     }
-    
+
     // Store token and user data in cookies/localStorage
     const { auth } = await import('@/lib/auth');
     auth.login(token, userData);
-    
+
     return data;
   } catch (error) {
     console.error('Login error:', error);
@@ -54,22 +54,22 @@ export const logout = async () => {
     // Get auth token
     const { auth } = await import('@/lib/auth');
     const token = auth.getToken();
-    
+
     const headers = { ...API_CONFIG.HEADERS };
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    
+
     // Try to call logout API with timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-    
+
     const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.LOGOUT}`, {
       method: 'POST',
       headers,
       signal: controller.signal,
     });
-    
+
     clearTimeout(timeoutId);
 
     if (!response.ok) {

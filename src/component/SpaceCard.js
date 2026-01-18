@@ -85,7 +85,7 @@ export default function SpaceCard({ space, onBook }) {
 
           {/* Name and Type */}
           <div className="flex-1 min-w-0 pt-1">
-            <h3 className="text-xl font-black text-black tracking-tight mb-1 truncate uppercase" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
+            <h3 className="text-xl font-black text-black tracking-wide mb-1 truncate uppercase" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
               {space.name}
             </h3>
             <p className="text-sm font-bold text-neutral-600 uppercase tracking-wide">

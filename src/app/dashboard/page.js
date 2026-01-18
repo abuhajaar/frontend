@@ -81,44 +81,6 @@ export default function DashboardPage() {
           {/* Left Column: Stats & Schedule (8/12) */}
           <div className="xl:col-span-8 flex flex-col gap-8">
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {loading ? (
-                [1, 2, 3, 4].map(i => <div key={i} className="h-40 bg-white rounded-3xl animate-pulse border-2 border-black" />)
-              ) : (
-                <>
-                  <StatsCard
-                    icon={<Activity size={24} strokeWidth={3} />}
-                    label="Today by Numbers"
-                    value={stats?.today_bookings || 0}
-                    description="Active sessions today"
-                    shadowColor="#FFD028" // Yellowish
-                  />
-                  <StatsCard
-                    icon={<Calendar size={24} strokeWidth={3} />}
-                    label="Upcoming Plan"
-                    value={stats?.upcoming_bookings || 0}
-                    description="Future bookings scheduled"
-                    shadowColor="#3B82F6" // Blue
-                  />
-                  <StatsCard
-                    icon={<Clock size={24} strokeWidth={3} />}
-                    label="Weekly Focus"
-                    value={stats?.weekly_booking_hours.toFixed(1)}
-                    description="Hours dedicated this week"
-                    shadowColor="#A855F7" // Purple
-                  />
-                  <StatsCard
-                    icon={<MapPin size={24} strokeWidth={3} />}
-                    label="Go-To Space"
-                    value={stats?.favorite_space ? stats.favorite_space.space_name : 'Explore'}
-                    description={stats?.favorite_space ? `Most visited (${stats.favorite_space.booking_count})` : 'Find your favorite spot'}
-                    shadowColor="#F97316" // Orange
-                  />
-                </>
-              )}
-            </div>
-
             {/* Work Mode Selector */}
             <div className="bg-white rounded-[32px] p-8 border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden">
               <div className="flex justify-between items-center mb-8 relative z-10">
@@ -165,6 +127,30 @@ export default function DashboardPage() {
                   );
                 })}
               </div>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              {loading ? (
+                [1, 2].map(i => <div key={i} className="h-40 bg-white rounded-3xl animate-pulse border-2 border-black" />)
+              ) : (
+                <>
+                  <StatsCard
+                    icon={<Clock size={24} strokeWidth={3} />}
+                    label="Weekly Focus"
+                    value={stats?.weekly_booking_hours.toFixed(1)}
+                    description="Hours dedicated this week"
+                    shadowColor="#A855F7" // Purple
+                  />
+                  <StatsCard
+                    icon={<MapPin size={24} strokeWidth={3} />}
+                    label="Go-To Space"
+                    value={stats?.favorite_space ? stats.favorite_space.space_name : 'Explore'}
+                    description={stats?.favorite_space ? `Most visited (${stats.favorite_space.booking_count})` : 'Find your favorite spot'}
+                    shadowColor="#F97316" // Orange
+                  />
+                </>
+              )}
             </div>
           </div>
 
