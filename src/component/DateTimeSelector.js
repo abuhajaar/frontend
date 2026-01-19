@@ -46,9 +46,9 @@ export default function DateTimeSelector({
   };
 
   return (
-    <div className="bg-white border-[3px] border-black rounded-[32px] p-8 mb-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-visible">
+    <div className="bg-white border-[3px] border-black rounded-[32px] p-8 mb-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-visible z-50">
 
-      <div className="relative z-10">
+      <div className="relative">
         <div className="mb-8">
           <h3 className="text-2xl font-black text-black tracking-tight mb-2 uppercase" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
             Select Date & Time
@@ -77,7 +77,7 @@ export default function DateTimeSelector({
               </button>
 
               {showCalendar && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 z-[9999]">
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 z-[100]">
                   <CustomCalendar
                     selectedDate={selectedDate}
                     onDateSelect={(date) => {

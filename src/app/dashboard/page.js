@@ -32,6 +32,12 @@ export default function DashboardPage() {
     { id: 3, time: '04:00 PM', title: 'Client Call', space: 'Conference Room', type: 'meeting' },
   ];
 
+  const announcements = [
+    { id: 1, title: 'New Meeting Rooms Available', content: 'Check out our newly renovated conference rooms on Floor 3!', date: '2 hours ago', priority: 'high' },
+    { id: 2, title: 'Office Closure - Public Holiday', content: 'The office will be closed this Friday for the public holiday.', date: '1 day ago', priority: 'medium' },
+    { id: 3, title: 'Updated Booking Policy', content: 'Please note the new 2-hour minimum booking requirement for all spaces.', date: '3 days ago', priority: 'low' },
+  ];
+
   const workModes = [
     { id: 'focus', title: 'Deep Focus', desc: 'Pomodoro Timer & Zen Mode', icon: '⏱️', color: 'bg-black text-white border-black' },
     { id: 'collab', title: 'Team Sync', desc: 'Meeting rooms with TV', icon: '👥', color: 'bg-blue-50 text-blue-600 border-blue-100 group-hover:border-blue-200' },
@@ -65,11 +71,19 @@ export default function DashboardPage() {
 
           <div className="flex gap-3">
             <button
-              onClick={() => router.push('/dashboard/booking')}
-              className="group relative px-6 py-3 bg-white text-black rounded-xl font-bold text-base overflow-hidden transition-all hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none border-2 border-black"
+              ref={pomodoroButtonRef}
+              onClick={(e) => {
+                const buttonElement = e.currentTarget;
+                const rect = buttonElement.getBoundingClientRect();
+                const xPercent = ((rect.left + rect.width / 2) / window.innerWidth) * 100;
+                const yPercent = ((rect.top + rect.height / 2) / window.innerHeight) * 100;
+                setPomodoroPosition({ x: xPercent, y: yPercent });
+                setShowPomodoro(true);
+              }}
+              className="group relative px-6 py-3 bg-black text-white rounded-xl font-bold text-base overflow-hidden transition-all hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none border-2 border-black"
             >
               <span className="relative z-10 flex items-center gap-2">
-                Start a New Booking <span className="group-hover:translate-x-1 transition-transform">→</span>
+                ⏱️ Pomodoro Timer
               </span>
             </button>
           </div>
@@ -81,51 +95,43 @@ export default function DashboardPage() {
           {/* Left Column: Stats & Schedule (8/12) */}
           <div className="xl:col-span-8 flex flex-col gap-8">
 
-            {/* Work Mode Selector */}
-            <div className="bg-white rounded-[32px] p-8 border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden">
-              <div className="flex justify-between items-center mb-8 relative z-10">
-                <div>
-                  <h2 className="text-3xl font-black text-black uppercase tracking-tight">Pick Your Vibe</h2>
-                  <p className="text-gray-500 font-medium mt-1">What's on the agenda today?</p>
-                </div>
-                <button onClick={() => router.push('/dashboard/booking')} className="px-4 py-2 bg-gray-100 rounded-xl border-2 border-black font-bold text-sm hover:bg-yellow-300 transition-colors">View Map</button>
+            {/* Announcements */}
+            <div className="bg-yellow-300 rounded-3xl p-8 border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden">
+              <div className="mb-6 relative z-10">
+                <h2 className="text-2xl font-black text-black tracking-tight">Announcements</h2>
+                <p className="text-black/60 font-medium text-sm mt-1">Stay updated with the latest news</p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
-                {workModes.map(mode => {
-                  const isFocus = mode.id === 'focus';
-                  return (
-                    <button
-                      key={mode.id}
-                      ref={isFocus ? pomodoroButtonRef : null}
-                      onClick={(e) => {
-                        if (isFocus) {
-                          const buttonElement = e.currentTarget;
-                          const rect = buttonElement.getBoundingClientRect();
-                          const xPercent = ((rect.left + rect.width / 2) / window.innerWidth) * 100;
-                          const yPercent = ((rect.top + rect.height / 2) / window.innerHeight) * 100;
-                          setPomodoroPosition({ x: xPercent, y: yPercent });
-                          setShowPomodoro(true);
-                        } else {
-                          router.push(`/dashboard/booking?mode=${mode.id}`);
-                        }
-                      }}
-                      className={`flex flex-col p-5 rounded-2xl border-[3px] border-black transition-all duration-300 group hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-left
-                        ${isFocus ? 'bg-black text-white' : 'bg-white text-black'}
-                      `}
+              <div className="space-y-3 relative z-10">
+                {announcements.length > 0 ? (
+                  announcements.map((announcement, idx) => (
+                    <div 
+                      key={announcement.id} 
+                      className="bg-white rounded-xl p-4 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all cursor-pointer group"
                     >
-                      <div className={`w-12 h-12 rounded-full border-2 border-black flex items-center justify-center text-2xl mb-4 
-                        ${isFocus ? 'bg-white text-black' :
-                          mode.id === 'collab' ? 'bg-blue-100' :
-                            mode.id === 'creative' ? 'bg-amber-100' : 'bg-rose-100'}
-                      `}>
-                        {mode.icon}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            {announcement.priority === 'high' && (
+                              <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold uppercase rounded border border-black">Urgent</span>
+                            )}
+                            {announcement.priority === 'medium' && (
+                              <span className="px-2 py-0.5 bg-blue-500 text-white text-[10px] font-bold uppercase rounded border border-black">Info</span>
+                            )}
+                            <span className="text-[11px] font-semibold text-gray-400">{announcement.date}</span>
+                          </div>
+                          <h3 className="font-bold text-base text-black mb-1 group-hover:underline">{announcement.title}</h3>
+                          <p className="text-sm font-medium text-gray-600 leading-relaxed">{announcement.content}</p>
+                        </div>
+                        <span className="text-xl opacity-70">{idx === 0 ? '📢' : idx === 1 ? '📅' : '📋'}</span>
                       </div>
-                      <span className={`font-bold text-lg mb-1 ${isFocus ? 'text-white' : 'text-black'}`}>{mode.title}</span>
-                      <span className={`text-xs font-bold uppercase tracking-wider ${isFocus ? 'text-gray-400' : 'text-gray-500'}`}>{mode.desc}</span>
-                    </button>
-                  );
-                })}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-black/50 font-medium">
+                    No announcements at the moment
+                  </div>
+                )}
               </div>
             </div>
 
@@ -152,13 +158,25 @@ export default function DashboardPage() {
                 </>
               )}
             </div>
+
+            {/* Mini-Promo Canvas - Artsy Style */}
+            <div className="bg-[#1D1D1F] rounded-[24px] p-6 text-white relative overflow-hidden min-h-[200px] flex flex-col justify-end group cursor-pointer border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]" onClick={() => router.push('/dashboard/booking')}>
+              <img src="https://images.unsplash.com/photo-1519752594763-2633d8d4ea29?auto=format&fit=crop&q=80&w=800" className="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-overlay transition-transform duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="Workspace" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+
+              <div className="relative z-20 transform group-hover:translate-x-1 transition-transform">
+                <span className="inline-block px-2 py-1 bg-yellow-400 text-black text-xs font-black uppercase tracking-wider mb-2 border border-black transform -rotate-2">Featured Space</span>
+                <h3 className="text-3xl font-black mb-1">THE STUDIO</h3>
+                <p className="text-gray-300 text-sm font-medium">For the makers & creators.</p>
+              </div>
+            </div>
           </div>
 
           {/* Right Column: Timeline & Activity (4/12) */}
-          <div className="xl:col-span-4 flex flex-col gap-8 h-full">
+          <div className="xl:col-span-4 flex flex-col">
 
             {/* Today's Schedule - Notebook Style */}
-            <div className="bg-[#FFFDF5] rounded-[24px] border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] h-full overflow-hidden flex flex-col relative px-8 py-10"
+            <div className="bg-[#FFFDF5] rounded-[24px] border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex-1 overflow-hidden flex flex-col relative px-8 py-10"
               style={{
                 backgroundImage: `linear-gradient(#E5E7EB 1px, transparent 1px)`,
                 backgroundSize: '100% 32px',
@@ -210,7 +228,7 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div className="flex-1 flex flex-col items-center justify-center text-center mt-10">
-                    <div className="w-24 h-24 border-[3px] border-black rounded-full flex items-center justify-center mb-4 text-4xl bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">✨</div>
+                    <div className="w-24 h-24 border-[3px] border-black rounded-full flex items-center justify-center mb-4 text-4xl bg-white ]">✨</div>
                     <p className="font-bold text-xl text-black">Nothing scheduled!</p>
                     <p className="text-base text-gray-500 font-medium">Time to create something new.</p>
                     <button onClick={() => router.push('/dashboard/booking')} className="mt-6 px-6 py-2 bg-blue-500 text-white font-bold rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all">
@@ -218,18 +236,6 @@ export default function DashboardPage() {
                     </button>
                   </div>
                 ))}
-              </div>
-            </div>
-
-            {/* Mini-Promo Canvas - Artsy Style */}
-            <div className="bg-[#1D1D1F] rounded-[24px] p-6 text-white relative overflow-hidden min-h-[200px] flex flex-col justify-end group cursor-pointer border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]" onClick={() => router.push('/dashboard/booking')}>
-              <img src="https://images.unsplash.com/photo-1519752594763-2633d8d4ea29?auto=format&fit=crop&q=80&w=800" className="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-overlay transition-transform duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="Workspace" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-
-              <div className="relative z-20 transform group-hover:translate-x-1 transition-transform">
-                <span className="inline-block px-2 py-1 bg-yellow-400 text-black text-xs font-black uppercase tracking-wider mb-2 border border-black transform -rotate-2">Featured Space</span>
-                <h3 className="text-3xl font-black mb-1">THE STUDIO</h3>
-                <p className="text-gray-300 text-sm font-medium">For the makers & creators.</p>
               </div>
             </div>
 

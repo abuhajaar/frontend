@@ -376,7 +376,7 @@ export default function BookingPage() {
         {/* Conditional rendering based on view mode */}
         {viewMode === 'floorplan' ? (
           hasSearched ? (
-            <div className="bg-[#FFFEF8] rounded-[24px] overflow-hidden relative pl-36">
+            <div className="bg-[#FFFEF8] rounded-[24px] overflow-hidden relative pl-36 z-10">
               <FloorPlan
                 occupiedDesks={occupiedDesks}
                 onDeskSelect={handleDeskSelect}
@@ -401,7 +401,7 @@ export default function BookingPage() {
             <DefaultMsg />
           )
         ) : (
-          <div className="overflow-visible pb-4">
+          <div className="overflow-visible pb-4 relative z-10">
             <SpacesGrid
               spaces={spaces}
               filteredSpaces={filteredSpaces}
