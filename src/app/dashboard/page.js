@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import StatsCard from '@/component/StatsCard';
 import { useAuth } from '@/lib/useAuth';
 import { useCurrentUser, useDashboardStats } from '@/hooks';
+import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { useToast } from '@/contexts/ToastContext';
 import { getUserDisplayName } from '@/utils/user';
 import { useRouter } from 'next/navigation';
@@ -22,28 +23,34 @@ export default function DashboardPage() {
   const [showPomodoro, setShowPomodoro] = useState(false);
   const [pomodoroPosition, setPomodoroPosition] = useState({ x: 50, y: 50 });
 
-  const { data: response, isLoading: loading, error } = useDashboardStats(currentUser?.id);
+  const { data: response, isLoading: loading, error } = useDashboardStats();
   const stats = response?.data;
 
-  // Mock data for the visual demo (replace with real data hook later)
-  const scheduleItems = [
-    { id: 1, time: '10:00 AM', title: 'Team Sync', space: 'Meeting Room A', type: 'meeting' },
-    { id: 2, time: '01:30 PM', title: 'Focus Time', space: 'Booth 4', type: 'focus' },
-    { id: 3, time: '04:00 PM', title: 'Client Call', space: 'Conference Room', type: 'meeting' },
-  ];
+  // Get real data from API with WebSocket for announcements
+  const { announcements, isConnected: wsConnected, hasNewAnnouncement } = useAnnouncements(stats?.announcements || []);
+  const todoTasks = stats?.todo_list?.tasks || [];
+  const incompleteTasks = todoTasks.filter(task => !task.is_done);
 
-  const announcements = [
-    { id: 1, title: 'New Meeting Rooms Available', content: 'Check out our newly renovated conference rooms on Floor 3!', date: '2 hours ago', priority: 'high' },
-    { id: 2, title: 'Office Closure - Public Holiday', content: 'The office will be closed this Friday for the public holiday.', date: '1 day ago', priority: 'medium' },
-    { id: 3, title: 'Updated Booking Policy', content: 'Please note the new 2-hour minimum booking requirement for all spaces.', date: '3 days ago', priority: 'low' },
-  ];
+  // Helper function to format relative time
+  const getRelativeTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    return `${diffDays} days ago`;
+  };
 
-  const workModes = [
-    { id: 'focus', title: 'Deep Focus', desc: 'Pomodoro Timer & Zen Mode', icon: '⏱️', color: 'bg-black text-white border-black' },
-    { id: 'collab', title: 'Team Sync', desc: 'Meeting rooms with TV', icon: '👥', color: 'bg-blue-50 text-blue-600 border-blue-100 group-hover:border-blue-200' },
-    { id: 'creative', title: 'Brainstorm', desc: 'Whiteboards & open space', icon: '🎨', color: 'bg-amber-50 text-amber-600 border-amber-100 group-hover:border-amber-200' },
-    { id: 'social', title: 'Socialize', desc: 'Coffee bar & lounge', icon: '☕️', color: 'bg-rose-50 text-rose-600 border-rose-100 group-hover:border-rose-200' },
-  ];
+  // Helper function to get announcement priority
+  const getAnnouncementPriority = (index) => {
+    if (index === 0) return 'high';
+    if (index <= 2) return 'medium';
+    return 'low';
+  };
 
   if (error) {
     showToastMessage({
@@ -98,35 +105,49 @@ export default function DashboardPage() {
             {/* Announcements */}
             <div className="bg-yellow-300 rounded-3xl p-8 border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden">
               <div className="mb-6 relative z-10">
-                <h2 className="text-2xl font-black text-black tracking-tight">Announcements</h2>
-                <p className="text-black/60 font-medium text-sm mt-1">Stay updated with the latest news</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-black text-black tracking-tight">Announcements</h2>
+                    <p className="text-black/60 font-medium text-sm mt-1">Stay updated with the latest news</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2.5 h-2.5 rounded-full ${wsConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+                    <span className="text-xs font-bold text-black/70">
+                      {wsConnected ? 'LIVE' : 'OFFLINE'}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-3 relative z-10">
                 {announcements.length > 0 ? (
-                  announcements.map((announcement, idx) => (
-                    <div 
-                      key={announcement.id} 
-                      className="bg-white rounded-xl p-4 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            {announcement.priority === 'high' && (
-                              <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold uppercase rounded border border-black">Urgent</span>
-                            )}
-                            {announcement.priority === 'medium' && (
-                              <span className="px-2 py-0.5 bg-blue-500 text-white text-[10px] font-bold uppercase rounded border border-black">Info</span>
-                            )}
-                            <span className="text-[11px] font-semibold text-gray-400">{announcement.date}</span>
+                  announcements.slice(0, 5).map((announcement, idx) => {
+                    const priority = getAnnouncementPriority(idx);
+                    return (
+                      <div 
+                        key={announcement.id} 
+                        className="bg-white rounded-xl p-4 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all cursor-pointer group"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1.5">
+                              {priority === 'high' && (
+                                <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold uppercase rounded border border-black">Urgent</span>
+                              )}
+                              {priority === 'medium' && (
+                                <span className="px-2 py-0.5 bg-blue-500 text-white text-[10px] font-bold uppercase rounded border border-black">Info</span>
+                              )}
+                              <span className="text-[11px] font-semibold text-gray-400">{getRelativeTime(announcement.created_at)}</span>
+                              <span className="text-[10px] text-gray-400">by {announcement.creator_name}</span>
+                            </div>
+                            <h3 className="font-bold text-base text-black mb-1 group-hover:underline">{announcement.title}</h3>
+                            <p className="text-sm font-medium text-gray-600 leading-relaxed">{announcement.description}</p>
                           </div>
-                          <h3 className="font-bold text-base text-black mb-1 group-hover:underline">{announcement.title}</h3>
-                          <p className="text-sm font-medium text-gray-600 leading-relaxed">{announcement.content}</p>
+                          <span className="text-xl opacity-70">{idx === 0 ? '📢' : idx === 1 ? '📅' : '📋'}</span>
                         </div>
-                        <span className="text-xl opacity-70">{idx === 0 ? '📢' : idx === 1 ? '📅' : '📋'}</span>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <div className="text-center py-8 text-black/50 font-medium">
                     No announcements at the moment
@@ -197,38 +218,47 @@ export default function DashboardPage() {
                   <div className="space-y-6 mt-4">
                     {[1, 2, 3].map(i => <div key={i} className="h-12 bg-black/5 rounded-lg animate-pulse" />)}
                   </div>
-                ) : (stats?.today_bookings > 0 ? (
+                ) : (incompleteTasks.length > 0 ? (
                   <div className="space-y-6 mt-2">
-                    {scheduleItems.map((item, idx) => (
-                      <div key={item.id} className="relative group cursor-pointer" onClick={() => router.push('/dashboard/booking')}>
-                        {/* Handwritten-style check box */}
-                        <div className="flex items-start gap-4">
-                          <div className={`mt-1 w-6 h-6 border-2 border-black rounded-md flex items-center justify-center flex-shrink-0 ${idx === 0 ? 'bg-green-400' : 'bg-white'}`}>
-                            {idx === 0 && <span className="text-black font-bold">✓</span>}
-                          </div>
-
-                          <div className={`flex-1 transition-all ${idx === 0 ? 'opacity-50 line-through decoration-black decoration-2' : ''}`}>
-                            <div className="flex justify-between items-baseline">
-                              <h4 className="font-bold text-lg text-black leading-none">{item.title}</h4>
-                              <span className="text-sm font-bold bg-black text-white px-2 py-0.5 rounded-md -rotate-2">{item.time}</span>
+                    {incompleteTasks.slice(0, 3).map((task, idx) => {
+                      const dueDate = new Date(task.assignment_due_date);
+                      const formattedTime = dueDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                      const priorityColor = task.task_priority === 'high' ? 'bg-red-100' : task.task_priority === 'medium' ? 'bg-yellow-100' : 'bg-gray-50';
+                      
+                      return (
+                        <div key={task.task_id} className="relative group cursor-pointer">
+                          {/* Handwritten-style check box */}
+                          <div className="flex items-start gap-4">
+                            <div className={`mt-1 w-6 h-6 border-2 border-black rounded-md flex items-center justify-center flex-shrink-0 ${task.is_done ? 'bg-green-400' : 'bg-white'}`}>
+                              {task.is_done && <span className="text-black font-bold">✓</span>}
                             </div>
-                            <p className="text-sm font-medium text-gray-600 mt-1 flex items-center gap-1">
-                              📍 {item.space}
-                            </p>
+
+                            <div className={`flex-1 transition-all ${task.is_done ? 'opacity-50 line-through decoration-black decoration-2' : ''}`}>
+                              <div className="flex justify-between items-baseline gap-2">
+                                <h4 className="font-bold text-lg text-black leading-none">{task.task_title}</h4>
+                                <span className="text-sm font-bold bg-black text-white px-2 py-0.5 rounded-md -rotate-2 flex-shrink-0">{formattedTime}</span>
+                              </div>
+                              <p className="text-sm font-medium text-gray-600 mt-1 flex items-center gap-1">
+                                📋 {task.assignment_title}
+                              </p>
+                              <span className={`inline-block mt-1 px-2 py-0.5 text-[10px] font-bold uppercase rounded ${priorityColor} border border-black/20`}>
+                                {task.task_priority}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
 
-                    {stats.today_bookings > 3 && (
+                    {incompleteTasks.length > 3 && (
                       <button className="w-full py-2 text-sm font-bold text-gray-500 hover:text-black border-2 border-dashed border-gray-300 hover:border-black rounded-xl mt-4 transition-all">
-                        + {stats.today_bookings - 3} MORE TASKS
+                        + {incompleteTasks.length - 3} MORE TASKS
                       </button>
                     )}
                   </div>
                 ) : (
                   <div className="flex-1 flex flex-col items-center justify-center text-center mt-10">
-                    <div className="w-24 h-24 border-[3px] border-black rounded-full flex items-center justify-center mb-4 text-4xl bg-white ]">✨</div>
+                    <div className="w-24 h-24 border-[3px] border-black rounded-full flex items-center justify-center mb-4 text-4xl bg-white">✨</div>
                     <p className="font-bold text-xl text-black">Nothing scheduled!</p>
                     <p className="text-base text-gray-500 font-medium">Time to create something new.</p>
                     <button onClick={() => router.push('/dashboard/booking')} className="mt-6 px-6 py-2 bg-blue-500 text-white font-bold rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all">

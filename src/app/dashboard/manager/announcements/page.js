@@ -6,10 +6,12 @@ import StatsCard from '@/component/StatsCard';
 import { getAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement } from '@/services/announcementService';
 import { getTeamUsers } from '@/services/userService';
 import { useToast } from '@/contexts/ToastContext';
+import { useWebSocket } from '@/contexts/WebSocketContext';
 import DeleteConfirmDialog from '@/component/DeleteConfirmDialog';
 
 export default function ManagerAnnouncementsPage() {
   const { showToastMessage } = useToast();
+  const { isConnected, announcements: wsAnnouncements, subscribe } = useWebSocket();
   const [searchQuery, setSearchQuery] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -29,16 +31,19 @@ export default function ManagerAnnouncementsPage() {
   const [error, setError] = useState(null);
   const [department, setDepartment] = useState(null);
 
+  // Use WebSocket announcements when connected, otherwise use local state
+  const displayAnnouncements = isConnected && wsAnnouncements.length > 0 ? wsAnnouncements : announcements;
+
   // Mock stats (keep for now as API doesn't provide stats yet)
   const stats = {
-    totalAnnouncements: announcements.length,
-    thisWeek: announcements.filter(a => {
+    totalAnnouncements: displayAnnouncements.length,
+    thisWeek: displayAnnouncements.filter(a => {
       const date = new Date(a.created_at);
       const now = new Date();
       const oneWeekAgo = new Date(now.setDate(now.getDate() - 7));
       return date > oneWeekAgo;
     }).length,
-    thisMonth: announcements.filter(a => {
+    thisMonth: displayAnnouncements.filter(a => {
       const date = new Date(a.created_at);
       const now = new Date();
       const oneMonthAgo = new Date(now.setMonth(now.getMonth() - 1));
@@ -46,6 +51,45 @@ export default function ManagerAnnouncementsPage() {
     }).length,
     totalReads: 0 // Not available in API yet
   };
+
+  // Subscribe to real-time WebSocket updates
+  useEffect(() => {
+    const unsubscribeNew = subscribe('announcement_new', (newAnnouncement) => {
+      console.log('📢 Manager page: New announcement received:', newAnnouncement);
+      showToastMessage({
+        type: 'success',
+        title: '📢 New Announcement',
+        message: `"${newAnnouncement.title}" has been created`,
+        duration: 5000,
+      });
+    });
+
+    const unsubscribeUpdate = subscribe('announcement_update', (updatedAnnouncement) => {
+      console.log('✏️ Manager page: Announcement updated:', updatedAnnouncement);
+      showToastMessage({
+        type: 'info',
+        title: '✏️ Announcement Updated',
+        message: `"${updatedAnnouncement.title}" has been updated`,
+        duration: 5000,
+      });
+    });
+
+    const unsubscribeDelete = subscribe('announcement_delete', (deletedAnnouncement) => {
+      console.log('🗑️ Manager page: Announcement deleted:', deletedAnnouncement);
+      showToastMessage({
+        type: 'warning',
+        title: '🗑️ Announcement Deleted',
+        message: 'An announcement has been removed',
+        duration: 5000,
+      });
+    });
+
+    return () => {
+      unsubscribeNew();
+      unsubscribeUpdate();
+      unsubscribeDelete();
+    };
+  }, [subscribe, showToastMessage]);
 
   useEffect(() => {
     fetchAnnouncements();
@@ -252,7 +296,7 @@ export default function ManagerAnnouncementsPage() {
     return configs[priority] || configs.normal;
   };
 
-  const filteredAnnouncements = announcements.filter(announcement => {
+  const filteredAnnouncements = displayAnnouncements.filter(announcement => {
     const matchesSearch =
       announcement.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       announcement.description?.toLowerCase().includes(searchQuery.toLowerCase());

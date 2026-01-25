@@ -6,6 +6,7 @@
 'use client';
 
 import { ToastProvider } from "@/contexts/ToastContext";
+import { WebSocketProvider } from "@/contexts/WebSocketContext";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 
@@ -23,7 +24,9 @@ export default function Providers({ children }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
-        {children}
+        <WebSocketProvider>
+          {children}
+        </WebSocketProvider>
       </ToastProvider>
     </QueryClientProvider>
   );

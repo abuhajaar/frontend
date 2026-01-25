@@ -23,13 +23,12 @@ const getAuthHeaders = () => {
 
 /**
  * Get employee statistics
- * @param {string|number} userId - User ID
  * @returns {Promise<Object>} User statistics
  */
-export const getEmployeeStats = async (userId) => {
+export const getEmployeeStats = async () => {
   try {
     const response = await fetch(
-      `${API_CONFIG.BASE_URL}${API_ENDPOINTS.STATS_EMPLOYEE(userId)}`,
+      `${API_CONFIG.BASE_URL}${API_ENDPOINTS.STATS}`,
       {
         method: 'GET',
         headers: getAuthHeaders(),

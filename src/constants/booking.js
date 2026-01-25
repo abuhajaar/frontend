@@ -3,9 +3,10 @@
  * Centralized configuration for booking functionality
  * https://backend-openbo.devmosel.com/api/health
  * http://192.168.1.101:5000/api/health
+ * http://localhost:5001/api/health
  */
 
-export const API_BASE_URL = 'http://localhost:5001/api/health';
+export const API_BASE_URL = 'http://192.168.1.101:5000/api/health';
 
 export const TIME_SLOTS = [
   '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',

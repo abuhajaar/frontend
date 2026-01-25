@@ -9,6 +9,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { login, logout, register } from '@/services/authService';
 import { auth } from '@/lib/auth';
+import { useWebSocket } from '@/contexts/WebSocketContext';
 
 /**
  * Login mutation
@@ -33,10 +34,15 @@ export const useLogin = () => {
 export const useLogout = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { disconnect } = useWebSocket();
 
   return useMutation({
     mutationFn: logout,
     onSuccess: () => {
+      // Disconnect WebSocket
+      console.log('🔌 Disconnecting WebSocket on logout');
+      disconnect();
+      
       // Clear auth and all cached data
       auth.logout();
       queryClient.clear();
@@ -44,6 +50,11 @@ export const useLogout = () => {
     },
     onError: (error) => {
       console.error('Logout error:', error);
+      
+      // Disconnect WebSocket even on error
+      console.log('🔌 Disconnecting WebSocket on logout (error path)');
+      disconnect();
+      
       // Even if API fails, clear local auth as fallback
       auth.logout();
       queryClient.clear();

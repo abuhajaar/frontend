@@ -43,3 +43,6 @@ export { useCurrentUser } from './useCurrentUser';
 
 // Booking search
 export { useBookingSearch } from './useBookingSearch';
+
+// WebSocket hooks
+export { useAnnouncements } from './useAnnouncements';

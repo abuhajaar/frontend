@@ -3,10 +3,11 @@
  * Centralized API base URL and common configurations
  * https://backend-openbo.devmosel.com/
  * http://192.168.1.101:5000/
+ * http://localhost:5001/
  */
 
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:5001/',
+  BASE_URL: 'http://192.168.1.101:5000/',
   TIMEOUT: 10000, // 10 seconds
   HEADERS: {
     'Content-Type': 'application/json',
@@ -54,10 +55,10 @@ export const API_ENDPOINTS = {
   BLACKOUTS: '/api/blackouts',
 
   // Stats
-  STATS_EMPLOYEE: (userId) => `/api/stats_employee/${userId}`,
+  STATS: '/api/stats',
 
   // Announcements
-  ANNOUNCEMENTS: '/api/announcements',
+  ANNOUNCEMENTS: 'api/announcements',
 
   // Assignments
   ASSIGNMENTS: '/api/assignments',

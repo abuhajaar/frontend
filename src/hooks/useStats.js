@@ -11,11 +11,10 @@ import { getEmployeeStats } from '@/services/statsService';
 /**
  * Fetch dashboard statistics for a user
  */
-export const useDashboardStats = (userId) => {
+export const useDashboardStats = () => {
   return useQuery({
-    queryKey: ['stats', 'dashboard', userId],
-    queryFn: () => getEmployeeStats(userId),
-    enabled: !!userId,
+    queryKey: ['stats', 'dashboard'],
+    queryFn: () => getEmployeeStats(),
     staleTime: 60 * 1000, // 1 minute
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
   });
