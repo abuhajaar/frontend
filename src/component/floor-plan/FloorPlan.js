@@ -1,14 +1,12 @@
 /**
  * FloorPlan Component
- * Interactive floor plan view for desk selection - Lantai 1
- * Uses the SVG file from /public/lantai1.svg
+ * Interactive floor plan view for desk selection - All Floors
+ * Uses SVG files from /public/
  */
 
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
-import { isWeekend } from '@/utils/date';
 
 export default function FloorPlan({
   occupiedDesks = [],
@@ -19,13 +17,11 @@ export default function FloorPlan({
   onLevelChange
 }) {
   const svgContainerRef = useRef(null);
-  const svgInnerRef = useRef(null);
   const [svgLoaded, setSvgLoaded] = useState(false);
   const [occupiedSvgDoc, setOccupiedSvgDoc] = useState(null);
-  const [currentFloorSvg, setCurrentFloorSvg] = useState('lantai1');
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [currentLoadedFloor, setCurrentLoadedFloor] = useState(null);
 
-  // Desk and room metadata
+  // Desk and room metadata for all floors
   const deskInfo = {
     // Lantai 1: hotDesk01-12
     hotDesk01: { number: 1, type: 'hotDesk', floor: 1 },
@@ -50,16 +46,16 @@ export default function FloorPlan({
     hotDesk19: { number: 19, type: 'hotDesk', floor: 2 },
     hotDesk20: { number: 20, type: 'hotDesk', floor: 2 },
     // Lantai 1: meetingRoom01-03
-    meetingRoom01: { number: 1, type: 'meetingRoom', floor: 1 },
-    meetingRoom02: { number: 2, type: 'meetingRoom', floor: 1 },
-    meetingRoom03: { number: 3, type: 'meetingRoom', floor: 1 },
+    meetingRoom01: { number: 1, type: 'meetingRoom', name: 'Ruang Rapat 1', floor: 1 },
+    meetingRoom02: { number: 2, type: 'meetingRoom', name: 'Ruang Rapat 2', floor: 1 },
+    meetingRoom03: { number: 3, type: 'meetingRoom', name: 'Ruang Rapat 3', floor: 1 },
     // Lantai 2: meetingRoom04-06
-    meetingRoom04: { number: 4, type: 'meetingRoom', floor: 2 },
-    meetingRoom05: { number: 5, type: 'meetingRoom', floor: 2 },
-    meetingRoom06: { number: 6, type: 'meetingRoom', floor: 2 },
+    meetingRoom04: { number: 4, type: 'meetingRoom', name: 'Ruang Rapat 4', floor: 2 },
+    meetingRoom05: { number: 5, type: 'meetingRoom', name: 'Ruang Rapat 5', floor: 2 },
+    meetingRoom06: { number: 6, type: 'meetingRoom', name: 'Ruang Rapat 6', floor: 2 },
     // Lantai 3: meetingRoom07-08
-    meetingRoom07: { number: 7, type: 'meetingRoom', floor: 3 },
-    meetingRoom08: { number: 8, type: 'meetingRoom', floor: 3 },
+    meetingRoom07: { number: 7, type: 'meetingRoom', name: 'Ruang Rapat 7', floor: 3 },
+    meetingRoom08: { number: 8, type: 'meetingRoom', name: 'Ruang Rapat 8', floor: 3 },
     // Lantai 1: privateRoom01-02
     privateRoom01: { number: 1, type: 'privateRoom', floor: 1 },
     privateRoom02: { number: 2, type: 'privateRoom', floor: 1 },
@@ -72,49 +68,88 @@ export default function FloorPlan({
     privateRoom08: { number: 8, type: 'privateRoom', floor: 3 }
   };
 
-  // Calculate available desks count (hot desks + meeting rooms + private rooms)
-  const totalSpaces = Object.keys(deskInfo).length;
-  const availableSpaces = totalSpaces - occupiedDesks.length;
+  // Debug: Track when occupiedDesks prop changes
+  useEffect(() => {
+    console.log('🎨 FloorPlan: occupiedDesks prop changed:', occupiedDesks);
+  }, [occupiedDesks]);
+
+  // Get SVG file paths based on floor
+  const getSvgPaths = (floor) => {
+    switch (floor) {
+      case 'lantai1':
+        return { main: '/lantai1v2.svg', occupied: '/lantai1v2isOccupied.svg' };
+      case 'lantai2':
+        return { main: '/lantai2.svg', occupied: '/lantai2isOccupied.svg' };
+      case 'lantai3':
+        return { main: '/lantai3.svg', occupied: '/lantai3isOccupied.svg' };
+      default:
+        return { main: '/lantai1v2.svg', occupied: '/lantai1v2isOccupied.svg' };
+    }
+  };
+
+  // Reset state when floor changes
+  useEffect(() => {
+    console.log('🔄 FloorPlan: Floor changed to', selectedLevel);
+    setSvgLoaded(false);
+    setOccupiedSvgDoc(null);
+    setCurrentLoadedFloor(null);
+  }, [selectedLevel]);
 
   // Load the occupied SVG document based on selected floor
-  useEffect(function loadOccupiedSvg() {
-    const occupiedSvgFile = selectedLevel === 'lantai1'
-      ? '/lantai1v2isOccupied.svg'
-      : selectedLevel === 'lantai2'
-        ? '/lantai2isOccupied.svg'
-        : selectedLevel === 'lantai3'
-          ? '/lantai3isOccupied.svg'
-          : null;
+  useEffect(() => {
+    const { occupied: occupiedSvgFile } = getSvgPaths(selectedLevel);
 
-    if (!occupiedSvgFile) return;
+    console.log('🔄 FloorPlan: Loading occupied SVG for', selectedLevel, occupiedSvgFile);
 
     fetch(occupiedSvgFile)
-      .then(function (response) {
-        return response.text();
-      })
-      .then(function (svgText) {
+      .then((response) => response.text())
+      .then((svgText) => {
         const parser = new DOMParser();
         const doc = parser.parseFromString(svgText, 'image/svg+xml');
         setOccupiedSvgDoc(doc);
-        setCurrentFloorSvg(selectedLevel);
+        setCurrentLoadedFloor(selectedLevel);
+        console.log('✅ FloorPlan: Occupied SVG loaded for', selectedLevel);
       })
-      .catch(function (err) {
+      .catch((err) => {
         console.error('Failed to load occupied SVG:', err);
       });
   }, [selectedLevel]);
 
-  useEffect(function handleSvgInteraction() {
-    if (!svgContainerRef.current || !svgLoaded || !occupiedSvgDoc) return;
+  // Create a stable string representation of occupiedDesks for dependency tracking
+  const occupiedDesksKey = [...occupiedDesks].sort().join(',');
 
-    const objectElement = svgContainerRef.current.querySelector('object');
-    if (!objectElement || !objectElement.contentDocument) return;
+  // Handle SVG interaction - applies click handlers and occupied state styling
+  useEffect(() => {
+    // Wait for all conditions:
+    // 1. Container exists
+    // 2. Main SVG is loaded
+    // 3. Occupied SVG is loaded for the CURRENT floor
+    if (!svgContainerRef.current || !svgLoaded || !occupiedSvgDoc) {
+      console.log('⏳ FloorPlan: Waiting for conditions', { 
+        container: !!svgContainerRef.current, 
+        svgLoaded, 
+        occupiedSvgDoc: !!occupiedSvgDoc 
+      });
+      return;
+    }
+    
+    if (currentLoadedFloor !== selectedLevel) {
+      console.log('⏳ FloorPlan: Waiting for occupied SVG to match floor', selectedLevel, 'current:', currentLoadedFloor);
+      return;
+    }
+
+    const objectElement = svgContainerRef.current.querySelector(`object[data-floor="${selectedLevel}"]`);
+    if (!objectElement || !objectElement.contentDocument) {
+      console.log('⏳ FloorPlan: Waiting for object element', selectedLevel);
+      return;
+    }
 
     const svgDoc = objectElement.contentDocument;
+    
+    console.log('🔄 FloorPlan: Updating SVG for', selectedLevel, 'with occupied desks:', occupiedDesks);
 
     // Get all hotDesk, meetingRoom, and privateRoom elements from the SVG
-    // Only get top-level elements (not nested ones) by checking if parent is the root svg or a direct group
     const hotDeskElements = Array.from(svgDoc.querySelectorAll('[id^="hotDesk"]')).filter(el => {
-      // Exclude nested elements by ensuring we only get elements whose id matches exactly the pattern
       return /^hotDesk\d{2}$/.test(el.id);
     });
     const meetingRoomElements = Array.from(svgDoc.querySelectorAll('[id^="meetingRoom"]')).filter(el => {
@@ -124,6 +159,8 @@ export default function FloorPlan({
       return /^privateRoom\d{2}$/.test(el.id);
     });
     const allSpaceElements = [...hotDeskElements, ...meetingRoomElements, ...privateRoomElements];
+
+    console.log('📍 FloorPlan: Found elements in', selectedLevel, ':', allSpaceElements.map(e => e.id));
 
     allSpaceElements.forEach((spaceElement) => {
       const spaceId = spaceElement.id;
@@ -139,7 +176,7 @@ export default function FloorPlan({
         if (onDeskSelect && spaceMetadata) {
           let spaceName;
           if (spaceMetadata.type === 'meetingRoom') {
-            spaceName = spaceMetadata.name;
+            spaceName = spaceMetadata.name || `Meeting Room ${spaceMetadata.number}`;
           } else if (spaceMetadata.type === 'privateRoom') {
             spaceName = `Private Room ${spaceMetadata.number}`;
           } else {
@@ -156,7 +193,7 @@ export default function FloorPlan({
         }
       };
 
-      // Remove existing listeners
+      // Remove existing listeners by cloning
       spaceElement.replaceWith(spaceElement.cloneNode(true));
       const newSpaceElement = svgDoc.getElementById(spaceId);
       newSpaceElement.addEventListener('click', handleClick);
@@ -181,13 +218,11 @@ export default function FloorPlan({
         }
       }
 
-      // Handle occupied state
+      // Handle occupied state - replace with occupied version
       if (isOccupied) {
-        // Get the occupied version of this element from the occupied SVG
         const occupiedElement = occupiedSvgDoc.getElementById(spaceId);
 
         if (occupiedElement) {
-          // Clone the occupied element
           const occupiedClone = occupiedElement.cloneNode(true);
 
           // Replace the current element's innerHTML with the occupied version's innerHTML
@@ -195,24 +230,17 @@ export default function FloorPlan({
             newSpaceElement.removeChild(newSpaceElement.firstChild);
           }
 
-          // Copy all children from occupied version
           while (occupiedClone.firstChild) {
             newSpaceElement.appendChild(occupiedClone.firstChild);
           }
 
-          // Mark as replaced so we can track it
           newSpaceElement.setAttribute('data-occupied-replaced', 'true');
         }
       } else {
-        // Reset to available state - check if it was previously replaced
+        // Reset to available state if it was previously replaced
         if (newSpaceElement.getAttribute('data-occupied-replaced') === 'true') {
-          // Need to reload from the original SVG
-          // Get the original element from a fresh load
-          const originalSvgFile = selectedLevel === 'lantai1'
-            ? '/lantai1v2.svg'
-            : selectedLevel === 'lantai2'
-              ? '/lantai2.svg'
-              : '/lantai3.svg';
+          const { main: originalSvgFile } = getSvgPaths(selectedLevel);
+          
           fetch(originalSvgFile)
             .then(response => response.text())
             .then(svgText => {
@@ -221,7 +249,6 @@ export default function FloorPlan({
               const originalElement = originalDoc.getElementById(spaceId);
 
               if (originalElement) {
-                // Replace with original content
                 while (newSpaceElement.firstChild) {
                   newSpaceElement.removeChild(newSpaceElement.firstChild);
                 }
@@ -231,122 +258,76 @@ export default function FloorPlan({
                   newSpaceElement.appendChild(originalClone.firstChild);
                 }
 
-                // Remove the marker
                 newSpaceElement.removeAttribute('data-occupied-replaced');
               }
             });
         }
       }
     });
-  }, [selectedDeskId, occupiedDesks, onDeskSelect, svgLoaded, occupiedSvgDoc]);
+  }, [selectedDeskId, occupiedDesksKey, onDeskSelect, svgLoaded, occupiedSvgDoc, currentLoadedFloor, selectedLevel]);
 
-  // Handle floor changes from parent component with animation
-  useEffect(() => {
-    if (!currentFloorSvg || currentFloorSvg === selectedLevel) return;
-    if (isTransitioning) return;
-
-    setIsTransitioning(true);
-    const svgInner = svgInnerRef.current;
-
-    if (svgInner) {
-      // Determine slide direction based on floor numbers
-      const currentFloorNum = currentFloorSvg === 'lantai1' ? 1 : currentFloorSvg === 'lantai2' ? 2 : 3;
-      const newFloorNum = selectedLevel === 'lantai1' ? 1 : selectedLevel === 'lantai2' ? 2 : 3;
-      const direction = newFloorNum > currentFloorNum ? 1 : -1; // 1 = slide left, -1 = slide right
-
-      // Fade out and slide out animation
-      gsap.to(svgInner, {
-        x: `${direction * -5}%`,
-        opacity: 0,
-        duration: 0.25,
-        ease: 'power2.inOut',
-        onComplete: () => {
-          // Update floor and reset loaded state
-          setSvgLoaded(false);
-          setCurrentFloorSvg(selectedLevel);
-
-          // Reset position for slide in from opposite side
-          gsap.set(svgInner, { x: `${direction * 5}%`, opacity: 0 });
-        }
-      });
-    } else {
-      setSvgLoaded(false);
-      setCurrentFloorSvg(selectedLevel);
-      setIsTransitioning(false);
-    }
-  }, [selectedLevel, currentFloorSvg, isTransitioning]);
-
-  // Handle SVG load and trigger slide-in animation
-  const handleSvgLoad = () => {
-    setSvgLoaded(true);
-
-    // Only animate if we're transitioning between floors
-    if (isTransitioning) {
-      const svgInner = svgInnerRef.current;
-      if (svgInner) {
-        // Slide in animation - triggered after SVG is loaded
-        gsap.to(svgInner, {
-          x: 0,
-          opacity: 1,
-          duration: 0.35,
-          ease: 'power2.out',
-          delay: 0.05, // Small delay to ensure SVG is rendered
-          onComplete: () => {
-            setIsTransitioning(false);
-          }
-        });
-      } else {
-        setIsTransitioning(false);
-      }
+  // Handle SVG load
+  const handleSvgLoad = (floor) => {
+    console.log('🎨 FloorPlan: Main SVG loaded for', floor);
+    if (floor === selectedLevel) {
+      setSvgLoaded(true);
     }
   };
 
   return (
     <div className="overflow-hidden" style={{ backgroundColor: '#FFFEF8' }}>
-      {/* Floor Plan Container */}
       <div>
         <div
           ref={svgContainerRef}
           className="relative w-full overflow-hidden min-h-[600px]"
           style={{ backgroundColor: '#FFFEF8' }}
         >
-          <div ref={svgInnerRef} className="w-full h-full">
-            {selectedLevel === 'lantai1' && (
+          <div className="w-full h-full">
+            {/* Lantai 1 */}
+            <div style={{ display: selectedLevel === 'lantai1' ? 'block' : 'none' }}>
               <object
-                key="lantai1"
+                key="lantai1-svg"
+                data-floor="lantai1"
                 data="/lantai1v2.svg"
                 type="image/svg+xml"
                 className="w-full h-auto"
                 style={{ maxWidth: '1551px', display: 'block', backgroundColor: '#FFFEF8' }}
-                onLoad={handleSvgLoad}
+                onLoad={() => handleSvgLoad('lantai1')}
               >
                 Your browser does not support SVG
               </object>
-            )}
-            {selectedLevel === 'lantai2' && (
+            </div>
+
+            {/* Lantai 2 */}
+            <div style={{ display: selectedLevel === 'lantai2' ? 'block' : 'none' }}>
               <object
-                key="lantai2"
+                key="lantai2-svg"
+                data-floor="lantai2"
                 data="/lantai2.svg"
                 type="image/svg+xml"
                 className="w-full h-auto"
                 style={{ maxWidth: '1551px', display: 'block', backgroundColor: '#FFFEF8' }}
-                onLoad={handleSvgLoad}
+                onLoad={() => handleSvgLoad('lantai2')}
               >
                 Your browser does not support SVG
               </object>
-            )}
-            {selectedLevel === 'lantai3' && (
+            </div>
+
+            {/* Lantai 3 */}
+            <div style={{ display: selectedLevel === 'lantai3' ? 'block' : 'none' }}>
               <object
-                key="lantai3"
+                key="lantai3-svg"
+                data-floor="lantai3"
                 data="/lantai3.svg"
                 type="image/svg+xml"
                 className="w-full h-auto"
                 style={{ maxWidth: '1551px', display: 'block', backgroundColor: '#FFFEF8' }}
-                onLoad={handleSvgLoad}
+                onLoad={() => handleSvgLoad('lantai3')}
               >
                 Your browser does not support SVG
               </object>
-            )}
+            </div>
+
             {!['lantai1', 'lantai2', 'lantai3'].includes(selectedLevel) && (
               <div className="w-full h-[600px] flex items-center justify-center">
                 <p className="text-slate-500">Floor plan not available</p>

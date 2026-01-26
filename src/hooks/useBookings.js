@@ -53,10 +53,13 @@ export const useCreateBooking = () => {
 
   return useMutation({
     mutationFn: createBooking,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('✅ Booking created successfully, invalidating queries...', data);
       // Invalidate and refetch bookings
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      // Invalidate all space queries (this will trigger refetch in useBookingSearch)
       queryClient.invalidateQueries({ queryKey: ['spaces'] });
+      console.log('✅ Queries invalidated, refetch should happen automatically');
     },
   });
 };

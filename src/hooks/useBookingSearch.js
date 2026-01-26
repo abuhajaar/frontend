@@ -5,14 +5,19 @@
 
 'use client';
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSpacesWebSocket } from '@/contexts/SpacesWebSocketContext';
 import { searchSpaces as fetchSpaces } from '@/services/spaceService';
 import { transformSpaceData } from '@/utils/space';
 
 export const useBookingSearch = () => {
   const [searchParams, setSearchParams] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const { isConnected, subscribe } = useSpacesWebSocket();
+  const queryClient = useQueryClient();
+
+  console.log('🎯 useBookingSearch hook initialized. isConnected:', isConnected);
 
   /**
    * React Query for fetching spaces
@@ -22,6 +27,7 @@ export const useBookingSearch = () => {
     queryFn: async () => {
       if (!searchParams) return [];
       
+      console.log('🔍 useBookingSearch: Fetching spaces for', searchParams);
       const result = await fetchSpaces(
         searchParams.date, 
         searchParams.startTime, 
@@ -29,13 +35,50 @@ export const useBookingSearch = () => {
       );
       const apiData = result.data || [];
       
+      console.log('✅ useBookingSearch: Received', apiData.length, 'spaces from API');
+      if (apiData.length > 0) {
+        console.log('📦 First space availability:', apiData[0].is_available, apiData[0].name);
+      }
+      
       // Transform API data to UI format
-      return apiData.map(transformSpaceData);
+      const transformed = apiData.map(transformSpaceData);
+      console.log('🔄 useBookingSearch: Transformed', transformed.length, 'spaces');
+      return transformed;
     },
-    enabled: !!searchParams, // Only run query when searchParams is set
-    staleTime: 30 * 1000, // Data is fresh for 30 seconds
+    enabled: !!searchParams,
+    staleTime: 0,
     retry: 1,
   });
+
+  /**
+   * Subscribe to WebSocket availability changes and auto-refetch
+   */
+  useEffect(() => {
+    console.log('🎯 useBookingSearch: Setting up subscription. isConnected:', isConnected);
+    
+    if (!isConnected) {
+      console.log('⚠️ useBookingSearch: Not connected, skipping subscription');
+      return;
+    }
+
+    if (!subscribe) {
+      console.error('❌ useBookingSearch: subscribe function not available!');
+      return;
+    }
+
+    const unsubscribe = subscribe('availability_changed', (data) => {
+      console.log('🔄 Booking search: Availability changed callback triggered!', data);
+      queryClient.invalidateQueries({ queryKey: ['spaces'] });
+      console.log('✅ Spaces query invalidated');
+    });
+
+    console.log('✅ useBookingSearch: Subscription set up successfully');
+
+    return () => {
+      console.log('🔄 useBookingSearch: Cleaning up subscription');
+      unsubscribe();
+    };
+  }, [isConnected, subscribe, queryClient]);
 
   /**
    * Trigger search with new parameters

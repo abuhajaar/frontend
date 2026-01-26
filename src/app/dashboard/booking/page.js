@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import BookingModal from '@/component/BookingModal';
 import DateTimeSelector from '@/component/DateTimeSelector';
 import FilterBar from '@/component/FilterBar';
@@ -41,6 +41,16 @@ export default function BookingPage() {
 
   // Custom hooks for data management
   const { spaces, loading, error, hasSearched, searchSpaces } = useBookingSearch();
+
+  // Debug: Track when spaces change
+  useEffect(() => {
+    console.log('📊 Booking Page: Spaces updated, count:', spaces.length);
+    if (spaces.length > 0) {
+      console.log('📊 First space:', spaces[0].name, '| is_available:', spaces[0].is_available);
+      const occupied = spaces.filter(s => s.is_available === false);
+      console.log('📊 Occupied spaces:', occupied.map(s => s.name));
+    }
+  }, [spaces]);
 
   // Derived state
   const availableFloors = getUniqueFloors(spaces);
@@ -91,13 +101,14 @@ export default function BookingPage() {
     return isFloor3 && isPrivateRoom;
   });
 
-  // Map API spaces to SVG element IDs
+  // Map API spaces to SVG element IDs using useMemo to track changes
   // Lantai 1: hotDesk01-12 (12 desks)
   // Lantai 2: hotDesk13-20 (8 desks) - continuing numbering from Lantai 1
   // Lantai 1: meetingRoom01-03
   // Lantai 2: meetingRoom04-06 - continuing numbering from Lantai 1
-  const deskSpaceMap = {};
-  const occupiedDesks = [];
+  const { deskSpaceMap, occupiedDesks } = useMemo(() => {
+    const deskSpaceMap = {};
+    const occupiedDesks = [];
 
   // Map Lantai 1 hot desks (hotDesk01-12)
   floor1HotDesks.forEach((space, index) => {
@@ -176,25 +187,28 @@ export default function BookingPage() {
     }
   });
 
-  // Debug log to verify mapping
-  console.log('Floor Spaces Mapping:', {
-    lantai1: {
-      totalHotDesks: floor1HotDesks.length,
-      totalMeetingRooms: floor1MeetingRooms.length,
-      totalPrivateRooms: floor1PrivateRooms.length,
-    },
-    lantai2: {
-      totalHotDesks: floor2HotDesks.length,
-      totalMeetingRooms: floor2MeetingRooms.length,
-    },
-    lantai3: {
-      totalMeetingRooms: floor3MeetingRooms.length,
-      totalPrivateRooms: floor3PrivateRooms.length,
-    },
-    deskSpaceMap: Object.keys(deskSpaceMap),
-    occupiedDesks,
-    availableSpaces: Object.keys(deskSpaceMap).filter(id => !occupiedDesks.includes(id))
-  });
+    // Debug log to verify mapping
+    console.log('Floor Spaces Mapping:', {
+      lantai1: {
+        totalHotDesks: floor1HotDesks.length,
+        totalMeetingRooms: floor1MeetingRooms.length,
+        totalPrivateRooms: floor1PrivateRooms.length,
+      },
+      lantai2: {
+        totalHotDesks: floor2HotDesks.length,
+        totalMeetingRooms: floor2MeetingRooms.length,
+      },
+      lantai3: {
+        totalMeetingRooms: floor3MeetingRooms.length,
+        totalPrivateRooms: floor3PrivateRooms.length,
+      },
+      deskSpaceMap: Object.keys(deskSpaceMap),
+      occupiedDesks,
+      availableSpaces: Object.keys(deskSpaceMap).filter(id => !occupiedDesks.includes(id))
+    });
+
+    return { deskSpaceMap, occupiedDesks };
+  }, [spaces, floor1HotDesks, floor1MeetingRooms, floor1PrivateRooms, floor2HotDesks, floor2MeetingRooms, floor3MeetingRooms, floor3PrivateRooms]);
 
   // Calculate available spaces per floor
   const lantai1Spaces = Object.keys(deskSpaceMap).filter(id => {

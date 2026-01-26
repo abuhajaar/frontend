@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { useCurrentUser, useCreateBooking } from '@/hooks';
 import { useToast } from '@/contexts/ToastContext';
+import { useSpacesWebSocket } from '@/contexts/SpacesWebSocketContext';
 import { hapticClick } from '@/utils/animations';
 import {
   X,
@@ -29,6 +30,7 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
   const { currentUser } = useCurrentUser();
   const { showToastMessage } = useToast();
   const { mutate: createBooking, isPending: isSubmitting } = useCreateBooking();
+  const { isConnected, subscribe } = useSpacesWebSocket();
 
   const modalRef = useRef(null);
   const backdropRef = useRef(null);
@@ -36,6 +38,8 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
   const cancelButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const [isClosing, setIsClosing] = useState(false);
+  const [isNowUnavailable, setIsNowUnavailable] = useState(false);
+  const [unavailableMessage, setUnavailableMessage] = useState('');
 
   // Map amenities to Lucide icons
   const getAmenityIcon = (amenityName) => {
@@ -83,6 +87,61 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
   const typeConfig = getTypeConfig();
   const TypeIcon = typeConfig.icon || Users;
 
+  // Reset unavailable state when modal opens with new space
+  useEffect(() => {
+    if (isOpen && space) {
+      setIsNowUnavailable(false);
+      setUnavailableMessage('');
+    }
+  }, [isOpen, space?.id]);
+
+  // Subscribe to WebSocket to detect real-time availability changes
+  useEffect(() => {
+    if (!isOpen || !space || !isConnected || !subscribe) return;
+
+    console.log('🔔 BookingModal: Subscribing to availability changes for space', space.id);
+
+    const unsubscribe = subscribe('availability_changed', (data) => {
+      console.log('📅 BookingModal: Received availability_changed', data);
+      
+      // Check if this event affects the currently viewed space
+      if (data.space_id === space.id) {
+        // Check if the booking overlaps with our selected time
+        const eventStart = data.affected_time_range?.start;
+        const eventEnd = data.affected_time_range?.end;
+        const ourStart = bookingDetails?.startTime;
+        const ourEnd = bookingDetails?.endTime;
+        const eventDate = data.date;
+        const ourDate = bookingDetails?.date;
+
+        // Check if dates match and times overlap
+        if (eventDate === ourDate) {
+          // Simple overlap check
+          const hasOverlap = !(ourEnd <= eventStart || ourStart >= eventEnd);
+          
+          if (hasOverlap) {
+            console.log('⚠️ BookingModal: Space just became unavailable for our time slot!');
+            setIsNowUnavailable(true);
+            setUnavailableMessage(`This space was just booked by another user for ${eventStart} - ${eventEnd}`);
+            
+            // Show toast notification
+            showToastMessage({
+              type: 'warning',
+              title: 'Space Just Booked',
+              message: `${space.name} was just booked by another user for your selected time.`,
+              duration: 5000
+            });
+          }
+        }
+      }
+    });
+
+    return () => {
+      console.log('🔔 BookingModal: Unsubscribing from availability changes');
+      unsubscribe();
+    };
+  }, [isOpen, space?.id, isConnected, subscribe, bookingDetails, showToastMessage]);
+
   // Animate modal entrance
   useEffect(() => {
     if (isOpen && modalRef.current && backdropRef.current) {
@@ -112,8 +171,8 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
 
   if (!isOpen || !space) return null;
 
-  // Check if space is unavailable
-  const isUnavailable = space.is_available === false;
+  // Check if space is unavailable (either from initial load OR from real-time update)
+  const isUnavailable = space.is_available === false || isNowUnavailable;
 
   /**
    * Reset all states when modal closes
@@ -231,13 +290,13 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
         className="relative bg-white border-[3px] border-black rounded-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Header */}
-        <div className="p-6 border-b-[3px] border-black flex items-center justify-between sticky top-0 bg-black z-10">
+        <div className={`p-6 border-b-[3px] border-black flex items-center justify-between sticky top-0 z-10 ${isNowUnavailable ? 'bg-red-600' : 'bg-black'}`}>
           <div>
             <h2 className="text-3xl font-black text-white uppercase tracking-widest" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
-              {isUnavailable ? 'Space Unavailable' : 'Confirm Booking'}
+              {isNowUnavailable ? 'Just Booked!' : isUnavailable ? 'Space Unavailable' : 'Confirm Booking'}
             </h2>
             <p className="text-sm font-bold text-white/70 mt-1 uppercase tracking-wide">
-              {isUnavailable ? 'Cannot be booked now' : 'Review details below'}
+              {isNowUnavailable ? 'Someone just booked this space' : isUnavailable ? 'Cannot be booked now' : 'Review details below'}
             </p>
           </div>
           <button
@@ -299,12 +358,16 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
 
           {isUnavailable ? (
             /* Unavailable Reason */
-            <div className="bg-red-50 border-2 border-black rounded-xl p-4 flex gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className={`border-2 border-black rounded-xl p-4 flex gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${isNowUnavailable ? 'bg-red-100' : 'bg-red-50'}`}>
               <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
               <div>
-                <h4 className="font-black text-black text-sm mb-1 uppercase tracking-wide">Booking Conflict</h4>
+                <h4 className="font-black text-black text-sm mb-1 uppercase tracking-wide">
+                  {isNowUnavailable ? '⚡ Just Booked By Another User!' : 'Booking Conflict'}
+                </h4>
                 <p className="text-sm text-black font-medium leading-relaxed">
-                  {space.unavailable_reason ? (
+                  {isNowUnavailable ? (
+                    <span className="text-red-700 font-bold">{unavailableMessage}</span>
+                  ) : space.unavailable_reason ? (
                     <span dangerouslySetInnerHTML={{
                       __html: space.unavailable_reason
                         .replace(/(\w+)(?=\s+mulai)/gi, '<strong>$1</strong>')
@@ -314,6 +377,11 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
                     'This space is currently unavailable for the selected time slot.'
                   )}
                 </p>
+                {isNowUnavailable && (
+                  <p className="text-xs text-red-600 mt-2 font-bold">
+                    Please close this modal and select another space or time slot.
+                  </p>
+                )}
               </div>
             </div>
           ) : (

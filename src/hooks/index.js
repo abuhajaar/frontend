@@ -25,6 +25,7 @@ export {
 export {
   useSpace,
   useAllSpaces,
+  useSearchSpaces,
 } from './useSpaces';
 
 // Stats hooks

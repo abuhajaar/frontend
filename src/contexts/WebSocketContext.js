@@ -14,7 +14,7 @@ const WebSocketContext = createContext(null);
 
 // Socket.IO configuration
 const SOCKET_CONFIG = {
-  url: `${API_CONFIG.BASE_URL}announcements`,
+  url: `${API_CONFIG.BASE_URL}/announcements`,
   options: {
     transports: ['websocket', 'polling'],
     autoConnect: false,

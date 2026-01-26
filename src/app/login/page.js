@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { gsap } from 'gsap';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { login } from '@/services/authService';
 
-export default function LoginPage() {
+function LoginForm() {
   const formRef = useRef(null);
   const imageRef = useRef(null);
   const router = useRouter();
@@ -296,3 +296,12 @@ export default function LoginPage() {
     </div>
   );
 }
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#121212] flex items-center justify-center">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+

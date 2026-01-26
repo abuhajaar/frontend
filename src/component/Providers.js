@@ -7,6 +7,7 @@
 
 import { ToastProvider } from "@/contexts/ToastContext";
 import { WebSocketProvider } from "@/contexts/WebSocketContext";
+import { SpacesWebSocketProvider } from "@/contexts/SpacesWebSocketContext";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 
@@ -25,7 +26,9 @@ export default function Providers({ children }) {
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <WebSocketProvider>
-          {children}
+          <SpacesWebSocketProvider>
+            {children}
+          </SpacesWebSocketProvider>
         </WebSocketProvider>
       </ToastProvider>
     </QueryClientProvider>

@@ -7,7 +7,7 @@
  */
 
 export const API_CONFIG = {
-  BASE_URL: 'http://192.168.1.101:5000/',
+  BASE_URL: 'http://localhost:5001',
   TIMEOUT: 10000, // 10 seconds
   HEADERS: {
     'Content-Type': 'application/json',
@@ -58,7 +58,7 @@ export const API_ENDPOINTS = {
   STATS: '/api/stats',
 
   // Announcements
-  ANNOUNCEMENTS: 'api/announcements',
+  ANNOUNCEMENTS: '/api/announcements',
 
   // Assignments
   ASSIGNMENTS: '/api/assignments',
