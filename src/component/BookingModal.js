@@ -40,6 +40,9 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
   const [isClosing, setIsClosing] = useState(false);
   const [isNowUnavailable, setIsNowUnavailable] = useState(false);
   const [unavailableMessage, setUnavailableMessage] = useState('');
+  
+  // Track user's own booking to ignore WebSocket event for it
+  const lastBookingRef = useRef(null);
 
   // Map amenities to Lucide icons
   const getAmenityIcon = (amenityName) => {
@@ -103,6 +106,34 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
 
     const unsubscribe = subscribe('availability_changed', (data) => {
       console.log('📅 BookingModal: Received availability_changed', data);
+      console.log('📅 BookingModal: Current lastBookingRef:', lastBookingRef.current);
+      
+      // Skip if this matches the booking the user just made
+      if (lastBookingRef.current) {
+        const { space_id, date, start_time, end_time } = lastBookingRef.current;
+        const matchesOwnBooking = 
+          data.space_id === space_id &&
+          data.date === date &&
+          data.affected_time_range?.start === start_time &&
+          data.affected_time_range?.end === end_time;
+        
+        console.log('🔍 BookingModal: Comparison details:', {
+          'data.space_id': data.space_id,
+          'stored space_id': space_id,
+          'data.date': data.date,
+          'stored date': date,
+          'data.start': data.affected_time_range?.start,
+          'stored start': start_time,
+          'data.end': data.affected_time_range?.end,
+          'stored end': end_time,
+          'matches': matchesOwnBooking
+        });
+        
+        if (matchesOwnBooking) {
+          console.log('✅ BookingModal: Ignoring own booking event');
+          return;
+        }
+      }
       
       // Check if this event affects the currently viewed space
       if (data.space_id === space.id) {
@@ -140,7 +171,7 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
       console.log('🔔 BookingModal: Unsubscribing from availability changes');
       unsubscribe();
     };
-  }, [isOpen, space?.id, isConnected, subscribe, bookingDetails, showToastMessage]);
+  }, [isOpen, space?.id, isConnected, subscribe, bookingDetails, showToastMessage, currentUser?.id]);
 
   // Animate modal entrance
   useEffect(() => {
@@ -222,6 +253,23 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
       return;
     }
 
+    // Track this booking BEFORE making the API call
+    // This ensures we ignore the WebSocket event that arrives immediately
+    lastBookingRef.current = {
+      space_id: space.id,
+      date: bookingDetails.date,
+      start_time: bookingDetails.startTime,
+      end_time: bookingDetails.endTime
+    };
+    
+    console.log('🎯 BookingModal: Tracking own booking to ignore WebSocket event:', lastBookingRef.current);
+    
+    // Clear the tracking after 3 seconds
+    setTimeout(() => {
+      console.log('🧹 BookingModal: Clearing own booking tracking');
+      lastBookingRef.current = null;
+    }, 3000);
+
     const bookingPayload = {
       user_id: currentUser.id,
       space_id: space.id,
@@ -231,6 +279,7 @@ export default function BookingModal({ isOpen, onClose, space, bookingDetails })
 
     createBooking(bookingPayload, {
       onSuccess: (response) => {
+        
         showToastMessage({
           type: 'success',
           title: 'Booking confirmed!',

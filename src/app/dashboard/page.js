@@ -2,13 +2,15 @@
 
 import { useState, useRef } from 'react';
 import StatsCard from '@/component/StatsCard';
+import CheckInTimer from '@/component/CheckInTimer';
 import { useAuth } from '@/lib/useAuth';
-import { useCurrentUser, useDashboardStats } from '@/hooks';
+import { useCurrentUser, useDashboardStats, useUserBookings } from '@/hooks';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { useToast } from '@/contexts/ToastContext';
 import { getUserDisplayName } from '@/utils/user';
 import { useRouter } from 'next/navigation';
 import { Activity, Calendar, Clock, MapPin } from 'lucide-react';
+import { updateTask } from '@/services/taskService';
 import dynamic from 'next/dynamic';
 
 // Dynamically import Pomodoro to prevent SSR issues
@@ -23,13 +25,45 @@ export default function DashboardPage() {
   const [showPomodoro, setShowPomodoro] = useState(false);
   const [pomodoroPosition, setPomodoroPosition] = useState({ x: 50, y: 50 });
 
-  const { data: response, isLoading: loading, error } = useDashboardStats();
+  const { data: response, isLoading: loading, error, refetch } = useDashboardStats();
   const stats = response?.data;
 
   // Get real data from API with WebSocket for announcements
   const { announcements, isConnected: wsConnected, hasNewAnnouncement } = useAnnouncements(stats?.announcements || []);
-  const todoTasks = stats?.todo_list?.tasks || [];
+  const todoTasks = (stats?.todo_list?.tasks || []).sort((a, b) => a.task_id - b.task_id);
   const incompleteTasks = todoTasks.filter(task => !task.is_done);
+
+  // Get user's bookings to check for active check-in
+  const { data: bookingsResponse } = useUserBookings();
+  const bookingsData = bookingsResponse?.data || [];
+  const checkedInBooking = bookingsData.find(booking => booking.status === 'checkin');
+
+  // Handle task completion toggle
+  const handleTaskToggle = async (task) => {
+    try {
+      await updateTask(task.task_id, {
+        is_done: !task.is_done
+      });
+      
+      // Refetch dashboard stats to get updated tasks
+      refetch();
+      
+      showToastMessage({
+        type: 'success',
+        title: task.is_done ? 'Task Uncompleted' : 'Task Completed!',
+        message: task.is_done ? `"${task.task_title}" marked as incomplete` : `"${task.task_title}" marked as complete`,
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('Error toggling task:', error);
+      showToastMessage({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to update task',
+        duration: 3000
+      });
+    }
+  };
 
   // Helper function to format relative time
   const getRelativeTime = (dateString) => {
@@ -77,6 +111,8 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex gap-3">
+            {/* Check-in Timer - shown when user is checked in */}
+            {checkedInBooking && <CheckInTimer booking={checkedInBooking} />}
             <button
               ref={pomodoroButtonRef}
               onClick={(e) => {
@@ -102,55 +138,70 @@ export default function DashboardPage() {
           {/* Left Column: Stats & Schedule (8/12) */}
           <div className="xl:col-span-8 flex flex-col gap-8">
 
-            {/* Announcements */}
-            <div className="bg-yellow-300 rounded-3xl p-8 border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden">
+            {/* Announcements - Bulletin Board Style */}
+            <div className="bg-[#D4A574] rounded-3xl p-8 border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden">
+              {/* Cork texture overlay */}
+              <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ 
+                backgroundImage: 'radial-gradient(circle at 20% 50%, transparent 0%, rgba(139, 90, 43, 0.3) 100%)',
+                mixBlendMode: 'multiply'
+              }} />
+              
               <div className="mb-6 relative z-10">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-black text-black tracking-tight">Announcements</h2>
-                    <p className="text-black/60 font-medium text-sm mt-1">Stay updated with the latest news</p>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white border-2 border-black px-4 py-2 rounded-lg shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] -rotate-1">
+                      <h2 className="text-2xl font-black text-black tracking-tight uppercase" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>📌 Notice Board</h2>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 bg-white border-2 border-black px-3 py-1 rounded-full shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                     <div className={`w-2.5 h-2.5 rounded-full ${wsConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
-                    <span className="text-xs font-bold text-black/70">
+                    <span className="text-xs font-bold text-black uppercase tracking-wide">
                       {wsConnected ? 'LIVE' : 'OFFLINE'}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3 relative z-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
                 {announcements.length > 0 ? (
-                  announcements.slice(0, 5).map((announcement, idx) => {
+                  announcements.slice(0, 4).map((announcement, idx) => {
                     const priority = getAnnouncementPriority(idx);
+                    const rotations = ['rotate-1', '-rotate-1', 'rotate-2', '-rotate-2'];
+                    const colors = ['bg-yellow-100', 'bg-blue-100', 'bg-pink-100', 'bg-green-100'];
+                    const rotation = rotations[idx % rotations.length];
+                    const bgColor = colors[idx % colors.length];
+                    
                     return (
                       <div 
                         key={announcement.id} 
-                        className="bg-white rounded-xl p-4 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all cursor-pointer group"
+                        className={`${bgColor} rounded-lg p-5 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all cursor-pointer group relative ${rotation}`}
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1.5">
-                              {priority === 'high' && (
-                                <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold uppercase rounded border border-black">Urgent</span>
-                              )}
-                              {priority === 'medium' && (
-                                <span className="px-2 py-0.5 bg-blue-500 text-white text-[10px] font-bold uppercase rounded border border-black">Info</span>
-                              )}
-                              <span className="text-[11px] font-semibold text-gray-400">{getRelativeTime(announcement.created_at)}</span>
-                              <span className="text-[10px] text-gray-400">by {announcement.creator_name}</span>
-                            </div>
-                            <h3 className="font-bold text-base text-black mb-1 group-hover:underline">{announcement.title}</h3>
-                            <p className="text-sm font-medium text-gray-600 leading-relaxed">{announcement.description}</p>
+                        {/* Pushpin */}
+                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-6 h-6 bg-red-500 rounded-full border-2 border-black shadow-lg z-20" />
+                        
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {priority === 'high' && (
+                              <span className="px-2 py-0.5 bg-red-500 text-white text-[9px] font-bold uppercase rounded border-2 border-black">URGENT</span>
+                            )}
+                            {priority === 'medium' && (
+                              <span className="px-2 py-0.5 bg-blue-500 text-white text-[9px] font-bold uppercase rounded border-2 border-black">INFO</span>
+                            )}
+                            <span className="text-[10px] font-bold text-gray-500 uppercase">{getRelativeTime(announcement.created_at)}</span>
                           </div>
-                          <span className="text-xl opacity-70">{idx === 0 ? '📢' : idx === 1 ? '📅' : '📋'}</span>
+                          <h3 className="font-black text-base text-black leading-tight uppercase" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>{announcement.title}</h3>
+                          <p className="text-xs font-medium text-gray-700 leading-relaxed line-clamp-2">{announcement.description}</p>
+                          <div className="flex items-center justify-between mt-1">
+                            <span className="text-[10px] font-bold text-gray-500">by {announcement.creator_name}</span>
+                            <span className="text-lg">{idx === 0 ? '📢' : idx === 1 ? '📅' : idx === 2 ? '⚡' : '📋'}</span>
+                          </div>
                         </div>
                       </div>
                     );
                   })
                 ) : (
-                  <div className="text-center py-8 text-black/50 font-medium">
-                    No announcements at the moment
+                  <div className="col-span-2 bg-white rounded-lg p-8 text-center border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <p className="text-black/50 font-bold uppercase tracking-wide">No notices posted yet</p>
                   </div>
                 )}
               </div>
@@ -204,57 +255,67 @@ export default function DashboardPage() {
                 backgroundPosition: '0 24px' // Align lines
               }}>
 
-              {/* Paper Holes Decoration */}
-              <div className="absolute left-4 top-0 bottom-0 flex flex-col justify-evenly py-6 pointer-events-none">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                  <div key={i} className="w-4 h-4 rounded-full bg-[#1a1a1a] shadow-inner mb-8" />
-                ))}
-              </div>
-
               <div className="pl-6 relative z-10 flex-1 flex flex-col">
-                <h2 className="text-3xl font-black text-black mb-6 rotate-[-1deg] inline-block border-b-4 border-yellow-300 w-fit">TODAY'S PLAN</h2>
+                {/* Title */}
+                <h2 className="text-3xl font-black text-black border-b-4 border-yellow-300 text-center pb-2" style={{ marginBottom: '40px' }}>ASSIGNMENTS</h2>
 
                 {loading ? (
-                  <div className="space-y-6 mt-4">
-                    {[1, 2, 3].map(i => <div key={i} className="h-12 bg-black/5 rounded-lg animate-pulse" />)}
+                  <div className="flex flex-col gap-[64px]">
+                    {[1, 2, 3].map(i => <div key={i} className="h-8 bg-black/5 rounded-lg animate-pulse" />)}
                   </div>
-                ) : (incompleteTasks.length > 0 ? (
-                  <div className="space-y-6 mt-2">
-                    {incompleteTasks.slice(0, 3).map((task, idx) => {
-                      const dueDate = new Date(task.assignment_due_date);
-                      const formattedTime = dueDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-                      const priorityColor = task.task_priority === 'high' ? 'bg-red-100' : task.task_priority === 'medium' ? 'bg-yellow-100' : 'bg-gray-50';
-                      
-                      return (
-                        <div key={task.task_id} className="relative group cursor-pointer">
-                          {/* Handwritten-style check box */}
-                          <div className="flex items-start gap-4">
-                            <div className={`mt-1 w-6 h-6 border-2 border-black rounded-md flex items-center justify-center flex-shrink-0 ${task.is_done ? 'bg-green-400' : 'bg-white'}`}>
-                              {task.is_done && <span className="text-black font-bold">✓</span>}
-                            </div>
-
-                            <div className={`flex-1 transition-all ${task.is_done ? 'opacity-50 line-through decoration-black decoration-2' : ''}`}>
-                              <div className="flex justify-between items-baseline gap-2">
-                                <h4 className="font-bold text-lg text-black leading-none">{task.task_title}</h4>
-                                <span className="text-sm font-bold bg-black text-white px-2 py-0.5 rounded-md -rotate-2 flex-shrink-0">{formattedTime}</span>
-                              </div>
-                              <p className="text-sm font-medium text-gray-600 mt-1 flex items-center gap-1">
-                                📋 {task.assignment_title}
-                              </p>
-                              <span className={`inline-block mt-1 px-2 py-0.5 text-[10px] font-bold uppercase rounded ${priorityColor} border border-black/20`}>
-                                {task.task_priority}
-                              </span>
-                            </div>
-                          </div>
+                ) : (todoTasks.length > 0 ? (
+                  <div className="flex flex-col">
+                    {/* Group tasks by assignment */}
+                    {Object.entries(
+                      todoTasks.reduce((groups, task) => {
+                        const assignmentTitle = task.assignment_title || 'Other';
+                        if (!groups[assignmentTitle]) {
+                          groups[assignmentTitle] = [];
+                        }
+                        groups[assignmentTitle].push(task);
+                        return groups;
+                      }, {})
+                    ).map(([assignmentTitle, tasks]) => (
+                      <div key={assignmentTitle} className="mb-8">
+                        {/* Assignment Header */}
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="w-4 h-4 rounded-full bg-[#1a1a1a] shadow-inner flex-shrink-0" style={{ marginLeft: '-16px' }} />
+                          <h3 className="font-bold text-base text-black flex items-center gap-2">
+                            📋 {assignmentTitle}
+                            <span className="text-xs font-bold bg-black text-white px-2 py-0.5 rounded-md">
+                              {tasks.length}
+                            </span>
+                          </h3>
                         </div>
-                      );
-                    })}
+                        
+                        {/* Tasks under this assignment */}
+                        <div className="flex flex-col pl-8">
+                          {tasks.map((task) => {
+                            const priorityColor = task.task_priority === 'high' ? 'bg-red-400 border-red-600 text-white' : task.task_priority === 'medium' ? 'bg-yellow-300 border-yellow-500' : 'bg-gray-400 border-gray-600 text-white';
+                            
+                            return (
+                              <div key={task.task_id} className="relative group flex items-start gap-4 mb-4" style={{ minHeight: '32px' }}>
+                                <button
+                                  onClick={() => handleTaskToggle(task)}
+                                  className={`w-6 h-6 border-2 border-black rounded-md flex items-center justify-center flex-shrink-0 cursor-pointer hover:scale-110 transition-transform ${task.is_done ? 'bg-green-400' : 'bg-white hover:bg-gray-100'}`}
+                                >
+                                  {task.is_done && <span className="text-black font-bold">✓</span>}
+                                </button>
 
-                    {incompleteTasks.length > 3 && (
-                      <button className="w-full py-2 text-sm font-bold text-gray-500 hover:text-black border-2 border-dashed border-gray-300 hover:border-black rounded-xl mt-4 transition-all">
-                        + {incompleteTasks.length - 3} MORE TASKS
-                      </button>
-                    )}
+                                <div className={`flex-1 transition-all ${task.is_done ? 'opacity-50 line-through decoration-black decoration-2' : ''}`}>
+                                  <div className="flex items-center gap-2">
+                                    <h4 className="font-bold text-base text-black">{task.task_title}</h4>
+                                    <span className={`inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded ${priorityColor} border border-black/20`}>
+                                      {task.task_priority}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="flex-1 flex flex-col items-center justify-center text-center mt-10">

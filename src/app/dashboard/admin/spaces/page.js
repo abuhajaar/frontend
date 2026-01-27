@@ -20,7 +20,7 @@ export default function AdminSpacesPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   // WebSocket integration for real-time updates
-  const { subscribe, unsubscribe } = useSpacesWebSocket();
+  const { subscribe } = useSpacesWebSocket();
 
   useEffect(() => {
     fetchSpaces();
@@ -54,16 +54,17 @@ export default function AdminSpacesPage() {
       });
     };
 
-    subscribe('space_updated', handleSpaceUpdated);
-    subscribe('space_created', handleSpaceCreated);
-    subscribe('space_deleted', handleSpaceDeleted);
+    // Subscribe returns unsubscribe functions
+    const unsubscribeUpdated = subscribe('space_updated', handleSpaceUpdated);
+    const unsubscribeCreated = subscribe('space_created', handleSpaceCreated);
+    const unsubscribeDeleted = subscribe('space_deleted', handleSpaceDeleted);
 
     return () => {
-      unsubscribe('space_updated', handleSpaceUpdated);
-      unsubscribe('space_created', handleSpaceCreated);
-      unsubscribe('space_deleted', handleSpaceDeleted);
+      unsubscribeUpdated();
+      unsubscribeCreated();
+      unsubscribeDeleted();
     };
-  }, [subscribe, unsubscribe]);
+  }, [subscribe]);
 
   const fetchSpaces = async () => {
     try {

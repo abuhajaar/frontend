@@ -2,10 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, LayoutGrid, Calendar, Users, Building2, Layers, Boxes, CalendarOff } from 'lucide-react';
+import { LayoutGrid, Calendar, Users, Building2, Layers, Boxes, CalendarOff } from 'lucide-react';
 
 const adminTabs = [
-    { name: 'Overview', path: '/dashboard/admin', icon: Home },
     { name: 'Spaces', path: '/dashboard/admin/spaces', icon: LayoutGrid },
     { name: 'Bookings', path: '/dashboard/admin/bookings', icon: Calendar },
     { name: 'Users', path: '/dashboard/admin/users', icon: Users },

@@ -125,7 +125,7 @@ export default function BookingCard({ booking, onCheckIn, onCheckOut, onCancel, 
           {/* Header: Space Name & Status */}
           <div className="flex items-start justify-between">
             <div className="flex flex-col">
-              <h3 className="font-black text-lg text-black line-clamp-1 uppercase tracking-tight" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
+              <h3 className="font-black text-lg text-black line-clamp-1 uppercase tracking-wide" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>
                 {booking.space_name}
               </h3>
               <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">
