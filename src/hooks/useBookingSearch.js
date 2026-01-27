@@ -66,17 +66,26 @@ export const useBookingSearch = () => {
       return;
     }
 
-    const unsubscribe = subscribe('availability_changed', (data) => {
+    // Subscribe to availability changes from bookings
+    const unsubscribe1 = subscribe('availability_changed', (data) => {
       console.log('🔄 Booking search: Availability changed callback triggered!', data);
       queryClient.invalidateQueries({ queryKey: ['spaces'] });
       console.log('✅ Spaces query invalidated');
     });
 
-    console.log('✅ useBookingSearch: Subscription set up successfully');
+    // Subscribe to space status updates from admin (maintenance, etc.)
+    const unsubscribe2 = subscribe('space_updated', (space) => {
+      console.log('🔄 Booking search: Space updated callback triggered!', space);
+      queryClient.invalidateQueries({ queryKey: ['spaces'] });
+      console.log('✅ Spaces query invalidated after admin update');
+    });
+
+    console.log('✅ useBookingSearch: Subscriptions set up successfully (availability_changed + space_updated)');
 
     return () => {
-      console.log('🔄 useBookingSearch: Cleaning up subscription');
-      unsubscribe();
+      console.log('🔄 useBookingSearch: Cleaning up subscriptions');
+      unsubscribe1();
+      unsubscribe2();
     };
   }, [isConnected, subscribe, queryClient]);
 

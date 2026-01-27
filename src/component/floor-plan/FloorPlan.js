@@ -220,7 +220,16 @@ export default function FloorPlan({
 
       // Handle occupied state - replace with occupied version
       if (isOccupied) {
-        const occupiedElement = occupiedSvgDoc.getElementById(spaceId);
+        // Handle ID mapping for occupied SVG (some IDs differ from main SVG)
+        let occupiedElementId = spaceId;
+        
+        // Map meetingRoom02 -> meetingRoom01_2 and meetingRoom03 -> meetingRoom01_3 for Lantai 1
+        if (selectedLevel === 'lantai1') {
+          if (spaceId === 'meetingRoom02') occupiedElementId = 'meetingRoom01_2';
+          if (spaceId === 'meetingRoom03') occupiedElementId = 'meetingRoom01_3';
+        }
+        
+        const occupiedElement = occupiedSvgDoc.getElementById(occupiedElementId);
 
         if (occupiedElement) {
           const occupiedClone = occupiedElement.cloneNode(true);
@@ -235,6 +244,8 @@ export default function FloorPlan({
           }
 
           newSpaceElement.setAttribute('data-occupied-replaced', 'true');
+        } else {
+          console.warn(`⚠️ FloorPlan: Could not find occupied element for ${spaceId} (tried ${occupiedElementId})`);
         }
       } else {
         // Reset to available state if it was previously replaced

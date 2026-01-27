@@ -6,6 +6,7 @@ import { Search, ChevronUp, ChevronDown, RefreshCw, Save, LayoutGrid, CheckCircl
 import { HotDeskIcon, MeetingRoomIcon, PrivateRoomIcon } from '@/component/icons/SpaceTypeIcons';
 import AnimatedStatusToggle from '@/component/AnimatedStatusToggle';
 import StatsCard from '@/component/StatsCard';
+import { useSpacesWebSocket } from '@/contexts/SpacesWebSocketContext';
 
 export default function AdminSpacesPage() {
   const [spaces, setSpaces] = useState([]);
@@ -18,9 +19,51 @@ export default function AdminSpacesPage() {
   const [pendingChanges, setPendingChanges] = useState({});
   const [isSaving, setIsSaving] = useState(false);
 
+  // WebSocket integration for real-time updates
+  const { subscribe, unsubscribe } = useSpacesWebSocket();
+
   useEffect(() => {
     fetchSpaces();
-  }, []);
+
+    // Subscribe to real-time space updates
+    const handleSpaceUpdated = (space) => {
+      console.log('🔄 Real-time space updated:', space);
+      setSpaces(prev => prev.map(s => s.id === space.id ? space : s));
+      // Clear pending changes for this space if it was updated externally
+      setPendingChanges(prev => {
+        const newChanges = { ...prev };
+        delete newChanges[space.id];
+        return newChanges;
+      });
+    };
+
+    const handleSpaceCreated = (space) => {
+      console.log('✨ Real-time space created:', space);
+      setSpaces(prev => [...prev, space]);
+    };
+
+    const handleSpaceDeleted = (data) => {
+      console.log('🗑️ Real-time space deleted:', data);
+      const deleteId = data.id || data;
+      setSpaces(prev => prev.filter(s => s.id !== deleteId));
+      // Clear pending changes for deleted space
+      setPendingChanges(prev => {
+        const newChanges = { ...prev };
+        delete newChanges[deleteId];
+        return newChanges;
+      });
+    };
+
+    subscribe('space_updated', handleSpaceUpdated);
+    subscribe('space_created', handleSpaceCreated);
+    subscribe('space_deleted', handleSpaceDeleted);
+
+    return () => {
+      unsubscribe('space_updated', handleSpaceUpdated);
+      unsubscribe('space_created', handleSpaceCreated);
+      unsubscribe('space_deleted', handleSpaceDeleted);
+    };
+  }, [subscribe, unsubscribe]);
 
   const fetchSpaces = async () => {
     try {
