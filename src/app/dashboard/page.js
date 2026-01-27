@@ -79,6 +79,53 @@ export default function DashboardPage() {
     return `${diffDays} days ago`;
   };
 
+  // Helper function to format due date
+  const formatDueDate = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = date - now;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const formatted = `${monthNames[date.getMonth()]} ${date.getDate()}`;
+    
+    if (diffDays < 0) return { text: formatted, color: 'text-red-600', bg: 'bg-red-50', status: 'OVERDUE' };
+    if (diffDays === 0) return { text: 'Today', color: 'text-orange-600', bg: 'bg-orange-50', status: 'TODAY' };
+    if (diffDays === 1) return { text: 'Tomorrow', color: 'text-yellow-600', bg: 'bg-yellow-50', status: null };
+    if (diffDays <= 3) return { text: formatted, color: 'text-yellow-600', bg: 'bg-yellow-50', status: null };
+    if (diffDays <= 7) return { text: formatted, color: 'text-blue-600', bg: 'bg-blue-50', status: null };
+    return { text: formatted, color: 'text-gray-600', bg: 'bg-gray-50', status: null };
+  };
+
+  // Helper function to get department color
+  const getDepartmentColor = (departmentName) => {
+    if (!departmentName) return 'bg-gray-500';
+    
+    const colors = {
+      'HR': 'bg-blue-500',
+      'IT': 'bg-cyan-500',
+      'Engineering': 'bg-green-500',
+      'Marketing': 'bg-pink-500',
+      'Sales': 'bg-orange-500',
+      'Finance': 'bg-yellow-500',
+      'Operations': 'bg-purple-500',
+      'Support': 'bg-indigo-500',
+      'Admin': 'bg-red-500',
+      'Management': 'bg-emerald-500',
+    };
+    
+    // Return matched color or generate consistent color based on string
+    if (colors[departmentName]) {
+      return colors[departmentName];
+    }
+    
+    // Generate consistent color for unknown departments
+    const colorOptions = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500', 'bg-cyan-500'];
+    const index = departmentName.charCodeAt(0) % colorOptions.length;
+    return colorOptions[index];
+  };
+
   // Helper function to get announcement priority
   const getAnnouncementPriority = (index) => {
     if (index === 0) return 'high';
@@ -181,19 +228,15 @@ export default function DashboardPage() {
                         
                         <div className="flex flex-col gap-2">
                           <div className="flex items-center gap-2 flex-wrap">
-                            {priority === 'high' && (
-                              <span className="px-2 py-0.5 bg-red-500 text-white text-[9px] font-bold uppercase rounded border-2 border-black">URGENT</span>
-                            )}
-                            {priority === 'medium' && (
-                              <span className="px-2 py-0.5 bg-blue-500 text-white text-[9px] font-bold uppercase rounded border-2 border-black">INFO</span>
+                            {announcement.department_name && (
+                              <span className={`px-2 py-0.5 ${getDepartmentColor(announcement.department_name)} text-white text-[9px] font-bold uppercase rounded border-2 border-black`}>{announcement.department_name}</span>
                             )}
                             <span className="text-[10px] font-bold text-gray-500 uppercase">{getRelativeTime(announcement.created_at)}</span>
                           </div>
                           <h3 className="font-black text-base text-black leading-tight uppercase" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>{announcement.title}</h3>
                           <p className="text-xs font-medium text-gray-700 leading-relaxed line-clamp-2">{announcement.description}</p>
-                          <div className="flex items-center justify-between mt-1">
+                          <div className="flex items-center mt-1">
                             <span className="text-[10px] font-bold text-gray-500">by {announcement.creator_name}</span>
-                            <span className="text-lg">{idx === 0 ? '📢' : idx === 1 ? '📅' : idx === 2 ? '⚡' : '📋'}</span>
                           </div>
                         </div>
                       </div>
@@ -275,7 +318,12 @@ export default function DashboardPage() {
                         groups[assignmentTitle].push(task);
                         return groups;
                       }, {})
-                    ).map(([assignmentTitle, tasks]) => (
+                    ).map(([assignmentTitle, tasks]) => {
+                      // Get the assignment due date from the first task
+                      const assignmentDueDate = tasks[0]?.assignment_due_date;
+                      const dueDateInfo = assignmentDueDate ? formatDueDate(assignmentDueDate) : null;
+                      
+                      return (
                       <div key={assignmentTitle} className="mb-8">
                         {/* Assignment Header */}
                         <div className="flex items-center gap-2 mb-4">
@@ -285,6 +333,12 @@ export default function DashboardPage() {
                             <span className="text-xs font-bold bg-black text-white px-2 py-0.5 rounded-md">
                               {tasks.length}
                             </span>
+                            {dueDateInfo && (
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${dueDateInfo.bg} ${dueDateInfo.color} border border-black/10 flex items-center gap-1`}>
+                                📅 {dueDateInfo.text}
+                                {dueDateInfo.status && <span className="font-black">{dueDateInfo.status}</span>}
+                              </span>
+                            )}
                           </h3>
                         </div>
                         
@@ -315,7 +369,8 @@ export default function DashboardPage() {
                           })}
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="flex-1 flex flex-col items-center justify-center text-center mt-10">

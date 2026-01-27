@@ -17,9 +17,9 @@ export default function LevelTabs({
     availability = { lantai1: 0, lantai2: 0, lantai3: 0 }
 }) {
     const tabs = [
-        { id: 'lantai3', label: 'Lantai 3', count: availability.lantai3 },
-        { id: 'lantai2', label: 'Lantai 2', count: availability.lantai2 },
-        { id: 'lantai1', label: 'Lantai 1', count: availability.lantai1 }
+        { id: 'lantai3', label: 'Floor 3', count: availability.lantai3 },
+        { id: 'lantai2', label: 'Floor 2', count: availability.lantai2 },
+        { id: 'lantai1', label: 'Floor 1', count: availability.lantai1 }
     ];
 
     // Refs for animation
