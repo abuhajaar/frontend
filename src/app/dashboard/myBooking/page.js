@@ -172,7 +172,7 @@ export default function MyBookingPage() {
               </span>
             </div>
             
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               {checkedInBookings.map((booking) => (
                 <BookingCard
                   key={booking.id}
@@ -209,7 +209,7 @@ export default function MyBookingPage() {
             <div className="flex flex-col gap-6">
               <div className="flex items-center gap-3 border-b-2 border-black pb-2">
                 <div className="w-3 h-3 rounded-full bg-green-400 border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"></div>
-                <h2 className="text-2xl font-black text-black uppercase tracking-wide" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>Active Bookings</h2>
+                <h2 className="text-2xl font-black text-black uppercase tracking-tight" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>Active Bookings</h2>
                 <span className="text-sm font-bold bg-black text-white px-2 py-0.5 rounded-md ml-auto">{activeBookings.length}</span>
               </div>
 
@@ -238,7 +238,7 @@ export default function MyBookingPage() {
             <div className="flex flex-col gap-6">
               <div className="flex items-center gap-3 border-b-2 border-black pb-2 opacity-60">
                 <div className="w-3 h-3 rounded-full bg-gray-300 border border-black"></div>
-                <h2 className="text-2xl font-black text-black uppercase tracking-wide" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>Past Bookings</h2>
+                <h2 className="text-2xl font-black text-black uppercase tracking-tight" style={{ fontFamily: 'Tanker-Regular, sans-serif' }}>Past Bookings</h2>
                 <span className="text-sm font-bold bg-gray-200 text-black px-2 py-0.5 rounded-md ml-auto border border-black/50">{pastBookings.length}</span>
               </div>
 

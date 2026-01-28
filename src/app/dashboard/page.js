@@ -87,8 +87,10 @@ export default function DashboardPage() {
     const diffMs = date - now;
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const formatted = `${monthNames[date.getMonth()]} ${date.getDate()}`;
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const day = date.getDate();
+    const ordinal = day === 1 || day === 21 || day === 31 ? 'st' : day === 2 || day === 22 ? 'nd' : day === 3 || day === 23 ? 'rd' : 'th';
+    const formatted = `${monthNames[date.getMonth()]} ${day}${ordinal}`;
     
     if (diffDays < 0) return { text: formatted, color: 'text-red-600', bg: 'bg-red-50', status: 'OVERDUE' };
     if (diffDays === 0) return { text: 'Today', color: 'text-orange-600', bg: 'bg-orange-50', status: 'TODAY' };
@@ -326,20 +328,23 @@ export default function DashboardPage() {
                       return (
                       <div key={assignmentTitle} className="mb-8">
                         {/* Assignment Header */}
-                        <div className="flex items-center gap-2 mb-4">
-                          <div className="w-4 h-4 rounded-full bg-[#1a1a1a] shadow-inner flex-shrink-0" style={{ marginLeft: '-16px' }} />
-                          <h3 className="font-bold text-base text-black flex items-center gap-2">
-                            📋 {assignmentTitle}
-                            <span className="text-xs font-bold bg-black text-white px-2 py-0.5 rounded-md">
-                              {tasks.length}
-                            </span>
+                        <div className="flex items-start gap-2 mb-4">
+                          <div className="w-4 h-4 rounded-full bg-[#1a1a1a] shadow-inner flex-shrink-0 mt-1" style={{ marginLeft: '-16px' }} />
+                          <div className="flex-1">
                             {dueDateInfo && (
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${dueDateInfo.bg} ${dueDateInfo.color} border border-black/10 flex items-center gap-1`}>
-                                📅 {dueDateInfo.text}
-                                {dueDateInfo.status && <span className="font-black">{dueDateInfo.status}</span>}
+                              <span className="inline-block text-[10px] font-bold text-gray-600 mb-2 uppercase tracking-wider">
+                                Due {dueDateInfo.text}
                               </span>
                             )}
-                          </h3>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-base text-black">
+                                {assignmentTitle}
+                              </h3>
+                              <span className="text-xs font-bold bg-black text-white px-2 py-0.5 rounded-md">
+                                {tasks.length}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                         
                         {/* Tasks under this assignment */}
